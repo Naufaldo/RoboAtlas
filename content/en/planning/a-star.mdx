@@ -1,0 +1,36 @@
+---
+id: a-star
+title: A* Path Planning & Heuristic Search
+slug: a-star
+category: planning
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 20
+prerequisites:
+  - intro-to-robotics
+  - 2d-geometry
+references:
+  - lavalle-planning
+  - hart-nilsson-raphael-1968
+components:
+  - PathPlanningSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - AcademicReferences
+---
+
+# A* Path Planning on 2D Grids
+
+The A* search algorithm finds the strictly optimal shortest path across graph spaces by prioritizing nodes with minimum estimated total cost.
+
+## Evaluation Function
+
+$$f(n) = g(n) + h(n)$$
+
+- $g(n)$: Exact accumulated cost paid from start node to node $n$.
+- $h(n)$: Estimated remaining heuristic distance from node $n$ to the goal.
+
+## Admissible Octile Heuristic
+
+$$h_{octile}(n) = (\Delta x + \Delta y) + (\sqrt{2} - 2)\min(\Delta x, \Delta y)$$

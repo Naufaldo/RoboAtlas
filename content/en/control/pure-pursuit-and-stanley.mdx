@@ -1,0 +1,30 @@
+---
+id: pure-pursuit-and-stanley
+title: Path Tracking Control with Pure Pursuit & Stanley
+slug: pure-pursuit-and-stanley
+category: control
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 20
+prerequisites:
+  - velocity-kinematics-2d
+references:
+  - coudriet-pure-pursuit
+  - thrun-stanley-darpa
+components:
+  - ControlSimulator
+  - FormulaExplainer
+---
+
+# Path Tracking Feedback Control
+
+Path tracking controllers compute the steering angle $\delta(t)$ required to guide a vehicle along a reference geometric path.
+
+## Pure Pursuit Geometric Steering
+
+$$\delta = \arctan\left( \frac{2 L \sin\alpha}{L_f} \right)$$
+
+## Stanley Front Axle Non-Linear Control
+
+$$\delta(t) = \theta_e(t) + \arctan\left( \frac{k \cdot e(t)}{v(t)} \right)$$

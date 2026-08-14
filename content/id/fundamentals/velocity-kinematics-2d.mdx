@@ -1,0 +1,32 @@
+---
+id: velocity-kinematics-2d
+title: Kinematika Kecepatan 2D & Pemodelan Roda Diferensial
+slug: velocity-kinematics-2d
+category: fundamentals
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 25
+prerequisites:
+  - 2d-geometry
+references:
+  - ben-ari-elements-of-robotics
+  - herath-foundations-of-robotics
+components:
+  - KinematicsSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+---
+
+# Kinematika Kecepatan Roda Diferensial
+
+Robot roda diferensial mengendalikan pergerakan dengan menerapkan kecepatan putar independen pada roda kiri ($v_L$) dan roda kanan ($v_R$) yang terpisah sejauh lebar sumbu $L$.
+
+## Pemetaan Kinematika Maju
+
+$$v = \frac{v_R + v_L}{2}, \quad \omega = \frac{v_R - v_L}{L}, \quad R_{ICC} = \frac{L}{2} \left(\frac{v_R + v_L}{v_R - v_L}\right)$$
+
+### Kendala Non-Holonomik Bebas Selip
+Roda tidak dapat meluncur ke samping tanpa menggelinding. Dalam kerangka bodi robot, kecepatan lateral tepat bernilai nol:
+
+$$-\dot{x}\sin\theta + \dot{y}\cos\theta = 0$$

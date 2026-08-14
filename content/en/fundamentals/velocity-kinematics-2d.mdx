@@ -1,0 +1,32 @@
+---
+id: velocity-kinematics-2d
+title: Velocity Kinematics in 2D & Differential-Drive Modeling
+slug: velocity-kinematics-2d
+category: fundamentals
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 25
+prerequisites:
+  - 2d-geometry
+references:
+  - ben-ari-elements-of-robotics
+  - herath-foundations-of-robotics
+components:
+  - KinematicsSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+---
+
+# Differential-Drive Velocity Kinematics
+
+A differential-drive mobile robot controls motion by applying independent wheel speeds to left and right drive wheels separated by wheelbase $L$.
+
+## Forward Kinematic Mapping
+
+$$v = \frac{v_R + v_L}{2}, \quad \omega = \frac{v_R - v_L}{L}, \quad R_{ICC} = \frac{L}{2} \left(\frac{v_R + v_L}{v_R - v_L}\right)$$
+
+### Non-Holonomic No-Slip Constraint
+The wheels cannot slide laterally without rolling. In the robot frame, lateral velocity is strictly zero:
+
+$$-\dot{x}\sin\theta + \dot{y}\cos\theta = 0$$

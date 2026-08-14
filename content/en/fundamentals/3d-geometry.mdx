@@ -1,0 +1,28 @@
+---
+id: 3d-geometry
+title: 3D Spatial Geometry & Euler Angles
+slug: 3d-geometry
+category: fundamentals
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 20
+prerequisites:
+  - 2d-geometry
+references:
+  - herath-foundations-of-robotics
+components:
+  - SpatialRotation3D
+  - FormulaExplainer
+---
+
+# 3D Spatial Geometry & Rotations
+
+In 3D space, rigid body orientations require 3 rotational degrees of freedom: Roll ($\phi$ around X), Pitch ($\theta$ around Y), and Yaw ($\psi$ around Z).
+
+## $SO(3)$ Rotation Matrix
+
+$$R_{ZYX}(\psi, \theta, \phi) = R_z(\psi) R_y(\theta) R_x(\phi)$$
+
+### Non-Commutative Property
+In 3D space, order of rotation matters: $R_x R_y \neq R_y R_x$. Successive matrix multiplication maps coordinate frames through successive rotations.

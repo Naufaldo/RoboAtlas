@@ -1,0 +1,36 @@
+---
+id: a-star
+title: Perencanaan Jalur A* & Pencarian Heuristik
+slug: a-star
+category: planning
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 20
+prerequisites:
+  - intro-to-robotics
+  - 2d-geometry
+references:
+  - lavalle-planning
+  - hart-nilsson-raphael-1968
+components:
+  - PathPlanningSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - AcademicReferences
+---
+
+# Perencanaan Jalur A* pada Grid 2D
+
+Algoritma pencarian A* menemukan jalur terpendek optimal pada ruang graf dengan memprioritaskan simpul yang memiliki estimasi total biaya terendah.
+
+## Fungsi Evaluasi Biaya
+
+$$f(n) = g(n) + h(n)$$
+
+- $g(n)$: Biaya aktual yang sudah ditempuh dari titik awal ke simpul $n$.
+- $h(n)$: Estimasi jarak heuristik sisa dari simpul $n$ ke titik tujuan goal.
+
+## Heuristik Octile Admisibel
+
+$$h_{octile}(n) = (\Delta x + \Delta y) + (\sqrt{2} - 2)\min(\Delta x, \Delta y)$$

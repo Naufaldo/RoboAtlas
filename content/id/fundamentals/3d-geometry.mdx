@@ -1,0 +1,28 @@
+---
+id: 3d-geometry
+title: Geometri Spasial 3D & Sudut Euler
+slug: 3d-geometry
+category: fundamentals
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 20
+prerequisites:
+  - 2d-geometry
+references:
+  - herath-foundations-of-robotics
+components:
+  - SpatialRotation3D
+  - FormulaExplainer
+---
+
+# Geometri Spasial 3D & Rotasi
+
+Dalam ruang 3D, orientasi benda kaku memerlukan 3 derajat kebebasan rotasi: Roll ($\phi$ pada sumbu X), Pitch ($\theta$ pada sumbu Y), dan Yaw ($\psi$ pada sumbu Z).
+
+## Matriks Rotasi $SO(3)$
+
+$$R_{ZYX}(\psi, \theta, \phi) = R_z(\psi) R_y(\theta) R_x(\phi)$$
+
+### Sifat Non-Komutatif
+Dalam ruang 3 dimensi, urutan rotasi menentukan hasil orientasi akhir: $R_x R_y \neq R_y R_x$. Perkalian matriks berurutan mengombinasikan transformasi sumbu bodi secara tepat.

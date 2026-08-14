@@ -1,0 +1,30 @@
+---
+id: pure-pursuit-and-stanley
+title: Kendali Pelacakan Jalur dengan Pure Pursuit & Stanley
+slug: pure-pursuit-and-stanley
+category: control
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 20
+prerequisites:
+  - velocity-kinematics-2d
+references:
+  - coudriet-pure-pursuit
+  - thrun-stanley-darpa
+components:
+  - ControlSimulator
+  - FormulaExplainer
+---
+
+# Kendali Umpan Balik Pelacakan Jalur
+
+Kontroler pelacak jalur menghitung sudut kemudi $\delta(t)$ yang diperlukan untuk mengarahkan kendaraan mengikuti jalur geometris referensi secara presisi.
+
+## Kemudi Geometris Pure Pursuit
+
+$$\delta = \arctan\left( \frac{2 L \sin\alpha}{L_f} \right)$$
+
+## Kendali Sumbu Depan Non-Linear Stanley
+
+$$\delta(t) = \theta_e(t) + \arctan\left( \frac{k \cdot e(t)}{v(t)} \right)$$

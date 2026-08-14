@@ -1,0 +1,28 @@
+---
+id: 2d-geometry
+title: Geometri 2D & Transformasi Koordinat Planar
+slug: 2d-geometry
+category: fundamentals
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 20
+prerequisites:
+  - intro-to-robotics
+references:
+  - herath-foundations-of-robotics
+components:
+  - TransformSandbox
+  - FormulaExplainer
+---
+
+# Geometri Planar 2D & Kerangka Koordinat
+
+Robotika bergantung pada transformasi pengukuran titik antar berbagai kerangka koordinat (misal: dari kerangka sensor LiDAR $\{S\}$ ke kerangka badan robot $\{R\}$, lalu ke kerangka peta global $\{W\}$).
+
+## Matriks Transformasi Homogen dalam $SE(2)$
+
+$$\mathbf{p}^W = T_R^W \mathbf{p}^R = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x^R \\ y^R \\ 1 \end{bmatrix}$$
+
+### Mengapa Koordinat Homogen?
+Dalam geometri Euclidean biasa, rotasi bersifat perkalian ($\mathbf{p}' = R\mathbf{p}$) sedangkan translasi bersifat penjumlahan ($\mathbf{p}^W = \mathbf{p}' + \mathbf{t}$). Dengan menambahkan angka $1$ homogen di baris ketiga, kedua operasi digabung menjadi SATU perkalian matriks $3\times 3$ yang efisien.

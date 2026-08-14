@@ -1,0 +1,28 @@
+---
+id: 2d-geometry
+title: 2D Geometry & Planar Coordinate Transforms
+slug: 2d-geometry
+category: fundamentals
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 20
+prerequisites:
+  - intro-to-robotics
+references:
+  - herath-foundations-of-robotics
+components:
+  - TransformSandbox
+  - FormulaExplainer
+---
+
+# 2D Planar Geometry & Coordinate Frames
+
+Robotics relies fundamentally on transforming point measurements between multiple coordinate frames (e.g., from a LiDAR sensor frame $\{S\}$ to the robot chassis frame $\{R\}$, and into the global map frame $\{W\}$).
+
+## Homogeneous Transformation Matrix in $SE(2)$
+
+$$\mathbf{p}^W = T_R^W \mathbf{p}^R = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x^R \\ y^R \\ 1 \end{bmatrix}$$
+
+### Why Homogeneous Coordinates?
+In Euclidean geometry, rotation is multiplicative ($\mathbf{p}' = R\mathbf{p}$) while translation is additive ($\mathbf{p}^W = \mathbf{p}' + \mathbf{t}$). By augmenting coordinates with a trailing $1$, both operations combine into a single $3\times 3$ matrix multiplication.
