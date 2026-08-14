@@ -7,14 +7,10 @@ import {
   RotateCcw,
   Crosshair,
   Radio,
-  Sliders,
-  Sparkles,
-  Gauge,
-  Compass,
-  Zap,
-  Layers,
 } from 'lucide-react';
 import { vecNorm, wrapToPi } from '@/lib/math/vector2d';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useTheme } from '@/lib/theme/ThemeContext';
 
 interface Obstacle {
   x: number;
@@ -28,6 +24,9 @@ export function HeroCanvasPreview() {
   const [showRays, setShowRays] = useState(true);
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [currentScenario, setCurrentScenario] = useState<'arena' | 'corridor' | 'slalom'>('arena');
+  const { t } = useLanguage();
+  const { theme } = useTheme();
+
   const [telemetry, setTelemetry] = useState({
     x: 120,
     y: 160,
@@ -143,17 +142,16 @@ export function HeroCanvasPreview() {
 
     let animId: number;
     let lastFrame = performance.now();
-    let frameCount = 0;
     let lastFpsUpdate = performance.now();
+
+    const isLight = theme === 'light';
 
     const render = (time: number) => {
       const dt = Math.min((time - lastFrame) / 1000, 0.1) * speedMultiplier;
       lastFrame = time;
 
-      frameCount++;
       if (time - lastFpsUpdate > 500) {
         lastFpsUpdate = time;
-        frameCount = 0;
       }
 
       const state = simState.current;
@@ -245,8 +243,12 @@ export function HeroCanvasPreview() {
       // Render
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Background fill
+      ctx.fillStyle = isLight ? '#f1f5f9' : '#050811';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       // Grid
-      ctx.strokeStyle = 'rgba(51, 65, 85, 0.25)';
+      ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(51, 65, 85, 0.25)';
       ctx.lineWidth = 1;
       const gridSize = 28;
       for (let x = 0; x < canvas.width; x += gridSize) {
@@ -269,7 +271,7 @@ export function HeroCanvasPreview() {
         for (let i = 1; i < state.trail.length; i++) {
           ctx.lineTo(state.trail[i].x, state.trail[i].y);
         }
-        ctx.strokeStyle = 'rgba(6, 182, 212, 0.45)';
+        ctx.strokeStyle = isLight ? 'rgba(2, 132, 199, 0.65)' : 'rgba(6, 182, 212, 0.55)';
         ctx.lineWidth = 2.5;
         ctx.setLineDash([4, 4]);
         ctx.stroke();
@@ -284,6 +286,8 @@ export function HeroCanvasPreview() {
           ctx.lineTo(ray.x2, ray.y2);
           ctx.strokeStyle = ray.hit
             ? 'rgba(244, 63, 94, 0.85)'
+            : isLight
+            ? 'rgba(2, 132, 199, 0.35)'
             : 'rgba(34, 211, 238, 0.25)';
           ctx.lineWidth = 1.2;
           ctx.stroke();
@@ -299,15 +303,11 @@ export function HeroCanvasPreview() {
 
       // Obstacles
       for (const obs of obstacles) {
-        const grad = ctx.createRadialGradient(obs.x, obs.y, 4, obs.x, obs.y, obs.radius);
-        grad.addColorStop(0, '#1e293b');
-        grad.addColorStop(1, '#0f172a');
-
         ctx.beginPath();
         ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
+        ctx.fillStyle = isLight ? '#cbd5e1' : '#1e293b';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+        ctx.strokeStyle = isLight ? '#94a3b8' : 'rgba(148, 163, 184, 0.4)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
@@ -316,14 +316,14 @@ export function HeroCanvasPreview() {
         ctx.lineTo(obs.x + 6, obs.y);
         ctx.moveTo(obs.x, obs.y - 6);
         ctx.lineTo(obs.x, obs.y + 6);
-        ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+        ctx.strokeStyle = isLight ? '#64748b' : 'rgba(148, 163, 184, 0.3)';
         ctx.stroke();
       }
 
       // Goal Waypoint
       ctx.beginPath();
       ctx.arc(goal.x, goal.y, 10, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+      ctx.fillStyle = isLight ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.15)';
       ctx.fill();
       ctx.strokeStyle = '#10b981';
       ctx.lineWidth = 2;
@@ -341,14 +341,14 @@ export function HeroCanvasPreview() {
 
       ctx.beginPath();
       ctx.arc(0, 0, robot.radius, 0, Math.PI * 2);
-      ctx.fillStyle = '#090d16';
+      ctx.fillStyle = isLight ? '#ffffff' : '#090d16';
       ctx.fill();
-      ctx.strokeStyle = '#06b6d4';
+      ctx.strokeStyle = isLight ? '#0284c7' : '#06b6d4';
       ctx.lineWidth = 2.5;
       ctx.stroke();
 
       // Wheels
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = isLight ? '#475569' : '#64748b';
       ctx.fillRect(-7, -robot.radius - 2.5, 14, 5);
       ctx.fillRect(-7, robot.radius - 2.5, 14, 5);
 
@@ -356,7 +356,7 @@ export function HeroCanvasPreview() {
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(robot.radius + 6, 0);
-      ctx.strokeStyle = '#22d3ee';
+      ctx.strokeStyle = isLight ? '#0284c7' : '#22d3ee';
       ctx.lineWidth = 2.5;
       ctx.stroke();
 
@@ -367,12 +367,12 @@ export function HeroCanvasPreview() {
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [isRunning, showRays, speedMultiplier]);
+  }, [isRunning, showRays, speedMultiplier, theme]);
 
   return (
-    <div className="relative w-full rounded-2xl bg-slate-950 border border-slate-800/90 shadow-2xl overflow-hidden glass-panel">
+    <div className="relative w-full rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/90 shadow-2xl overflow-hidden glass-panel">
       {/* Top HUD */}
-      <div className="px-4 py-3 bg-slate-900/80 border-b border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono text-slate-300">
+      <div className="px-4 py-3 bg-slate-100/90 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono text-slate-800 dark:text-slate-300">
         <div className="flex items-center gap-2">
           <span className="flex h-2.5 w-2.5 relative">
             <span
@@ -386,20 +386,20 @@ export function HeroCanvasPreview() {
               }`}
             ></span>
           </span>
-          <span className="font-bold text-cyan-400">Pure Pursuit & LiDAR Kinematics</span>
+          <span className="font-bold text-cyan-600 dark:text-cyan-400">Pure Pursuit & LiDAR Kinematics</span>
         </div>
 
         {/* Scenario Switcher */}
-        <div className="flex items-center gap-1 bg-slate-950/70 p-1 rounded-lg border border-slate-800 text-[11px]">
-          <span className="text-slate-500 px-1.5 hidden sm:inline">Map:</span>
+        <div className="flex items-center gap-1 bg-slate-200 dark:bg-slate-950/70 p-1 rounded-lg border border-slate-300 dark:border-slate-800 text-[11px]">
+          <span className="text-slate-500 px-1.5 hidden sm:inline">{t.sim.map}:</span>
           {(['arena', 'corridor', 'slalom'] as const).map((sc) => (
             <button
               key={sc}
               onClick={() => loadScenario(sc)}
               className={`px-2 py-0.5 rounded capitalize transition-all ${
                 currentScenario === sc
-                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold border border-cyan-500/30'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               {sc}
@@ -409,7 +409,7 @@ export function HeroCanvasPreview() {
       </div>
 
       {/* Main Canvas Viewport */}
-      <div className="relative aspect-[16/9] w-full max-h-[360px] cursor-crosshair bg-[#060911]">
+      <div className="relative aspect-[16/9] w-full max-h-[360px] cursor-crosshair bg-[#f1f5f9] dark:bg-[#060911]">
         <canvas
           ref={canvasRef}
           width={520}
@@ -418,80 +418,80 @@ export function HeroCanvasPreview() {
           className="w-full h-full block"
         />
 
-        <div className="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md text-[11px] font-mono text-slate-300 border border-slate-700/60 pointer-events-none flex items-center gap-1.5 shadow-md">
-          <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
-          <span>Click anywhere on canvas to direct robot</span>
+        <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md text-[11px] font-mono text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700/60 pointer-events-none flex items-center gap-1.5 shadow-md">
+          <Crosshair className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+          <span>{t.sim.clickPrompt}</span>
         </div>
       </div>
 
       {/* Telemetry Dashboard Strip */}
-      <div className="grid grid-cols-4 border-t border-slate-800/80 bg-slate-900/40 text-center py-2 px-3 divide-x divide-slate-800/60 text-xs font-mono">
+      <div className="grid grid-cols-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/40 text-center py-2 px-3 divide-x divide-slate-200 dark:divide-slate-800/60 text-xs font-mono">
         <div>
           <span className="text-[10px] text-slate-500 block">Position (X, Y)</span>
-          <span className="text-slate-200 font-semibold">{telemetry.x}, {telemetry.y}</span>
+          <span className="text-slate-800 dark:text-slate-200 font-semibold">{telemetry.x}, {telemetry.y}</span>
         </div>
         <div>
           <span className="text-[10px] text-slate-500 block">Heading (θ)</span>
-          <span className="text-slate-200 font-semibold">{telemetry.theta} rad</span>
+          <span className="text-slate-800 dark:text-slate-200 font-semibold">{telemetry.theta} rad</span>
         </div>
         <div>
           <span className="text-[10px] text-slate-500 block">Speed (v)</span>
-          <span className="text-cyan-400 font-semibold">{telemetry.v} m/s</span>
+          <span className="text-cyan-600 dark:text-cyan-400 font-semibold">{telemetry.v} m/s</span>
         </div>
         <div>
           <span className="text-[10px] text-slate-500 block">Target Distance</span>
-          <span className="text-emerald-400 font-semibold">{telemetry.distToGoal} px</span>
+          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{telemetry.distToGoal} px</span>
         </div>
       </div>
 
       {/* Interactive Controls Toolbar */}
-      <div className="px-4 py-3 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between flex-wrap gap-3 text-xs">
+      <div className="px-4 py-3 bg-slate-100/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-3 text-xs">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsRunning(!isRunning)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono font-semibold transition-all ${
               isRunning
-                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
-                : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/25 shadow-lg shadow-cyan-500/10'
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                : 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/25 shadow-lg shadow-cyan-500/10'
             }`}
           >
             {isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-            {isRunning ? 'Pause' : 'Resume'}
+            {isRunning ? t.sim.pause : t.sim.resume}
           </button>
 
           <button
             onClick={resetSim}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors font-mono"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 transition-colors font-mono"
             title="Reset Robot & Waypoints"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            Reset
+            {t.sim.reset}
           </button>
 
           <button
             onClick={() => setShowRays(!showRays)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono transition-all ${
               showRays
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-slate-800/60 text-slate-500 border-slate-700'
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                : 'bg-slate-200 dark:bg-slate-800/60 text-slate-500 border-slate-300 dark:border-slate-700'
             }`}
           >
             <Radio className="w-3.5 h-3.5" />
-            LiDAR Rays
+            {t.sim.rays}
           </button>
         </div>
 
         {/* Speed Toggle */}
-        <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-lg border border-slate-800 font-mono text-[11px]">
-          <span className="text-slate-500 px-1">Speed:</span>
+        <div className="flex items-center gap-1.5 bg-slate-200 dark:bg-slate-950/80 p-1 rounded-lg border border-slate-300 dark:border-slate-800 font-mono text-[11px]">
+          <span className="text-slate-500 px-1">{t.sim.speed}:</span>
           {[1, 1.5, 2].map((s) => (
             <button
               key={s}
               onClick={() => setSpeedMultiplier(s)}
               className={`px-2 py-0.5 rounded transition-colors ${
                 speedMultiplier === s
-                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold border border-cyan-500/30'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               {s}x

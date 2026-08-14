@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { DOMAINS } from '@/lib/navigation/curriculum';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   Compass,
   MapPin,
@@ -28,16 +29,17 @@ const iconMap: Record<string, React.ElementType> = {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <aside className="w-full lg:w-64 flex-shrink-0">
       <div className="sticky top-20 rounded-2xl glass-panel p-4 shadow-xl">
-        <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-slate-800/80">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
-            Curriculum
+        <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-slate-200 dark:border-slate-800/80">
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+            {t.nav.curriculum}
           </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold">
-            7 Domains
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-semibold">
+            {t.nav.domains}
           </span>
         </div>
 
@@ -53,14 +55,14 @@ export function Sidebar() {
                 href={href}
                 className={`group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-mono transition-all ${
                   isActive
-                    ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm shadow-cyan-500/10'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+                    ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm shadow-cyan-500/10'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
                   <Icon
                     className={`w-4 h-4 flex-shrink-0 transition-colors ${
-                      isActive ? 'text-cyan-400' : 'text-slate-500 group-hover:text-slate-300'
+                      isActive ? 'text-cyan-500 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
                     }`}
                   />
                   <span className="truncate">{domain.title}</span>
@@ -69,8 +71,8 @@ export function Sidebar() {
                 <ChevronRight
                   className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${
                     isActive
-                      ? 'text-cyan-400 translate-x-0.5'
-                      : 'text-slate-600 group-hover:text-slate-400'
+                      ? 'text-cyan-500 dark:text-cyan-400 translate-x-0.5'
+                      : 'text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400'
                   }`}
                 />
               </Link>
@@ -79,9 +81,9 @@ export function Sidebar() {
         </nav>
 
         {/* Milestone Indicator */}
-        <div className="mt-4 pt-3.5 border-t border-slate-800/80 text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
-          <span>Foundation Active</span>
+        <div className="mt-4 pt-3.5 border-t border-slate-200 dark:border-slate-800/80 text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400 flex-shrink-0" />
+          <span>{t.nav.activeFoundation}</span>
         </div>
       </div>
     </aside>

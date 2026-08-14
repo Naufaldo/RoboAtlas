@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { ThemeProvider } from '@/lib/theme/ThemeContext';
+import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 
 export const metadata: Metadata = {
   title: 'RoboAtlas — Interactive Robotics Learning Platform & Algorithm Laboratory',
@@ -29,11 +31,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
-        <Header />
-        <main className="flex-1 w-full">{children}</main>
-        <Footer />
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className="min-h-screen bg-[#070a13] text-slate-100 dark:bg-[#070a13] dark:text-slate-100 flex flex-col antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+        <ThemeProvider>
+          <LanguageProvider>
+            <Header />
+            <main className="flex-1 w-full">{children}</main>
+            <Footer />
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
