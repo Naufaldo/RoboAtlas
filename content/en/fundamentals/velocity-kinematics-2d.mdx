@@ -1,32 +1,162 @@
 ---
 id: velocity-kinematics-2d
-title: Velocity Kinematics in 2D & Differential-Drive Modeling
+title: 2D Velocity Kinematics & Differential Drive Unicycle
 slug: velocity-kinematics-2d
 category: fundamentals
 difficulty: intermediate
 language: en
 interactive: true
-estimatedMinutes: 25
+estimatedMinutes: 45
 prerequisites:
   - 2d-geometry
 references:
-  - ben-ari-elements-of-robotics
-  - herath-foundations-of-robotics
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 5). Springer Open.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics. Springer.
 components:
   - KinematicsSimulator
   - FormulaExplainer
   - MathCodeBridge
+  - ConceptCheck
 ---
 
-# Differential-Drive Velocity Kinematics
+# 2D Velocity Kinematics & Differential-Drive Modeling
 
-A differential-drive mobile robot controls motion by applying independent wheel speeds to left and right drive wheels separated by wheelbase $L$.
+> "How does spinning two independent wheels at different speeds translate into smooth curvilinear trajectory tracking in the plane?"
 
-## Forward Kinematic Mapping
+The differential-drive chassis (found in warehouse AGVs, autonomous vacuum cleaners, and planetary rovers) is the most widespread mobile robot locomotion architecture in robotics.
 
-$$v = \frac{v_R + v_L}{2}, \quad \omega = \frac{v_R - v_L}{L}, \quad R_{ICC} = \frac{L}{2} \left(\frac{v_R + v_L}{v_R - v_L}\right)$$
+---
 
-### Non-Holonomic No-Slip Constraint
-The wheels cannot slide laterally without rolling. In the robot frame, lateral velocity is strictly zero:
+## 1. Physical Anatomy & Motion Parameters
 
-$$-\dot{x}\sin\theta + \dot{y}\cos\theta = 0$$
+A differential-drive robot consists of two coaxial motorized drive wheels separated by a track gauge (wheelbase) $L$, and one or two passive caster wheels for balance:
+
+- **$v_L$**: Linear velocity of the left wheel ($v_L = r \omega_L$) $[\text{m/s}]$
+- **$v_R$**: Linear velocity of the right wheel ($v_R = r \omega_R$) $[\text{m/s}]$
+- **$L$**: Distance between wheel contact points (track width) $[\text{m}]$
+- **$r$**: Wheel radius $[\text{m}]$
+
+---
+
+## 2. Forward Velocity Kinematics Mapping
+
+The chassis body motion is represented by linear forward speed $v$ and rotational angular velocity $\omega$:
+
+### Linear Velocity $v$:
+The robot moves forward at the average speed of both drive wheels:
+
+$$
+v = \frac{v_R + v_L}{2}
+$$
+
+### Angular Velocity $\omega$:
+The robot rotates because of the differential velocity across baseline $L$:
+
+$$
+\omega = \frac{v_R - v_L}{L}
+$$
+
+### Matrix Formulation:
+$$
+\begin{bmatrix} v \\ \omega \end{bmatrix} = \begin{bmatrix} \frac{1}{2} & \frac{1}{2} \\ \frac{1}{L} & -\frac{1}{L} \end{bmatrix} \begin{bmatrix} v_R \\ v_L \end{bmatrix}
+$$
+
+---
+
+## 3. Instantaneous Center of Curvature (ICC)
+
+When $v_L \neq v_R$, the robot follows a circular arc around a common point called the **Instantaneous Center of Curvature (ICC)**.
+
+The radius of curvature $R_{ICC}$ from the robot center to the ICC is:
+
+$$
+R_{ICC} = \frac{v}{\omega} = \frac{L}{2} \left( \frac{v_R + v_L}{v_R - v_L} \right)
+$$
+
+### Special Locomotion Cases:
+1. **$v_L = v_R$**: $R_{ICC} \to \infty, \omega = 0 \implies$ Pure straight-line forward motion.
+2. **$v_L = -v_R$**: $R_{ICC} = 0, v = 0 \implies$ Pure in-place pivot rotation (*zero turning radius*).
+3. **$v_L = 0, v_R > 0$**: $R_{ICC} = +L/2 \implies$ Pivot around stationary left wheel.
+
+---
+
+## 4. The Non-Holonomic No-Slip Constraint
+
+A differential-drive robot cannot slide sideways instantaneously. Under ideal rolling without lateral skidding, the lateral velocity in the robot frame $\{R\}$ is strictly zero:
+
+$$
+\dot{y}^R = 0 \implies -\dot{x}\sin\theta + \dot{y}\cos\theta = 0
+$$
+
+This is a **Pfaffian non-holonomic constraint**. While the robot can reach any configuration $(x, y, \theta)$ in 2D space, it cannot move in arbitrary velocity directions instantaneously.
+
+---
+
+## 5. Continuous-Time State Evolution (Unicycle Model)
+
+In the global world frame $\{W\}$, the kinematic state $\mathbf{x} = [x, y, \theta]^T$ evolves according to:
+
+$$
+\begin{bmatrix} \dot{x} \\ \dot{y} \\ \dot{\theta} \end{bmatrix} = \begin{bmatrix} \cos\theta & 0 \\ \sin\theta & 0 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} v \\ \omega \end{bmatrix}
+$$
+
+Using numerical Euler integration with timestep $\Delta t$:
+
+$$
+\begin{aligned}
+x_{k+1} &= x_k + v_k \cos\theta_k \, \Delta t \\
+y_{k+1} &= y_k + v_k \sin\theta_k \, \Delta t \\
+\theta_{k+1} &= \theta_k + \omega_k \, \Delta t
+\end{aligned}
+$$
+
+---
+
+## 6. Interactive Kinematics & ICC Simulator
+
+Adjust $v_L$ and $v_R$ sliders below to observe the resulting trajectory, turning radius, and Instantaneous Center of Curvature:
+
+<KinematicsSimulator />
+
+---
+
+## 7. Inverse Kinematics Mapping
+
+When a high-level path follower (like Pure Pursuit) outputs desired body commands $(v, \omega)$, the low-level motor controllers compute required wheel velocities:
+
+$$
+\begin{aligned}
+v_R &= v + \frac{\omega L}{2} \\
+v_L &= v - \frac{\omega L}{2}
+\end{aligned}
+$$
+
+---
+
+## 8. Concept Check
+
+<ConceptCheck
+  id="quiz-kinematics-2d"
+  question="If a robot has wheelbase L = 0.5 m, left wheel speed v_L = -1.0 m/s, and right wheel speed v_R = +1.0 m/s, what is its motion?"
+  options={[
+    {
+      id: "A",
+      text: "Pure in-place rotation with linear speed v = 0 m/s and angular rate omega = 4.0 rad/s.",
+      isCorrect: true,
+      explanation: "Correct! v = (1 - 1)/2 = 0 m/s, and omega = (1 - (-1))/0.5 = 2.0 / 0.5 = 4.0 rad/s."
+    },
+    {
+      id: "B",
+      text: "The robot moves straight forward at 1.0 m/s.",
+      isCorrect: false,
+      explanation: "Incorrect. The wheels spin in opposite directions, resulting in zero forward translation."
+    },
+    {
+      id: "C",
+      text: "The robot slips sideways.",
+      isCorrect: false,
+      explanation: "Incorrect. Differential drive obeys non-holonomic no-slip constraints."
+    }
+  ]}
+  hint="Compute linear speed v = (v_R + v_L)/2 and angular rate omega = (v_R - v_L)/L."
+/>

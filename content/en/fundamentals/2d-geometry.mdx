@@ -1,28 +1,136 @@
 ---
 id: 2d-geometry
-title: 2D Geometry & Planar Coordinate Transforms
+title: 2D Geometry & Planar Coordinate Transforms SE(2)
 slug: 2d-geometry
 category: fundamentals
 difficulty: beginner
 language: en
 interactive: true
-estimatedMinutes: 20
+estimatedMinutes: 35
 prerequisites:
-  - intro-to-robotics
+  - mathematical-foundations
 references:
-  - herath-foundations-of-robotics
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 2). Springer.
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics. Springer Open.
 components:
   - TransformSandbox
   - FormulaExplainer
+  - ConceptCheck
 ---
 
-# 2D Planar Geometry & Coordinate Frames
+# 2D Geometry & Planar Coordinate Transforms in $SE(2)$
 
-Robotics relies fundamentally on transforming point measurements between multiple coordinate frames (e.g., from a LiDAR sensor frame $\{S\}$ to the robot chassis frame $\{R\}$, and into the global map frame $\{W\}$).
+> "How does a robot know where an obstacle is in the world when its sensor only measures distance relative to itself?"
 
-## Homogeneous Transformation Matrix in $SE(2)$
+Every autonomous robot consists of multiple physical parts: a chassis body, wheels, sensors (like LiDAR or cameras), and end-effectors. Each part defines its own local coordinate system.
 
-$$\mathbf{p}^W = T_R^W \mathbf{p}^R = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x^R \\ y^R \\ 1 \end{bmatrix}$$
+---
 
-### Why Homogeneous Coordinates?
-In Euclidean geometry, rotation is multiplicative ($\mathbf{p}' = R\mathbf{p}$) while translation is additive ($\mathbf{p}^W = \mathbf{p}' + \mathbf{t}$). By augmenting coordinates with a trailing $1$, both operations combine into a single $3\times 3$ matrix multiplication.
+## 1. The Multi-Frame Dilemma in Robotics
+
+Consider a mobile robot $\{R\}$ equipped with a laser scanner $\{S\}$ operating in a room with a global world frame $\{W\}$:
+
+1. The LiDAR sensor detects a wall landmark at local coordinate $\mathbf{p}^S = [1.2, 0.5]^T \text{ m}$.
+2. The LiDAR is mounted on the robot chassis at an offset $\mathbf{t}_{S}^R = [0.3, 0.0]^T \text{ m}$.
+3. The robot itself is located in the room at position $\mathbf{t}_R^W = [4.0, 2.5]^T \text{ m}$ with heading orientation $\theta = 45^\circ$.
+
+To place the obstacle on the global map, the robot must convert $\mathbf{p}^S \to \mathbf{p}^R \to \mathbf{p}^W$.
+
+---
+
+## 2. 2D Rotation Matrices in $SO(2)$
+
+When a robot rotates by heading angle $\theta$, every point $\mathbf{p} = [x, y]^T$ rotates around the origin according to trigonometric projection:
+
+$$
+R(\theta) = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix}
+$$
+
+Key properties of rotation matrices:
+- **Orthogonality**: $R^{-1}(\theta) = R^T(\theta) = R(-\theta)$
+- **Unit Determinant**: $\det(R) = +1$ (preserves distances and angles without scaling or mirroring).
+- **Special Orthogonal Group**: $R \in SO(2)$.
+
+---
+
+## 3. Homogeneous Transformations in $SE(2)$
+
+In standard Euclidean space, rotation is multiplicative ($\mathbf{p}' = R\mathbf{p}$) while translation is additive ($\mathbf{p}^W = \mathbf{p}' + \mathbf{t}$). Combining them requires an affine operation:
+
+$$
+\mathbf{p}^W = R \mathbf{p}^R + \mathbf{t}
+$$
+
+To compose multiple transformations using pure matrix multiplication, we augment coordinates into **homogeneous coordinates** by appending a trailing $1$:
+
+$$
+\mathbf{p} = \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}
+$$
+
+The combined transformation matrix $T \in SE(2)$ (Special Euclidean Group) is structured as:
+
+$$
+T_R^W = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix}
+$$
+
+Multiplying $T_R^W$ by a local point $\mathbf{p}^R$:
+
+$$
+\begin{bmatrix} x^W \\ y^W \\ 1 \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x^R \\ y^R \\ 1 \end{bmatrix} = \begin{bmatrix} x^R\cos\theta - y^R\sin\theta + t_x \\ x^R\sin\theta + y^R\cos\theta + t_y \\ 1 \end{bmatrix}
+$$
+
+---
+
+## 4. Interactive 2D Transformation Sandbox
+
+Experiment with translation offsets $(t_x, t_y)$ and heading angle $\theta$ below. Observe how the local robot frame $\{R\}$ and its LiDAR beam rotate and translate relative to world frame $\{W\}$:
+
+<TransformSandbox />
+
+---
+
+## 5. Composition Chains & Inverse Transforms
+
+### Transformation Chaining
+Transformations compose naturally through matrix multiplication from right to left:
+
+$$
+T_S^W = T_R^W T_S^R
+$$
+
+### Analytical Matrix Inverse
+To transform world coordinates back into robot coordinates $(\mathbf{p}^R = (T_R^W)^{-1}\mathbf{p}^W)$, we compute the closed-form inverse without expensive matrix inversion:
+
+$$
+(T_R^W)^{-1} = \begin{bmatrix} R^T & -R^T \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix} = \begin{bmatrix} \cos\theta & \sin\theta & -(t_x\cos\theta + t_y\sin\theta) \\ -\sin\theta & \cos\theta & -(-t_x\sin\theta + t_y\cos\theta) \\ 0 & 0 & 1 \end{bmatrix}
+$$
+
+---
+
+## 6. Concept Check
+
+<ConceptCheck
+  id="quiz-2d-transforms"
+  question="Why do we use homogeneous coordinates (3x3 matrices for 2D) in robotics instead of separate 2x2 rotation and translation vectors?"
+  options={[
+    {
+      id: "A",
+      text: "Because homogeneous coordinates allow arbitrary chains of rotations and translations to be composed into a single matrix multiplication.",
+      isCorrect: true,
+      explanation: "Correct! Chaining T_A^C = T_B^C * T_A^B enables fast, associative, and hardware-accelerated coordinate transformations."
+    },
+    {
+      id: "B",
+      text: "Because 2x2 matrices cannot represent angles greater than 90 degrees.",
+      isCorrect: false,
+      explanation: "Incorrect. Standard 2x2 rotation matrices represent any angle theta in [0, 2*pi]."
+    },
+    {
+      id: "C",
+      text: "Because robots have 3 wheels.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about how multiple coordinate frame changes (sensor to body to world) are computed."
+/>

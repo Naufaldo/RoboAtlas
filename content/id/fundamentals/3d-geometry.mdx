@@ -1,28 +1,134 @@
 ---
 id: 3d-geometry
-title: Geometri Spasial 3D & Sudut Euler
+title: Geometri Spasial 3D, Sudut Euler & Rotasi SO(3)
 slug: 3d-geometry
 category: fundamentals
 difficulty: intermediate
 language: id
 interactive: true
-estimatedMinutes: 20
+estimatedMinutes: 40
 prerequisites:
   - 2d-geometry
 references:
-  - herath-foundations-of-robotics
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 3). Springer.
+  - Steven M. LaValle (2006). Planning Algorithms. Cambridge University Press.
 components:
   - SpatialRotation3D
   - FormulaExplainer
+  - ConceptCheck
 ---
 
-# Geometri Spasial 3D & Rotasi
+# Geometri Spasial 3D, Sudut Euler & Rotasi pada $SO(3)$
 
-Dalam ruang 3D, orientasi benda kaku memerlukan 3 derajat kebebasan rotasi: Roll ($\phi$ pada sumbu X), Pitch ($\theta$ pada sumbu Y), dan Yaw ($\psi$ pada sumbu Z).
+> "Mengapa urutan rotasi robot di ruang 3D mengubah arah hadap akhirnya secara signifikan?"
 
-## Matriks Rotasi $SO(3)$
+Pada robotika planar 2D, orientasi cukup dideskripsikan oleh satu sudut skalar $\theta$. Namun di ruang fisik 3D—baik saat mengarahkan ujung lengan industri 6-DOF, menjaga keseimbangan terbang drone quadrotor, maupun mengarahkan kapal selam ROV—orientasi membutuhkan tiga derajat kebebasan rotasi (*3 Rotational Degrees of Freedom*).
 
-$$R_{ZYX}(\psi, \theta, \phi) = R_z(\psi) R_y(\theta) R_x(\phi)$$
+---
 
-### Sifat Non-Komutatif
-Dalam ruang 3 dimensi, urutan rotasi menentukan hasil orientasi akhir: $R_x R_y \neq R_y R_x$. Perkalian matriks berurutan mengombinasikan transformasi sumbu bodi secara tepat.
+## 1. Matriks Rotasi Elementer 3D
+
+Rotasi di sekitar sumbu utama $X, Y, Z$ dengan sudut $\phi, \theta, \psi$ dinyatakan melalui matriks rotasi berukuran $3\times 3$:
+
+### Rotasi pada Sumbu X (Roll $\phi$):
+$$
+R_x(\phi) = \begin{bmatrix} 1 & 0 & 0 \\ 0 & \cos\phi & -\sin\phi \\ 0 & \sin\phi & \cos\phi \end{bmatrix}
+$$
+
+### Rotasi pada Sumbu Y (Pitch $\theta$):
+$$
+R_y(\theta) = \begin{bmatrix} \cos\theta & 0 & \sin\theta \\ 0 & 1 & 0 \\ -\sin\theta & 0 & \cos\theta \end{bmatrix}
+$$
+
+### Rotasi pada Sumbu Z (Yaw $\psi$):
+$$
+R_z(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi & 0 \\ \sin\psi & \cos\psi & 0 \\ 0 & 0 & 1 \end{bmatrix}
+$$
+
+---
+
+## 2. Sifat Non-Komutatif Rotasi 3D
+
+Berbeda dengan perkalian bilangan skalar biasa, **rotasi 3D tidak bersifat komutatif**:
+
+$$
+R_x(\phi) R_y(\theta) \neq R_y(\theta) R_x(\phi)
+$$
+
+Urutan pelaksanaan rotasi menentukan orientasi spasial akhir robot. Standar konvensi yang paling banyak digunakan dalam dirgantara dan robotika adalah **Konvensi Tait-Bryan ZYX** (Yaw $\to$ Pitch $\to$ Roll):
+
+$$
+R_{ZYX}(\psi, \theta, \phi) = R_z(\psi) R_y(\theta) R_x(\phi)
+$$
+
+Hasil perkalian matriks lengkap pada grup $SO(3)$ bernilai:
+
+$$
+R_{ZYX} = \begin{bmatrix} \cos\psi\cos\theta & \cos\psi\sin\theta\sin\phi - \sin\psi\cos\phi & \cos\psi\sin\theta\cos\phi + \sin\psi\sin\phi \\ \sin\psi\cos\theta & \sin\psi\sin\theta\sin\phi + \cos\psi\cos\phi & \sin\psi\sin\theta\cos\phi - \cos\psi\sin\phi \\ -\sin\theta & \cos\theta\sin\phi & \cos\theta\cos\phi \end{bmatrix}
+$$
+
+---
+
+## 3. Simulator Interaktif Rotasi 3D & Sudut Euler
+
+Atur slider Roll ($\phi$), Pitch ($\theta$), dan Yaw ($\psi$) di bawah ini. Amati bagaimana kerangka acuan 3D berputar secara *real-time*, dan cermati nilai matriks $3\times 3$ yang dihasilkan:
+
+<SpatialRotation3D />
+
+---
+
+## 4. Singularitas Gimbal Lock
+
+Ketika sudut Pitch mencapai $\theta = \pm 90^\circ$ ($\pm \frac{\pi}{2}\text{ radian}$), nilai $\cos\theta = 0$. Matriks di atas akan tereduksi menjadi:
+
+$$
+R_{ZYX}(\psi, 90^\circ, \phi) = \begin{bmatrix} 0 & \sin(\phi - \psi) & \cos(\phi - \psi) \\ 0 & \cos(\phi - \psi) & -\sin(\phi - \psi) \\ -1 & 0 & 0 \end{bmatrix}
+$$
+
+Perhatikan bahwa sudut $\phi$ (Roll) dan $\psi$ (Yaw) kini hanya muncul sebagai selisih sudut $(\phi - \psi)$. Sistem telah **kehilangan satu derajat kebebasan rotasi**. Kondisi singularitas representasi matematis ini disebut **Gimbal Lock**.
+
+Untuk menghilangkan singularitas pada kontroler penerbangan drone dan SLAM 3D, robotika memanfaatkan representasi **Kuaternion Satuan** (*Unit Quaternions*):
+
+$$
+\mathbf{q} = \begin{bmatrix} q_w \\ q_x \\ q_y \\ q_z \end{bmatrix} = \begin{bmatrix} \cos(\theta/2) \\ \mathbf{u}\sin(\theta/2) \end{bmatrix}, \quad \|\mathbf{q}\| = 1
+$$
+
+---
+
+## 5. Transformasi Homogen pada $SE(3)$
+
+Menggabungkan matriks rotasi 3D $R \in SO(3)$ dan vektor translasi $\mathbf{t} = [t_x, t_y, t_z]^T$ menghasilkan matriks transformasi homogen $4\times 4$ pada $SE(3)$:
+
+$$
+T = \begin{bmatrix} R & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix} = \begin{bmatrix} r_{11} & r_{12} & r_{13} & t_x \\ r_{21} & r_{22} & r_{23} & t_y \\ r_{31} & r_{32} & r_{33} & t_z \\ 0 & 0 & 0 & 1 \end{bmatrix}
+$$
+
+---
+
+## 6. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-3d-rotations"
+  question="Apa yang terjadi secara matematis saat kondisi Gimbal Lock terjadi pada urutan rotasi Euler ZYX?"
+  options={[
+    {
+      id: "A",
+      text: "Ketika Pitch = 90 derajat, sumbu Roll dan Yaw menjadi sejajar, menyebabkan hilangnya satu derajat kebebasan rotasi.",
+      isCorrect: true,
+      explanation: "Tepat! Pada pitch = 90 derajat, cos(pitch) = 0, sehingga roll dan yaw tereduksi menjadi satu variabel selisih sudut (roll - yaw)."
+    },
+    {
+      id: "B",
+      text: "Motor penggerak robot mengalami macet secara mekanis.",
+      isCorrect: false,
+      explanation: "Salah. Gimbal lock adalah singularitas representasi matematis, bukan kerusakan mekanik motor."
+    },
+    {
+      id: "C",
+      text: "Nilai determinan matriks rotasi menjadi bernilai 0.",
+      isCorrect: false,
+      explanation: "Salah. Determinan matriks SO(3) yang valid selalu bernilai +1."
+    }
+  ]}
+  hint="Pikirkan tentang apa yang terjadi pada suku trigonometri ketika cos(theta) = 0."
+/>

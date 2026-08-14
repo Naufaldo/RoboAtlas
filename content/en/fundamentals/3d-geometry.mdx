@@ -1,28 +1,134 @@
 ---
 id: 3d-geometry
-title: 3D Spatial Geometry & Euler Angles
+title: 3D Spatial Geometry, Euler Angles & SO(3) Rotations
 slug: 3d-geometry
 category: fundamentals
 difficulty: intermediate
 language: en
 interactive: true
-estimatedMinutes: 20
+estimatedMinutes: 40
 prerequisites:
   - 2d-geometry
 references:
-  - herath-foundations-of-robotics
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 3). Springer.
+  - Steven M. LaValle (2006). Planning Algorithms. Cambridge University Press.
 components:
   - SpatialRotation3D
   - FormulaExplainer
+  - ConceptCheck
 ---
 
-# 3D Spatial Geometry & Rotations
+# 3D Spatial Geometry, Euler Angles & $SO(3)$ Rotations
 
-In 3D space, rigid body orientations require 3 rotational degrees of freedom: Roll ($\phi$ around X), Pitch ($\theta$ around Y), and Yaw ($\psi$ around Z).
+> "Why does the order in which a robot rotates in 3D change where it ends up pointing?"
 
-## $SO(3)$ Rotation Matrix
+In planar 2D robotics, orientation is simple: a single scalar angle $\theta$. But in 3D physical space—whether positioning a 6-DOF industrial arm end-effector, balancing an aerial drone, or orienting a submarine ROV—orientation requires three rotational degrees of freedom.
 
-$$R_{ZYX}(\psi, \theta, \phi) = R_z(\psi) R_y(\theta) R_x(\phi)$$
+---
 
-### Non-Commutative Property
-In 3D space, order of rotation matters: $R_x R_y \neq R_y R_x$. Successive matrix multiplication maps coordinate frames through successive rotations.
+## 1. Elementary 3D Rotation Matrices
+
+Rotation around the canonical axes $X, Y, Z$ by angles $\phi, \theta, \psi$ is defined by $3\times 3$ elementary rotation matrices:
+
+### Rotation around X-axis (Roll $\phi$):
+$$
+R_x(\phi) = \begin{bmatrix} 1 & 0 & 0 \\ 0 & \cos\phi & -\sin\phi \\ 0 & \sin\phi & \cos\phi \end{bmatrix}
+$$
+
+### Rotation around Y-axis (Pitch $\theta$):
+$$
+R_y(\theta) = \begin{bmatrix} \cos\theta & 0 & \sin\theta \\ 0 & 1 & 0 \\ -\sin\theta & 0 & \cos\theta \end{bmatrix}
+$$
+
+### Rotation around Z-axis (Yaw $\psi$):
+$$
+R_z(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi & 0 \\ \sin\psi & \cos\psi & 0 \\ 0 & 0 & 1 \end{bmatrix}
+$$
+
+---
+
+## 2. Non-Commutativity of 3D Rotations
+
+Unlike numbers or 2D rotations, **3D rotations do not commute**:
+
+$$
+R_x(\phi) R_y(\theta) \neq R_y(\theta) R_x(\phi)
+$$
+
+The sequence of rotations dictates the final spatial orientation. In aerospace and robotics, the most common standard is the **Tait-Bryan ZYX convention** (Yaw $\to$ Pitch $\to$ Roll):
+
+$$
+R_{ZYX}(\psi, \theta, \phi) = R_z(\psi) R_y(\theta) R_x(\phi)
+$$
+
+Multiplying these matrices yields the complete $3\times 3$ rotation matrix in $SO(3)$:
+
+$$
+R_{ZYX} = \begin{bmatrix} \cos\psi\cos\theta & \cos\psi\sin\theta\sin\phi - \sin\psi\cos\phi & \cos\psi\sin\theta\cos\phi + \sin\psi\sin\phi \\ \sin\psi\cos\theta & \sin\psi\sin\theta\sin\phi + \cos\psi\cos\phi & \sin\psi\sin\theta\cos\phi - \cos\psi\sin\phi \\ -\sin\theta & \cos\theta\sin\phi & \cos\theta\cos\phi \end{bmatrix}
+$$
+
+---
+
+## 3. Interactive 3D Rotation & Euler Angle Simulator
+
+Adjust the Roll ($\phi$), Pitch ($\theta$), and Yaw ($\psi$) sliders below. Observe how the 3D coordinate frame gizmo rotates in real-time, and inspect the resulting $3\times 3$ matrix values:
+
+<SpatialRotation3D />
+
+---
+
+## 4. The Gimbal Lock Singularity
+
+When Pitch reaches $\theta = \pm 90^\circ$ ($\pm \frac{\pi}{2}\text{ radians}$), $\cos\theta = 0$. In the matrix above:
+
+$$
+R_{ZYX}(\psi, 90^\circ, \phi) = \begin{bmatrix} 0 & \sin(\phi - \psi) & \cos(\phi - \psi) \\ 0 & \cos(\phi - \psi) & -\sin(\phi - \psi) \\ -1 & 0 & 0 \end{bmatrix}
+$$
+
+Notice that $\phi$ (Roll) and $\psi$ (Yaw) now appear only as the difference $(\phi - \psi)$. The system has **lost one degree of rotational freedom**. This condition is known as **Gimbal Lock**.
+
+To eliminate singularities in flight controllers and 3D SLAM, robotics utilizes **Unit Quaternions**:
+
+$$
+\mathbf{q} = \begin{bmatrix} q_w \\ q_x \\ q_y \\ q_z \end{bmatrix} = \begin{bmatrix} \cos(\theta/2) \\ \mathbf{u}\sin(\theta/2) \end{bmatrix}, \quad \|\mathbf{q}\| = 1
+$$
+
+---
+
+## 5. Homogeneous Transformation in $SE(3)$
+
+Combining 3D rotation $R \in SO(3)$ and translation $\mathbf{t} = [t_x, t_y, t_z]^T$ creates a $4\times 4$ homogeneous transformation matrix $T \in SE(3)$:
+
+$$
+T = \begin{bmatrix} R & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix} = \begin{bmatrix} r_{11} & r_{12} & r_{13} & t_x \\ r_{21} & r_{22} & r_{23} & t_y \\ r_{31} & r_{32} & r_{33} & t_z \\ 0 & 0 & 0 & 1 \end{bmatrix}
+$$
+
+---
+
+## 6. Concept Check
+
+<ConceptCheck
+  id="quiz-3d-rotations"
+  question="What happens mathematically during Gimbal Lock in the Euler ZYX rotation sequence?"
+  options={[
+    {
+      id: "A",
+      text: "When Pitch = 90 degrees, the Roll and Yaw axes align, causing the loss of one rotational degree of freedom.",
+      isCorrect: true,
+      explanation: "Exact! At pitch = 90 degrees, cos(pitch) = 0, causing roll and yaw to degenerate into a single angular difference (roll - yaw)."
+    },
+    {
+      id: "B",
+      text: "The robot's motors mechanically freeze and cannot spin.",
+      isCorrect: false,
+      explanation: "Incorrect. Gimbal lock is a mathematical representation singularity, not a mechanical motor fault."
+    },
+    {
+      id: "C",
+      text: "The rotation matrix determinant becomes 0.",
+      isCorrect: false,
+      explanation: "Incorrect. The determinant of any valid SO(3) matrix is always +1."
+    }
+  ]}
+  hint="Think about what happens to the trigonometric terms when cos(theta) = 0."
+/>

@@ -1,32 +1,162 @@
 ---
 id: velocity-kinematics-2d
-title: Kinematika Kecepatan 2D & Pemodelan Roda Diferensial
+title: Kinematika Kecepatan 2D & Pemodelan Unicycle Roda Diferensial
 slug: velocity-kinematics-2d
 category: fundamentals
 difficulty: intermediate
 language: id
 interactive: true
-estimatedMinutes: 25
+estimatedMinutes: 45
 prerequisites:
   - 2d-geometry
 references:
-  - ben-ari-elements-of-robotics
-  - herath-foundations-of-robotics
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 5). Springer Open.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics. Springer.
 components:
   - KinematicsSimulator
   - FormulaExplainer
   - MathCodeBridge
+  - ConceptCheck
 ---
 
-# Kinematika Kecepatan Roda Diferensial
+# Kinematika Kecepatan 2D & Pemodelan Roda Diferensial
 
-Robot roda diferensial mengendalikan pergerakan dengan menerapkan kecepatan putar independen pada roda kiri ($v_L$) dan roda kanan ($v_R$) yang terpisah sejauh lebar sumbu $L$.
+> "Bagaimana memutar dua roda independen pada kecepatan berbeda menghasilkan pergerakan kurvatur trajektori yang mulus di bidang datar?"
 
-## Pemetaan Kinematika Maju
+Sasis penggerak diferensial (*differential-drive chassis*) yang banyak ditemukan pada robot AGV gudang, robot pembersih lantai otonom, hingga robot penjelajah Mars adalah arsitektur lokomosi paling mendasar dalam robotika bergerak.
 
-$$v = \frac{v_R + v_L}{2}, \quad \omega = \frac{v_R - v_L}{L}, \quad R_{ICC} = \frac{L}{2} \left(\frac{v_R + v_L}{v_R - v_L}\right)$$
+---
 
-### Kendala Non-Holonomik Bebas Selip
-Roda tidak dapat meluncur ke samping tanpa menggelinding. Dalam kerangka bodi robot, kecepatan lateral tepat bernilai nol:
+## 1. Anatomi Fisik & Parameter Gerak
 
-$$-\dot{x}\sin\theta + \dot{y}\cos\theta = 0$$
+Robot roda diferensial terdiri dari dua roda penggerak bermotor koaksial yang dipisahkan oleh jarak poros (*wheelbase / track width*) $L$, serta satu atau dua roda kastor pasif untuk menjaga keseimbangan:
+
+- **$v_L$**: Kecepatan linier roda kiri ($v_L = r \omega_L$) $[\text{m/s}]$
+- **$v_R$**: Kecepatan linier roda kanan ($v_R = r \omega_R$) $[\text{m/s}]$
+- **$L$**: Jarak antara titik kontak kedua roda ke tanah $[\text{m}]$
+- **$r$**: Jari-jari radius roda $[\text{m}]$
+
+---
+
+## 2. Pemetaan Kinematika Kecepatan Maju (Forward Kinematics)
+
+Pergerakan bodi sasis dinyatakan melalui kecepatan linier maju $v$ dan kecepatan sudut rotasi arah hadap $\omega$:
+
+### Kecepatan Linier Maju $v$:
+Robot bergerak maju pada kecepatan rata-rata dari kedua roda penggerak:
+
+$$
+v = \frac{v_R + v_L}{2}
+$$
+
+### Kecepatan Sudut Rotasi $\omega$:
+Robot berotasi karena adanya selisih kecepatan antara roda kanan dan kiri sepanjang jarak poros $L$:
+
+$$
+\omega = \frac{v_R - v_L}{L}
+$$
+
+### Formulasi Matriks:
+$$
+\begin{bmatrix} v \\ \omega \end{bmatrix} = \begin{bmatrix} \frac{1}{2} & \frac{1}{2} \\ \frac{1}{L} & -\frac{1}{L} \end{bmatrix} \begin{bmatrix} v_R \\ v_L \end{bmatrix}
+$$
+
+---
+
+## 3. Pusat Kurvatur Seketika / Instantaneous Center of Curvature (ICC)
+
+Ketika $v_L \neq v_R$, robot bergerak melingkar mengelilingi satu titik pusat rotasi bersama yang disebut **Instantaneous Center of Curvature (ICC)**.
+
+Jari-jari kurvatur $R_{ICC}$ dari titik tengah bodi robot ke titik ICC adalah:
+
+$$
+R_{ICC} = \frac{v}{\omega} = \frac{L}{2} \left( \frac{v_R + v_L}{v_R - v_L} \right)
+$$
+
+### Kasus Khusus Lokomosi:
+1. **$v_L = v_R$**: $R_{ICC} \to \infty, \omega = 0 \implies$ Gerak lurus murni ke depan tanpa berputar.
+2. **$v_L = -v_R$**: $R_{ICC} = 0, v = 0 \implies$ Rotasi putar di tempat (*zero turning radius*).
+3. **$v_L = 0, v_R > 0$**: $R_{ICC} = +L/2 \implies$ Berputar dengan poros roda kiri sebagai titik tumpu.
+
+---
+
+## 4. Kendala Non-Holonomik Tanpa Slip (No-Slip Constraint)
+
+Robot roda diferensial tidak dapat bergeser ke samping secara seketika (*lateral skid*). Di bawah kondisi roda menggelinding murni tanpa slip, kecepatan lateral pada kerangka bodi robot $\{R\}$ bernilai nol:
+
+$$
+\dot{y}^R = 0 \implies -\dot{x}\sin\theta + \dot{y}\cos\theta = 0
+$$
+
+Ini adalah **kendala non-holonomik Pfaffian**. Meskipun robot dapat mencapai posisi dan sudut hadap apapun $(x, y, \theta)$ di bidang 2D, ia tidak dapat bergerak ke segala arah vektor kecepatan secara bebas seketika.
+
+---
+
+## 5. Model Unicycle Waktu-Kontinu & Integrasi Numerik
+
+Pada kerangka acuan dunia $\{W\}$, status kinematika robot $\mathbf{x} = [x, y, \theta]^T$ berevolusi menurut persamaan diferensial:
+
+$$
+\begin{bmatrix} \dot{x} \\ \dot{y} \\ \dot{\theta} \end{bmatrix} = \begin{bmatrix} \cos\theta & 0 \\ \sin\theta & 0 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} v \\ \omega \end{bmatrix}
+$$
+
+Menggunakan integrasi numerik Euler dengan selang waktu $\Delta t$:
+
+$$
+\begin{aligned}
+x_{k+1} &= x_k + v_k \cos\theta_k \, \Delta t \\
+y_{k+1} &= y_k + v_k \sin\theta_k \, \Delta t \\
+\theta_{k+1} &= \theta_k + \omega_k \, \Delta t
+\end{aligned}
+$$
+
+---
+
+## 6. Simulator Kinematika & ICC Interaktif
+
+Atur slider kecepatan $v_L$ dan $v_R$ di bawah ini untuk melihat trajektori gerak, jari-jari putar, dan posisi titik ICC:
+
+<KinematicsSimulator />
+
+---
+
+## 7. Kinematika Kecepatan Balik (Inverse Kinematics)
+
+Ketika kontroler jalur tingkat tinggi (seperti Pure Pursuit) menghasilkan perintah kecepatan bodi yang diinginkan $(v, \omega)$, kontroler motor menghitung kecepatan putar roda yang dibutuhkan:
+
+$$
+\begin{aligned}
+v_R &= v + \frac{\omega L}{2} \\
+v_L &= v - \frac{\omega L}{2}
+\end{aligned}
+$$
+
+---
+
+## 8. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-kinematics-2d"
+  question="Jika sebuah robot memiliki jarak antar roda L = 0.5 m, kecepatan roda kiri v_L = -1.0 m/s, dan kecepatan roda kanan v_R = +1.0 m/s, bagaimanakah gerak robot?"
+  options={[
+    {
+      id: "A",
+      text: "Robot berputar murni di tempat dengan kecepatan linier v = 0 m/s dan kecepatan sudut omega = 4.0 rad/s.",
+      isCorrect: true,
+      explanation: "Tepat! v = (1 - 1)/2 = 0 m/s, dan omega = (1 - (-1))/0.5 = 2.0 / 0.5 = 4.0 rad/s."
+    },
+    {
+      id: "B",
+      text: "Robot bergerak lurus maju dengan kecepatan 1.0 m/s.",
+      isCorrect: false,
+      explanation: "Salah. Roda berputar ke arah berlawanan sehingga translasi maju bernilai nol."
+    },
+    {
+      id: "C",
+      text: "Robot tergelincir ke samping.",
+      isCorrect: false,
+      explanation: "Salah. Roda diferensial mematuhi kendala non-holonomik tanpa slip lateral."
+    }
+  ]}
+  hint="Hitung kecepatan linier v = (v_R + v_L)/2 dan kecepatan sudut omega = (v_R - v_L)/L."
+/>
