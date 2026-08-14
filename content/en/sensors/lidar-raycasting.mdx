@@ -1,0 +1,128 @@
+---
+id: lidar-raycasting
+title: "LiDAR Raycasting, Beam Intersection & Point Cloud Extraction (M21)"
+slug: lidar-raycasting
+category: sensors
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - sensor-fundamentals
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 6: Sensor Models). MIT Press.
+  - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots (Chapter 4). MIT Press.
+components:
+  - LidarRaycastSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# LiDAR Raycasting, Beam Intersection & Point Cloud Extraction (M21)
+
+> "How does a spinning laser sensor convert optical Time-of-Flight (ToF) reflections into thousands of 2D/3D spatial obstacle points for autonomous mapping and SLAM?"
+
+**Light Detection and Ranging (LiDAR)** is the primary exteroceptive sensor for mobile robotics. A 2D LiDAR spins rapidly, projecting hundreds of pulsed laser beams to measure distances to surrounding obstacle boundaries.
+
+---
+
+## 1. Raycasting Geometry & Parametric Intersection
+
+Let the robot/sensor center be at global coordinate $\mathbf{p}_R = [x_R, y_R]^T$ with heading $\theta_R$.
+
+For the $i$-th laser beam with relative angular offset $\alpha_i \in [0, 2\pi)$, the global beam heading is:
+
+$$
+\phi_i = \theta_R + \alpha_i
+$$
+
+The ray is parameterized by distance $u \in [0, r_{\max}]$:
+
+$$
+\mathbf{p}_{\text{ray}}(u) = \begin{bmatrix} x_R \\ y_R \end{bmatrix} + u \begin{bmatrix} \cos\phi_i \\ \sin\phi_i \end{bmatrix}
+$$
+
+### Line-Segment Obstacle Intersection
+For an obstacle boundary segment connecting endpoints $\mathbf{a} = [x_1, y_1]^T$ and $\mathbf{b} = [x_2, y_2]^T$, parameterized by $v \in [0, 1]$:
+
+$$
+\mathbf{p}_{\text{seg}}(v) = \mathbf{a} + v(\mathbf{b} - \mathbf{a})
+$$
+
+Equating $\mathbf{p}_{\text{ray}}(u) = \mathbf{p}_{\text{seg}}(v)$ yields a $2 \times 2$ linear system:
+
+$$
+\begin{bmatrix} \cos\phi_i & -(x_2 - x_1) \\ \sin\phi_i & -(y_2 - y_1) \end{bmatrix} \begin{bmatrix} u \\ v \end{bmatrix} = \begin{bmatrix} x_1 - x_R \\ y_1 - y_R \end{bmatrix}
+$$
+
+A valid collision occurs when $0 \le u \le r_{\max}$ and $0 \le v \le 1$. The true distance is the minimum $u$ across all obstacle segments:
+
+$$
+d_i = \min_k u_k
+$$
+
+---
+
+## 2. Derivation: Point Cloud Extraction with Gaussian Noise
+
+Physical range measurements $r_i$ incorporate random electronic thermal noise $\epsilon_i \sim \mathcal{N}(0, \sigma^2)$:
+
+$$
+r_i = d_i + \epsilon_i
+$$
+
+Each range reading $(r_i, \alpha_i)$ is converted back into 2D Cartesian **Point Cloud coordinates** in the global map:
+
+$$
+\mathbf{p}_i^W = \begin{bmatrix} x_i^W \\ y_i^W \end{bmatrix} = \begin{bmatrix} x_R + r_i \cos(\theta_R + \alpha_i) \\ y_R + r_i \sin(\theta_R + \alpha_i) \end{bmatrix}
+$$
+
+---
+
+## 3. Video Lecture: LiDAR Working Principle & Raycasting
+
+<VideoEmbed
+  title="LiDAR Raycasting and 2D Point Cloud Generation"
+  videoId="a4N4k3bZzYw"
+/>
+
+---
+
+## 4. Interactive 2D LiDAR Raycasting Simulator
+
+Drag the robot around the map below. Adjust the laser ray count and maximum range to observe real-time ray-obstacle intersections and point cloud generation:
+
+<LidarRaycastSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m21"
+  question="Why do LiDAR raycasting models check for the MINIMUM positive intersection distance (min u_k) along each laser beam?"
+  options={[
+    {
+      id: "A",
+      text: "Because opaque physical obstacles block the light pulse, meaning the laser beam reflects off the closest surface and cannot penetrate through to obstacles behind it.",
+      isCorrect: true,
+      explanation: "Exact! The optical Time-of-Flight sensor detects the first returning photon reflection (the closest surface)."
+    },
+    {
+      id: "B",
+      text: "Because lasers always bounce backwards to the robot origin.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because computers cannot process more than one number.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about light occlusion by opaque solid walls."
+/>

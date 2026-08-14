@@ -24,6 +24,10 @@ import { CspaceInflationSimulator } from '@/components/simulation/CspaceInflatio
 import { BayesianFilterSimulator } from '@/components/simulation/BayesianFilterSimulator';
 import { TransformChainSimulator } from '@/components/simulation/TransformChainSimulator';
 import { HolonomicConstraintSimulator } from '@/components/simulation/HolonomicConstraintSimulator';
+import { BayesianRoomSimulator } from '@/components/simulation/BayesianRoomSimulator';
+import { TrackingErrorGeometrySimulator } from '@/components/simulation/TrackingErrorGeometrySimulator';
+import { ArmForwardKinematicsSimulator } from '@/components/simulation/ArmForwardKinematicsSimulator';
+import { LidarRaycastSimulator } from '@/components/simulation/LidarRaycastSimulator';
 import {
   Compass,
   Cpu,
@@ -299,6 +303,54 @@ export default function LabsPage() {
       icon: '👥',
       lessonHref: '/learn/advanced/laplacian-consensus',
       component: <MultiAgentSimulator />,
+    },
+    {
+      id: 'bayesian-room',
+      category: 'math',
+      titleEn: 'Bayesian Room Localization & Prior-Posterior Lab (M10)',
+      titleId: 'Lokalisasi Ruangan Bayesian & Pembaharuan Keyakinan (M10)',
+      descEn: 'Observe how noisy sensor measurements update posterior probability beliefs via Bayes Rule.',
+      descId: 'Amati bagaimana pengukuran sensor berderau memperbarui keyakinan probabilitas posterior dengan Aturan Bayes.',
+      levelBadge: 'Level 1',
+      icon: '🚪',
+      lessonHref: '/learn/mathematics/probability-for-robotics',
+      component: <BayesianRoomSimulator />,
+    },
+    {
+      id: 'tracking-error-geometry',
+      category: 'control',
+      titleEn: 'Path Tracking Error Geometry (e_lat & e_θ) (M14)',
+      titleId: 'Geometri Galat Pelacakan Jalur (e_lat & e_θ) (M14)',
+      descEn: 'Calculate signed cross-track lateral error and heading alignment error with Frenet-Serret framing.',
+      descId: 'Hitung galat samping lateral cross-track bertanda dan galat sudut hadap dengan kerangka Frenet-Serret.',
+      levelBadge: 'Level 7',
+      icon: '🎯',
+      lessonHref: '/learn/control/path-tracking-error-geometry',
+      component: <TrackingErrorGeometrySimulator />,
+    },
+    {
+      id: 'arm-2dof-fk',
+      category: 'manipulation',
+      titleEn: '2-DOF Planar Arm Forward Kinematics & Workspace (M18)',
+      titleId: 'Kinematika Maju Lengan 2-DOF & Batas Ruang Kerja (M18)',
+      descEn: 'Calculate end-effector Cartesian coordinates and sweep reachable workspace annulus limits.',
+      descId: 'Hitung koordinat ujung lengan Kartesius dan amati batas annulus ruang kerja jangkauan fisik.',
+      levelBadge: 'Level 14',
+      icon: '🦾',
+      lessonHref: '/learn/manipulation/2dof-forward-kinematics',
+      component: <ArmForwardKinematicsSimulator />,
+    },
+    {
+      id: 'lidar-raycast',
+      category: 'sensors',
+      titleEn: '2D LiDAR Raycasting & Point Cloud Extraction (M21)',
+      titleId: 'Raycasting LiDAR 2D & Ekstraksi Point Cloud (M21)',
+      descEn: 'Emit 360° laser rays intersecting obstacles and extract 2D Cartesian reflection point clouds.',
+      descId: 'Pancarkan sinar laser 360° yang memotong rintangan dan ekstrak awan titik pantulan (Point Cloud).',
+      levelBadge: 'Level 5',
+      icon: '📡',
+      lessonHref: '/learn/sensors/lidar-raycasting',
+      component: <LidarRaycastSimulator />,
     },
   ];
 

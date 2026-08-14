@@ -1,0 +1,128 @@
+---
+id: lidar-raycasting
+title: "Raycasting LiDAR, Pemotongan Sinar & Ekstraksi Point Cloud (M21)"
+slug: lidar-raycasting
+category: sensors
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - sensor-fundamentals
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 6: Sensor Models). MIT Press.
+  - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots (Chapter 4). MIT Press.
+components:
+  - LidarRaycastSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Raycasting LiDAR, Pemotongan Sinar & Ekstraksi Point Cloud (M21)
+
+> "Bagaimana sensor laser berputar mengubah waktu pantulan optik Time-of-Flight (ToF) menjadi ribuan titik koordinat rintangan spasial (Point Cloud) untuk pemetaan dan SLAM?"
+
+**Light Detection and Ranging (LiDAR)** adalah sensor eksteroseptif paling dominan pada robotika bergerak otonom. Sensor LiDAR 2D berputar secara cepat, memancarkan ratusan berkas pulsa laser untuk mengukur jarak ke batas rintangan di sekelilingnya.
+
+---
+
+## 1. Geometri Raycasting & Perpotongan Parametrik
+
+Misalkan pusat sensor LiDAR berada pada koordinat global $\mathbf{p}_R = [x_R, y_R]^T$ dengan sudut orientasi $\theta_R$.
+
+Untuk berkas sinar laser ke-$i$ dengan offset sudut relatif $\alpha_i \in [0, 2\pi)$, sudut arah sinar global adalah:
+
+$$
+\phi_i = \theta_R + \alpha_i
+$$
+
+Garis sinar laser diparameterisasi oleh jarak tempuh $u \in [0, r_{\max}]$:
+
+$$
+\mathbf{p}_{\text{ray}}(u) = \begin{bmatrix} x_R \\ y_R \end{bmatrix} + u \begin{bmatrix} \cos\phi_i \\ \sin\phi_i \end{bmatrix}
+$$
+
+### Perpotongan dengan Garis Batas Rintangan
+Untuk segmen dinding rintangan yang menghubungkan titik $\mathbf{a} = [x_1, y_1]^T$ dan $\mathbf{b} = [x_2, y_2]^T$, dengan parameter $v \in [0, 1]$:
+
+$$
+\mathbf{p}_{\text{seg}}(v) = \mathbf{a} + v(\mathbf{b} - \mathbf{a})
+$$
+
+Menyamakan $\mathbf{p}_{\text{ray}}(u) = \mathbf{p}_{\text{seg}}(v)$ menghasilkan sistem persamaan linier $2 \times 2$:
+
+$$
+\begin{bmatrix} \cos\phi_i & -(x_2 - x_1) \\ \sin\phi_i & -(y_2 - y_1) \end{bmatrix} \begin{bmatrix} u \\ v \end{bmatrix} = \begin{bmatrix} x_1 - x_R \\ y_1 - y_R \end{bmatrix}
+$$
+
+Perpotongan fisik yang valid terjadi jika $0 \le u \le r_{\max}$ dan $0 \le v \le 1$. Jarak ukur sebenarnya adalah nilai $u$ terkecil di antara seluruh segmen rintangan:
+
+$$
+d_i = \min_k u_k
+$$
+
+---
+
+## 2. Penurunan Rumus: Ekstraksi Point Cloud dengan Derau Gaussian
+
+Pengukuran jarak fisik $r_i$ mengandung derau acak termal elektronik $\epsilon_i \sim \mathcal{N}(0, \sigma^2)$:
+
+$$
+r_i = d_i + \epsilon_i
+$$
+
+Setiap data pasangan $(r_i, \alpha_i)$ dikonversikan kembali menjadi titik koordinat Kartesius **Point Cloud** pada peta global:
+
+$$
+\mathbf{p}_i^W = \begin{bmatrix} x_i^W \\ y_i^W \end{bmatrix} = \begin{bmatrix} x_R + r_i \cos(\theta_R + \alpha_i) \\ y_R + r_i \sin(\theta_R + \alpha_i) \end{bmatrix}
+$$
+
+---
+
+## 3. Video Pembelajaran: Prinsip Kerja LiDAR & Raycasting 2D
+
+<VideoEmbed
+  title="LiDAR Raycasting and 2D Point Cloud Generation"
+  videoId="a4N4k3bZzYw"
+/>
+
+---
+
+## 4. Simulator Interaktif Raycasting LiDAR 2D
+
+Geser robot di dalam ruangan pada kanvas di bawah. Ubah jumlah sinar laser dan batas jangkauan maksimum untuk menyaksikan ekstraksi point cloud rintangan waktu-nyata:
+
+<LidarRaycastSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m21"
+  question="Mengapa algoritma raycasting LiDAR memilih jarak perpotongan POSITIF TERKECIL (min u_k) sepanjang setiap berkas sinar laser?"
+  options={[
+    {
+      id: "A",
+      text: "Karena rintangan fisik bersifat solid (tidak tembus pandang), sehingga berkas sinar laser langsung terpantul pada permukaan terdekat dan tidak dapat menembus rintangan di belakangnya.",
+      isCorrect: true,
+      explanation: "Tepat! Sensor optik Time-of-Flight mendeteksi pantulan foton pertama yang kembali ke fotodioda (yakni permukaan terdekat)."
+    },
+    {
+      id: "B",
+      text: "Karena sinar laser selalu memantul mundur ke titik awal.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena komputer hanya mampu menyimpan satu nilai jarak.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang sifat dinding padat yang menghalangi laju cahaya."
+/>

@@ -1,0 +1,122 @@
+---
+id: probability-for-robotics
+title: "Probability Theory & Bayesian Reasoning for Robotics (M10)"
+slug: probability-for-robotics
+category: mathematics
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - vectors-and-coordinate-geometry
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 2: Recursive State Estimation). MIT Press.
+  - Sheldon M. Ross (2014). Introduction to Probability Models (11th ed.). Academic Press.
+components:
+  - BayesianRoomSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Probability Theory & Bayesian Reasoning for Robotics (M10)
+
+> "Robots never know the physical world with 100% certainty. How do we represent partial knowledge, update hypotheses, and reason under sensor noise?"
+
+In classical deterministic programming, variables are binary (`true` or `false`). In autonomous robotics, variables are **random variables** governed by **probability distributions**.
+
+---
+
+## 1. Random Variables, Distributions & Expectations
+
+Let $X$ be a random state variable (e.g. $X \in \{\text{Room A}, \text{Room B}\}$ or continuous coordinate $x \in \mathbb{R}$):
+
+### 1.1 Probability Axioms
+1. **Non-negativity**: $P(X = x) \ge 0 \quad \forall x$.
+2. **Total Probability**: $\sum_x P(X = x) = 1$ (or $\int p(x) \, dx = 1$).
+
+### 1.2 Mean (Expected Value) & Variance
+$$
+\begin{aligned}
+\text{Expected Value } \mathbb{E}[X] &= \mu = \sum_x x \cdot P(X = x) \\
+\text{Variance } \text{Var}(X) &= \sigma^2 = \mathbb{E}[(X - \mu)^2] = \sum_x (x - \mu)^2 P(X = x)
+\end{aligned}
+$$
+
+---
+
+## 2. Derivation: Conditional Probability & Bayes' Theorem
+
+When a robot makes a noisy sensor observation $Z = z$, we want to calculate the updated belief $P(X \mid Z)$:
+
+### 2.1 Conditional Probability
+The probability of state $A$ given evidence $B$:
+
+$$
+P(A \mid B) = \frac{P(A \cap B)}{P(B)} \quad (P(B) > 0)
+$$
+
+### 2.2 Law of Total Probability
+$$
+P(B) = \sum_i P(B \mid A_i) P(A_i)
+$$
+
+### 2.3 Bayes' Rule Formulation
+Combining both gives the foundational formula of probabilistic robotics:
+
+$$
+P(A \mid B) = \frac{P(B \mid A) \cdot P(A)}{P(B)} = \frac{P(B \mid A) P(A)}{\sum_i P(B \mid A_i) P(A_i)}
+$$
+
+Where:
+- **$P(A)$ (Prior Belief)**: What the robot believed *before* looking at the sensor.
+- **$P(B \mid A)$ (Measurement Likelihood)**: How likely the sensor is to report $B$ if the robot is truly in state $A$.
+- **$P(A \mid B)$ (Posterior Belief)**: The new updated confidence after fusing prior knowledge with sensor data.
+
+---
+
+## 3. Video Lecture: The Essence of Bayes' Theorem
+
+<VideoEmbed
+  title="Bayes theorem, the geometry of changing beliefs — 3Blue1Brown"
+  videoId="HZGCoVF3YvM"
+/>
+
+---
+
+## 4. Interactive Bayesian Room Localization Simulator
+
+Adjust the prior probability $P(\text{Room A})$ and the sensor reliability. Trigger sensor observations to watch the posterior belief bars shift in real-time:
+
+<BayesianRoomSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m10"
+  question="If a robot has an initial prior belief P(Room A) = 0.50 (50%) and receives a sensor reading that has 90% accuracy for Room A with 10% false positives, what will the posterior P(Room A | obs A) become?"
+  options={[
+    {
+      id: "A",
+      text: "P(Room A | obs A) = (0.90 * 0.50) / (0.90 * 0.50 + 0.10 * 0.50) = 0.45 / 0.50 = 0.90 (90%).",
+      isCorrect: true,
+      explanation: "Exact! Because the prior was uninformative (50/50), the posterior exactly mirrors the likelihood ratio."
+    },
+    {
+      id: "B",
+      text: "P(Room A | obs A) = 0.50 (unchanged).",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "P(Room A | obs A) = 1.00 (100% certainty).",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Apply Bayes rule with P(A) = 0.5 and P(B) = 0.5."
+/>

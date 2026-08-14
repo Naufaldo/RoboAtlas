@@ -1,0 +1,132 @@
+---
+id: 2dof-forward-kinematics
+title: "2-DOF Planar Arm Forward Kinematics & Workspace Sweep (M18)"
+slug: 2dof-forward-kinematics
+category: manipulation
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - 2d-rotation-matrices
+  - transform-composition-and-chains
+references:
+  - John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 3). Pearson.
+  - Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Chapter 4). Cambridge University Press.
+components:
+  - ArmForwardKinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# 2-DOF Planar Arm Forward Kinematics & Workspace Sweep (M18)
+
+> "Given the motor joint angles (q1, q2) of a robotic arm, where will its end-effector tool tip land in Cartesian workspace coordinates?"
+
+**Forward Kinematics (FK)** maps joint space variables $\mathbf{q} \in \mathbb{R}^n$ to operational Cartesian space coordinates $\mathbf{x} \in \text{SE}(2)$ or $\text{SE}(3)$.
+
+---
+
+## 1. Geometric Derivation of the 2-Link Serial Chain
+
+Consider a 2-degree-of-freedom planar robot arm with link lengths $L_1, L_2$ and joint angles $q_1, q_2$:
+
+```text
+       Joint 2 (Elbow)
+          o────────────o End-Effector (x_E, y_E)
+         /   q2         Link 2 (L2)
+        /
+       / Link 1 (L1)
+      /
+     o Base (0, 0)
+     q1
+```
+
+### 1.1 Joint 1 Position (Elbow Joint)
+$$
+\begin{aligned}
+x_1 &= L_1 \cos(q_1) \\
+y_1 &= L_1 \sin(q_1)
+\end{aligned}
+$$
+
+### 1.2 Joint 2 Position (End-Effector Tip)
+Adding the second link's projection at relative angle $(q_1 + q_2)$:
+
+$$
+\begin{aligned}
+x_E &= L_1 \cos(q_1) + L_2 \cos(q_1 + q_2) \\
+y_E &= L_1 \sin(q_1) + L_2 \sin(q_1 + q_2) \\
+\phi_E &= q_1 + q_2 \quad (\text{End-effector orientation})
+\end{aligned}
+$$
+
+---
+
+## 2. Workspace Boundaries & Annulus Geometry
+
+The **Reachable Workspace** $\mathcal{W}$ is the set of all Cartesian points $(x, y)$ reachable by the end-effector:
+
+1. **Maximum Reach ($R_{\max}$)**: Occurs when $q_2 = 0^\circ$ (arm fully outstretched):
+   $$
+   R_{\max} = L_1 + L_2
+   $$
+2. **Minimum Reach ($R_{\min}$)**: Occurs when $q_2 = 180^\circ$ (arm folded back on itself):
+   $$
+   R_{\min} = |L_1 - L_2|
+   $$
+3. **Workspace Area**:
+   $$
+   \text{Area} = \pi \left( R_{\max}^2 - R_{\min}^2 \right) = \pi \left( (L_1 + L_2)^2 - (L_1 - L_2)^2 \right) = 4\pi L_1 L_2
+   $$
+
+*(Notice that workspace area is maximized when $L_1 = L_2$).*
+
+---
+
+## 3. Video Lecture: Forward Kinematics of 2-Link Robot Arms
+
+<VideoEmbed
+  title="Forward Kinematics of 2-Link Robot Manipulator"
+  videoId="VjsuBT4Npvk"
+/>
+
+---
+
+## 4. Interactive 2-DOF Arm Forward Kinematics Laboratory
+
+Adjust joint angles $q_1$ and $q_2$. Observe how the analytical end-effector coordinates $(x_E, y_E)$ sweep across the reachable workspace donut:
+
+<ArmForwardKinematicsSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m18"
+  question="If a 2-DOF robotic arm has link lengths L1 = 1.0m and L2 = 1.0m, what is the minimum reachable radius R_min from the base?"
+  options={[
+    {
+      id: "A",
+      text: "R_min = |L1 - L2| = |1.0 - 1.0| = 0.0m (the end-effector can fold completely back to touch the base origin).",
+      isCorrect: true,
+      explanation: "Exact! When L1 = L2, the inner hole of the workspace annulus closes completely at the origin."
+    },
+    {
+      id: "B",
+      text: "R_min = 1.0m.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "R_min = 2.0m.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Use the formula R_min = |L1 - L2|."
+/>

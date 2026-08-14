@@ -1,0 +1,122 @@
+---
+id: probability-for-robotics
+title: "Teori Probabilitas & Penalaran Bayesian untuk Robotika (M10)"
+slug: probability-for-robotics
+category: mathematics
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - vectors-and-coordinate-geometry
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 2: Recursive State Estimation). MIT Press.
+  - Sheldon M. Ross (2014). Introduction to Probability Models (11th ed.). Academic Press.
+components:
+  - BayesianRoomSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Teori Probabilitas & Penalaran Bayesian untuk Robotika (M10)
+
+> "Robot fisik tidak pernah mengetahui kondisi dunia nyata dengan kepastian 100%. Bagaimana cara merepresentasikan pengetahuan parsial dan memperbarui keyakinan posisi saat sensor terpapar derau?"
+
+Dalam pemrograman deterministik biasa, variabel berstatus biner (`true` atau `false`). Namun dalam robotika otonom, status fisik robot diperlakukan sebagai **variabel acak (*random variables*)** yang tunduk pada **distribusi probabilitas**.
+
+---
+
+## 1. Variabel Acak, Distribusi & Ekspektasi
+
+Misalkan $X$ adalah variabel status posisi robot (misal: $X \in \{\text{Ruang A}, \text{Ruang B}\}$ atau koordinat posisi kontinu $x \in \mathbb{R}$):
+
+### 1.1 Aksioma Probabilitas
+1. **Non-negativitas**: $P(X = x) \ge 0 \quad \forall x$.
+2. **Total Probabilitas**: $\sum_x P(X = x) = 1$ (atau $\int p(x) \, dx = 1$).
+
+### 1.2 Nilai Harapan (*Mean*) & Variansi
+$$
+\begin{aligned}
+\text{Nilai Harapan (Mean) } \mathbb{E}[X] &= \mu = \sum_x x \cdot P(X = x) \\
+\text{Variansi } \text{Var}(X) &= \sigma^2 = \mathbb{E}[(X - \mu)^2] = \sum_x (x - \mu)^2 P(X = x)
+\end{aligned}
+$$
+
+---
+
+## 2. Penurunan Rumus: Probabilitas Bersyarat & Teorema Bayes
+
+Ketika sensor robot membaca observasi berderau $Z = z$, kita ingin menghitung keyakinan posisi baru $P(X \mid Z)$:
+
+### 2.1 Probabilitas Bersyarat
+Peluang terjadinya status $A$ jika bukti $B$ terdeteksi:
+
+$$
+P(A \mid B) = \frac{P(A \cap B)}{P(B)} \quad (P(B) > 0)
+$$
+
+### 2.2 Hukum Probabilitas Total
+$$
+P(B) = \sum_i P(B \mid A_i) P(A_i)
+$$
+
+### 2.3 Formulasi Teorema Bayes
+Menggabungkan kedua aturan menghasilkan persamaan dasar robotika probabilistik:
+
+$$
+P(A \mid B) = \frac{P(B \mid A) \cdot P(A)}{P(B)} = \frac{P(B \mid A) P(A)}{\sum_i P(B \mid A_i) P(A_i)}
+$$
+
+Di mana:
+- **$P(A)$ (*Prior Belief*)**: Keyakinan robot *sebelum* memeriksa sensor.
+- **$P(B \mid A)$ (*Measurement Likelihood*)**: Seberapa mungkin sensor melaporkan sinyal $B$ jika robot benar-benar berada di status $A$.
+- **$P(A \mid B)$ (*Posterior Belief*)**: Keyakinan baru yang telah diperbarui setelah memadukan prior dan data sensor.
+
+---
+
+## 3. Video Pembelajaran: Esensi Geometris Teorema Bayes
+
+<VideoEmbed
+  title="Bayes theorem, the geometry of changing beliefs — 3Blue1Brown"
+  videoId="HZGCoVF3YvM"
+/>
+
+---
+
+## 4. Simulator Interaktif Lokalisasi Ruangan Bayesian
+
+Atur probabilitas awal prior $P(\text{Ruangan A})$ dan tingkat keandalan sensor. Tekan tombol observasi untuk menyaksikan perubahan distribusi posterior secara langsung:
+
+<BayesianRoomSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m10"
+  question="Jika robot memiliki keyakinan awal P(Ruang A) = 0.50 (50%) dan sensor membaca sinyal 'Ruang A' dengan akurasi 90% (false positive 10%), berapa nilai keyakinan posterior P(Ruang A | sensor A)?"
+  options={[
+    {
+      id: "A",
+      text: "P(Ruang A | sensor A) = (0.90 * 0.50) / (0.90 * 0.50 + 0.10 * 0.50) = 0.45 / 0.50 = 0.90 (90%).",
+      isCorrect: true,
+      explanation: "Tepat! Karena nilai prior seimbang 50/50, nilai posterior langsung mencerminkan rasio akurasi sensor."
+    },
+    {
+      id: "B",
+      text: "P(Ruang A | sensor A) = 0.50 (tidak berubah).",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "P(Ruang A | sensor A) = 1.00 (pasti 100%).",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Terapkan rumus Bayes dengan P(A) = 0.5 dan P(B) = 0.5."
+/>

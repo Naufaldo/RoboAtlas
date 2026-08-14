@@ -1,0 +1,132 @@
+---
+id: 2dof-forward-kinematics
+title: "Kinematika Maju Lengan Robot 2-DOF & Batas Ruang Kerja (M18)"
+slug: 2dof-forward-kinematics
+category: manipulation
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - 2d-rotation-matrices
+  - transform-composition-and-chains
+references:
+  - John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 3). Pearson.
+  - Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Chapter 4). Cambridge University Press.
+components:
+  - ArmForwardKinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Kinematika Maju Lengan Robot 2-DOF & Batas Ruang Kerja (M18)
+
+> "Diberikan sudut rotasi motor pada setiap sendi lengan (q1, q2), di titik koordinat Kartesius manakah ujung gripper (end-effector) robot akan mendarat di ruang fisik?"
+
+**Kinematika Maju (*Forward Kinematics / FK*)** memetakan variabel ruang sendi $\mathbf{q} \in \mathbb{R}^n$ ke ruang koordinat operasional Kartesius $\mathbf{x} \in \text{SE}(2)$ atau $\text{SE}(3)$.
+
+---
+
+## 1. Penurunan Geometris Rantai Serial 2-Sendi
+
+Tinjau lengan robotik planar 2-DOF dengan panjang segmen link $L_1, L_2$ dan sudut sendi $q_1, q_2$:
+
+```text
+       Sendi 2 (Siku)
+          o────────────o End-Effector (x_E, y_E)
+         /   q2         Segmen 2 (L2)
+        /
+       / Segmen 1 (L1)
+      /
+     o Pangkal Base (0, 0)
+     q1
+```
+
+### 1.1 Posisi Sendi Siku (Joint 1)
+$$
+\begin{aligned}
+x_1 &= L_1 \cos(q_1) \\
+y_1 &= L_1 \sin(q_1)
+\end{aligned}
+$$
+
+### 1.2 Posisi Ujung Lengan (End-Effector Tip)
+Menambahkan proyeksi segmen kedua dengan orientasi sudut relatif $(q_1 + q_2)$:
+
+$$
+\begin{aligned}
+x_E &= L_1 \cos(q_1) + L_2 \cos(q_1 + q_2) \\
+y_E &= L_1 \sin(q_1) + L_2 \sin(q_1 + q_2) \\
+\phi_E &= q_1 + q_2 \quad (\text{Orientasi ujung lengan})
+\end{aligned}
+$$
+
+---
+
+## 2. Batas Ruang Kerja Jangkauan (*Workspace Boundaries*)
+
+**Ruang Kerja Jangkauan (*Reachable Workspace $\mathcal{W}$*)** adalah himpunan seluruh titik Kartesius $(x, y)$ yang dapat disentuh oleh ujung lengan:
+
+1. **Jangkauan Maksimum ($R_{\max}$)**: Tercapai saat $q_2 = 0^\circ$ (lengan lurus membentang penuh):
+   $$
+   R_{\max} = L_1 + L_2
+   $$
+2. **Jangkauan Minimum ($R_{\min}$)**: Tercapai saat $q_2 = 180^\circ$ (lengan terlipat penuh ke dalam):
+   $$
+   R_{\min} = |L_1 - L_2|
+   $$
+3. **Luas Area Ruang Kerja**:
+   $$
+   \text{Area} = \pi \left( R_{\max}^2 - R_{\min}^2 \right) = \pi \left( (L_1 + L_2)^2 - (L_1 - L_2)^2 \right) = 4\pi L_1 L_2
+   $$
+
+*(Luas area ruang kerja bernilai maksimal ketika kedua segmen memiliki panjang sama $L_1 = L_2$).*
+
+---
+
+## 3. Video Pembelajaran: Kinematika Maju Lengan Robot 2-DOF
+
+<VideoEmbed
+  title="Forward Kinematics of 2-Link Robot Manipulator"
+  videoId="VjsuBT4Npvk"
+/>
+
+---
+
+## 4. Simulator Interaktif Kinematika Maju Lengan 2-DOF
+
+Atur sudut sendi $q_1$ dan $q_2$. Amati pergerakan analitik koordinat $(x_E, y_E)$ serta batas annulus ruang kerja jangkauannya:
+
+<ArmForwardKinematicsSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m18"
+  question="Jika lengan robot 2-DOF memiliki panjang link L1 = 1.0m dan L2 = 1.0m, berapakah radius jangkauan minimum R_min dari titik pangkal base?"
+  options={[
+    {
+      id: "A",
+      text: "R_min = |L1 - L2| = |1.0 - 1.0| = 0.0m (ujung lengan dapat terlipat penuh hingga menyentuh titik pangkal base).",
+      isCorrect: true,
+      explanation: "Tepat! Ketika panjang link sama L1 = L2, lubang tengah annulus ruang kerja menutup sempurna di titik origin."
+    },
+    {
+      id: "B",
+      text: "R_min = 1.0m.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "R_min = 2.0m.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Gunakan rumus R_min = |L1 - L2|."
+/>

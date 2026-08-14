@@ -62,6 +62,24 @@ export const LESSON_PEDAGOGY_MAP: Record<string, LessonPedagogyData> = {
     progressionStepsEn: ['Dot Product Axioms', 'Projection Derivation', 'Interactive Shadow Lab', 'Cross-Track Steering'],
     progressionStepsId: ['Aksioma Dot Product', 'Penurunan Proyeksi', 'Lab Bayangan Interaktif', 'Kemudi Cross-Track'],
   },
+  'probability-for-robotics': {
+    learningObjectivesEn: [
+      'Model uncertain physical robot states using random variables and probability distributions.',
+      'Formulate discrete and continuous expectation (mean) and variance statistics.',
+      'Derive Conditional Probability and Bayes Theorem P(A|B) = P(B|A)P(A) / P(B).',
+      'Fuse prior domain knowledge with noisy sensor likelihoods to compute posterior state beliefs.',
+    ],
+    learningObjectivesId: [
+      'Memodelkan status fisik robot di dunia nyata menggunakan variabel acak dan distribusi probabilitas.',
+      'Merumuskan nilai harapan ekspektasi (mean) dan variansi secara diskrit dan kontinu.',
+      'Menurunkan rumus Probabilitas Bersyarat dan Teorema Bayes P(A|B) = P(B|A)P(A) / P(B).',
+      'Memadukan keyakinan awal (prior) dengan bukti sensor berderau (likelihood) untuk menghasilkan posterior.',
+    ],
+    whyItMattersEn: 'Robots never observe physical reality with 100% certainty; Bayesian reasoning is the mathematical engine behind all probabilistic state estimation.',
+    whyItMattersId: 'Robot fisik tidak pernah melihat dunia nyata dengan kepastian 100%; penalaran Bayesian adalah mesin matematis di balik seluruh estimasi status probabilistik.',
+    progressionStepsEn: ['Random Variables', 'Bayes Formulation', 'Interactive Room Lab', 'Posterior Update'],
+    progressionStepsId: ['Variabel Acak', 'Formulasi Bayes', 'Lab Ruangan Interaktif', 'Pembaruan Posterior'],
+  },
   '2d-rotation-matrices': {
     learningObjectivesEn: [
       'Derive the 2D rotation matrix R(θ) using trigonometric angle-sum identities.',
@@ -259,6 +277,60 @@ export const LESSON_PEDAGOGY_MAP: Record<string, LessonPedagogyData> = {
     whyItMattersId: 'Krusial untuk lengan robotik banyak-sendi, drone pada ruang 3D, dan kendaraan non-holonomik di mana grid search tidak efisien.',
     progressionStepsEn: ['Continuous Sampling', 'Steer & Collision Check', 'Interactive RRT* Lab', 'Asymptotic Rewiring'],
     progressionStepsId: ['Sampling Kontinu', 'Steer & Cek Tabrakan', 'Lab RRT* Interaktif', 'Rewiring Asimtotik'],
+  },
+  'lidar-raycasting': {
+    learningObjectivesEn: [
+      'Model spinning 2D LiDAR Time-of-Flight laser range principles.',
+      'Formulate 2D raycasting line-segment obstacle intersection linear equations.',
+      'Inject zero-mean Gaussian electronic noise to simulate physical sensor uncertainty.',
+      'Reconstruct 2D Cartesian point cloud obstacle coordinate maps from polar range-angle measurements.',
+    ],
+    learningObjectivesId: [
+      'Memodelkan prinsip jangkauan waktu tempuh Time-of-Flight pulsa sinar laser LiDAR 2D.',
+      'Merumuskan persamaan linier perpotongan berkas sinar raycasting terhadap segmen dinding rintangan.',
+      'Menginjeksikan derau Gaussian acak untuk mensimulasikan ketidakpastian fisik sensor nyata.',
+      'Merekonstruksi peta titik rintangan Point Cloud Kartesius 2D dari pembacaan polar jarak-sudut.',
+    ],
+    whyItMattersEn: 'LiDAR raycasting is the computational backbone of real-time 2D/3D mapping, obstacle avoidance, and ICP scan matching.',
+    whyItMattersId: 'Raycasting LiDAR adalah fondasi komputasi dari pemetaan 2D/3D waktu-nyata, penghindaran rintangan, dan pencocokan pindaian ICP.',
+    progressionStepsEn: ['Optical Time-of-Flight', 'Ray-Line Intersection', 'Interactive LiDAR Lab', 'Point Cloud Extraction'],
+    progressionStepsId: ['Optik Time-of-Flight', 'Perpotongan Garis Sinar', 'Lab LiDAR Interaktif', 'Ekstraksi Point Cloud'],
+  },
+  'path-tracking-error-geometry': {
+    learningObjectivesEn: [
+      'Represent continuous reference trajectories and parameterize local Frenet-Serret frames.',
+      'Calculate closest reference point projections and orthogonal path tangent vectors.',
+      'Derive signed Cross-Track Error (e_lat) for lateral steering deviation.',
+      'Derive Heading Alignment Error (e_theta) for vehicle orientation convergence.',
+    ],
+    learningObjectivesId: [
+      'Merepresentasikan lintasan referensi kontinu dan memparameterisasi kerangka lokal Frenet-Serret.',
+      'Menghitung proyeksi titik referensi terdekat dan vektor garis singgung ortogonal.',
+      'Menurunkan galat samping lateral bertanda (e_lat) untuk deviasi kemudi.',
+      'Menurunkan galat orientasi sudut (e_theta) untuk konvergensi arah hadap kendaraan.',
+    ],
+    whyItMattersEn: 'Every feedback steering law (Stanley, Pure Pursuit, MPC) requires precise calculation of cross-track and heading errors.',
+    whyItMattersId: 'Setiap hukum kendali kemudi umpan balik (Stanley, Pure Pursuit, MPC) memerlukan kalkulasi presisi atas galat lateral dan galat heading.',
+    progressionStepsEn: ['Frenet-Serret Frame', 'Cross-Track Derivation', 'Interactive Error Lab', 'Steering Convergence'],
+    progressionStepsId: ['Kerangka Frenet-Serret', 'Penurunan Cross-Track', 'Lab Galat Interaktif', 'Konvergensi Kemudi'],
+  },
+  '2dof-forward-kinematics': {
+    learningObjectivesEn: [
+      'Derive analytical forward kinematic equations for 2-DOF planar articulated arms.',
+      'Compute end-effector Cartesian coordinates (x_E, y_E) from motor joint angles (q1, q2).',
+      'Analyze the reachable workspace annulus and calculate maximum reach (L1+L2) and minimum hole (|L1-L2|).',
+      'Demonstrate why equal link lengths (L1=L2) maximize the workspace area.',
+    ],
+    learningObjectivesId: [
+      'Menurunkan persamaan kinematika maju analitik untuk lengan robot artikulasi 2-DOF planar.',
+      'Menghitung titik koordinat Kartesius ujung lengan (x_E, y_E) dari sudut rotasi motor (q1, q2).',
+      'Menganalisis batas annulus ruang kerja jangkauan: jangkauan maksimum (L1+L2) dan lubang minimum (|L1-L2|).',
+      'Membuktikan mengapa panjang link yang sama (L1=L2) menghasilkan luas ruang kerja maksimum.',
+    ],
+    whyItMattersEn: 'Forward kinematics is the foundational building block for robot manipulation, inverse kinematics, and obstacle avoidance.',
+    whyItMattersId: 'Kinematika maju adalah fondasi utama bagi manipulasi robot, kinematika invers, dan algoritma penghindaran tabrakan lengan.',
+    progressionStepsEn: ['Serial Link Geometry', 'FK Trigonometric Math', 'Interactive Arm Lab', 'Workspace Annulus'],
+    progressionStepsId: ['Geometri Link Serial', 'Trigonometri Kinematika Maju', 'Lab Lengan Interaktif', 'Annulus Ruang Kerja'],
   },
   'pure-pursuit-and-stanley': {
     learningObjectivesEn: [

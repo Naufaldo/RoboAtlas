@@ -25,6 +25,10 @@ import { CspaceInflationSimulator } from '@/components/simulation/CspaceInflatio
 import { BayesianFilterSimulator } from '@/components/simulation/BayesianFilterSimulator';
 import { TransformChainSimulator } from '@/components/simulation/TransformChainSimulator';
 import { HolonomicConstraintSimulator } from '@/components/simulation/HolonomicConstraintSimulator';
+import { BayesianRoomSimulator } from '@/components/simulation/BayesianRoomSimulator';
+import { TrackingErrorGeometrySimulator } from '@/components/simulation/TrackingErrorGeometrySimulator';
+import { ArmForwardKinematicsSimulator } from '@/components/simulation/ArmForwardKinematicsSimulator';
+import { LidarRaycastSimulator } from '@/components/simulation/LidarRaycastSimulator';
 import { ConceptCheck } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
@@ -235,6 +239,26 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<HolonomicConstraintSimulator')) {
         nodes.push(<HolonomicConstraintSimulator key={`comp-hcs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<BayesianRoomSimulator')) {
+        nodes.push(<BayesianRoomSimulator key={`comp-brs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<TrackingErrorGeometrySimulator')) {
+        nodes.push(<TrackingErrorGeometrySimulator key={`comp-tegs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<ArmForwardKinematicsSimulator')) {
+        nodes.push(<ArmForwardKinematicsSimulator key={`comp-afks-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<LidarRaycastSimulator')) {
+        nodes.push(<LidarRaycastSimulator key={`comp-lrs-${i}`} />);
         i++;
         continue;
       }

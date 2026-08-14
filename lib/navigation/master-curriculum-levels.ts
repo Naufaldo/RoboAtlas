@@ -79,6 +79,14 @@ export const MASTER_CURRICULUM_LEVELS: CurriculumLevel[] = [
         href: '/learn/mathematics/dot-product-and-projection',
         isInteractive: true,
       },
+      {
+        id: 'probability-for-robotics',
+        titleEn: 'Probability & Bayesian Reasoning (M10)',
+        titleId: 'Teori Probabilitas & Penalaran Bayesian (M10)',
+        topicsCount: 6,
+        href: '/learn/mathematics/probability-for-robotics',
+        isInteractive: true,
+      },
     ],
   },
   {
@@ -241,6 +249,14 @@ export const MASTER_CURRICULUM_LEVELS: CurriculumLevel[] = [
         href: '/learn/sensors/wheel-odometry-and-drift',
         isInteractive: true,
       },
+      {
+        id: 'lidar-raycasting',
+        titleEn: 'LiDAR Raycasting & Point Cloud Extraction (M21)',
+        titleId: 'Raycasting LiDAR & Ekstraksi Point Cloud (M21)',
+        topicsCount: 6,
+        href: '/learn/sensors/lidar-raycasting',
+        isInteractive: true,
+      },
     ],
   },
   {
@@ -285,6 +301,14 @@ export const MASTER_CURRICULUM_LEVELS: CurriculumLevel[] = [
     estimatedHours: 6,
     prerequisites: ['Level 3', 'Level 6'],
     modules: [
+      {
+        id: 'path-tracking-error-geometry',
+        titleEn: 'Path Tracking Error Geometry (M14)',
+        titleId: 'Geometri Galat Pelacakan Jalur (M14)',
+        topicsCount: 6,
+        href: '/learn/control/path-tracking-error-geometry',
+        isInteractive: true,
+      },
       {
         id: 'pure-pursuit-and-stanley',
         titleEn: 'Pure Pursuit & Stanley Path Tracking',
@@ -459,6 +483,14 @@ export const MASTER_CURRICULUM_LEVELS: CurriculumLevel[] = [
     estimatedHours: 7,
     prerequisites: ['Level 4', 'Level 7'],
     modules: [
+      {
+        id: '2dof-forward-kinematics',
+        titleEn: '2-DOF Planar Arm Forward Kinematics (M18)',
+        titleId: 'Kinematika Maju Lengan Robot 2-DOF (M18)',
+        topicsCount: 6,
+        href: '/learn/manipulation/2dof-forward-kinematics',
+        isInteractive: true,
+      },
       {
         id: 'manipulator-kinematics',
         titleEn: '6-DOF Manipulator Forward & Inverse Kinematics',

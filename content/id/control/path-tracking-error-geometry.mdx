@@ -1,0 +1,126 @@
+---
+id: path-tracking-error-geometry
+title: "Geometri Galat Pelacakan Jalur: Galat Cross-Track & Heading (M14)"
+slug: path-tracking-error-geometry
+category: control
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - dot-product-and-projection
+  - 2d-rotation-matrices
+references:
+  - Gabriel M. Hoffmann et al. (2007). Autonomous Automobile Trajectory Tracking for Off-Road Driving: Controller Design, Experimental Validation and Racing. American Control Conference.
+  - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots (Chapter 3 & 4). MIT Press.
+components:
+  - TrackingErrorGeometrySimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Geometri Galat Pelacakan Jalur: Galat Cross-Track & Heading (M14)
+
+> "Sebelum mobil otonom dapat memutar roda kemudi, sistem harus mengetahui: Seberapa jauh bodi robot menyimpang dari garis tengah jalur, dan berapa derajat selisih sudut arah hadapnya?"
+
+Algoritma kendali pelacakan jalur (seperti Pure Pursuit, Stanley Controller, dan MPC) mengandalkan dua metrik galat fundamental: **Galat Samping / Lateral (*Cross-Track Error $e_{\text{lat}}$*)** dan **Galat Orientasi (*Heading Error $e_\theta$*)**.
+
+---
+
+## 1. Representasi Jalur Referensi & Kerangka Frenet-Serret
+
+Misalkan sebuah jalur lintasan geometris 2D diparameterisasi berdasarkan panjang busur kurva $s$:
+
+$$
+\mathbf{r}(s) = \begin{bmatrix} x_r(s) \\ y_r(s) \end{bmatrix}
+$$
+
+Pada setiap titik busur $s$, kurva jalur membentuk kerangka koordinat ortonormal **Frenet-Serret**:
+- **Vektor Garis Singgung Satuan $\hat{\mathbf{t}}(s)$**:
+  $$
+  \hat{\mathbf{t}}(s) = \frac{d\mathbf{r}/ds}{\|d\mathbf{r}/ds\|} = \begin{bmatrix} \cos\theta_{\text{path}}(s) \\ \sin\theta_{\text{path}}(s) \end{bmatrix}
+  $$
+- **Vektor Garis Normal Satuan $\hat{\mathbf{n}}(s)$** (mengarah ke sisi kiri garis singgung):
+  $$
+  \hat{\mathbf{n}}(s) = \begin{bmatrix} -\sin\theta_{\text{path}}(s) \\ \cos\theta_{\text{path}}(s) \end{bmatrix}
+  $$
+
+---
+
+## 2. Penurunan Rumus: Titik Terdekat, Galat Cross-Track & Galat Heading
+
+Diberikan posisi koordinat bodi robot $\mathbf{p} = [x, y]^T$ dan sudut orientasi hadap robot $\theta$:
+
+### 2.1 Pencarian Titik Terdekat pada Jalur
+Titik jalur terdekat $s^*$ meminimalkan jarak Euclidean kuadrat:
+
+$$
+s^* = \arg\min_s \|\mathbf{p} - \mathbf{r}(s)\|
+$$
+
+### 2.2 Galat Samping Lateral (*Cross-Track Error $e_{\text{lat}}$*)
+Jarak tegak lurus bertanda dari garis tengah jalur ke robot dihitung melalui proyeksi skalar $(\mathbf{p} - \mathbf{r}(s^*))$ ke vektor normal satuan $\hat{\mathbf{n}}(s^*)$:
+
+$$
+e_{\text{lat}} = (\mathbf{p} - \mathbf{r}(s^*)) \cdot \hat{\mathbf{n}}(s^*) = -(x - x_r)\sin\theta_{\text{path}} + (y - y_r)\cos\theta_{\text{path}}
+$$
+
+*(Nilai positif menandakan robot berada di sebelah kiri garis jalur; negatif di sebelah kanan).*
+
+### 2.3 Galat Orientasi Hadap (*Heading Error $e_\theta$*)
+Selisih sudut antara arah moncong robot dan garis singgung jalur:
+
+$$
+e_\theta = \theta - \theta_{\text{path}}(s^*)
+$$
+
+*(Dinormalisasi pada rentang interval $[-\pi, +\pi]$).*
+
+---
+
+## 3. Video Pembelajaran: Geometri Pelacakan Jalur Kontroler Stanley
+
+<VideoEmbed
+  title="Autonomous Vehicles: Stanley Controller Path Tracking"
+  videoId="N4b_sK-jVd4"
+/>
+
+---
+
+## 4. Simulator Interaktif Geometri Galat Pelacakan
+
+Geser bodi robot pada kanvas di bawah ini. Ubah orientasi sudut $\theta$ untuk mengamati perhitungan nilai $e_{\text{lat}}$ dan $e_\theta$ secara langsung:
+
+<TrackingErrorGeometrySimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m14"
+  question="Mengapa kontroler kemudi Stanley mengukur galat cross-track pada AS RODA DEPAN alih-alih as roda belakang?"
+  options={[
+    {
+      id: "A",
+      text: "Karena sudut kemudi fisik berada pada roda depan; mengukur galat lateral pada as depan memberikan respons umpan balik langsung tanpa penundaan kinematika non-holonomik.",
+      isCorrect: true,
+      explanation: "Tepat! Tim Stanford Racing (Hoffmann et al.) membuktikan bahwa mengukur galat pada as roda kemudi depan menjamin kestabilan konvergensi eksponensial."
+    },
+    {
+      id: "B",
+      text: "Karena as roda belakang tidak menyentuh tanah.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena sensor GPS selalu dipasang di bemper depan.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan as roda mana yang berputar langsung saat membelok."
+/>
