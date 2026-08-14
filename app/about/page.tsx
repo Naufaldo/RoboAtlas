@@ -144,23 +144,21 @@ export default function AboutPage() {
             : 'RoboAtlas is distributed under the permissive MIT License. All original pedagogical lessons and simulator code are open for global community contribution.'}
         </p>
 
-        <div className="flex items-center justify-center gap-4 pt-2">
-          <a
-            href="https://github.com/Naufaldo/RoboAtlas"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-slate-100 border border-slate-700 hover:border-cyan-500/50 text-xs font-mono transition-all shadow-md"
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <Link
+            href="/learn"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs font-mono shadow-md shadow-cyan-500/20 hover:bg-cyan-400 transition-all"
           >
-            <Github className="w-4 h-4" />
-            <span>GitHub Repository</span>
-          </a>
+            <Compass className="w-4 h-4" />
+            <span>{isId ? 'Mulai Belajar di Kurikulum' : 'Explore Curriculum'}</span>
+          </Link>
 
           <Link
             href="/resources"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs font-mono shadow-md shadow-cyan-500/20 hover:bg-cyan-400 transition-all"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 text-slate-100 border border-slate-700 hover:border-cyan-500/50 text-xs font-mono transition-all shadow-md"
           >
             <BookOpen className="w-4 h-4" />
-            <span>{isId ? 'Lihat Literatur' : 'Literature & Notices'}</span>
+            <span>{isId ? 'Daftar Pustaka & Literatur' : 'Literature & References'}</span>
           </Link>
         </div>
       </div>
