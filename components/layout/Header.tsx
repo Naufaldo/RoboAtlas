@@ -29,8 +29,8 @@ export function Header() {
 
   const navLinks = [
     { name: t.nav.curriculum, href: '/learn', icon: BookOpen },
+    { name: t.nav.robots, href: '/robots', icon: Bot },
     { name: t.nav.algorithms, href: '/algorithms', icon: Cpu },
-    { name: t.nav.pathPlanning, href: '/learn/planning', icon: Navigation },
     { name: t.nav.kinematics, href: '/learn/fundamentals', icon: Compass },
   ];
 

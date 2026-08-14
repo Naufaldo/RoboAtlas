@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Interactive Robotics Learning Platform & Algorithm Laboratory</strong><br />
-  <em>Understand • See • Experiment</em>
+  <em>Understand • See • Experiment • Build</em>
 </p>
 
 <p align="center">
@@ -16,7 +16,7 @@
   <img src="https://img.shields.io/badge/Bilingual-EN%20%7C%20ID-8b5cf6?style=for-the-badge" alt="Bilingual EN | ID" />
   <img src="https://img.shields.io/badge/Theme-Dark%20%2F%20Light-f59e0b?style=for-the-badge" alt="Dual Theme" />
   <img src="https://img.shields.io/badge/Curriculum-21_Levels_(0--20)-cyan?style=for-the-badge" alt="21-Level Master Curriculum" />
-  <img src="https://img.shields.io/badge/Content-MDX_Canonical-3b82f6?style=for-the-badge" alt="MDX Canonical" />
+  <img src="https://img.shields.io/badge/Platforms-Cross--Platform_Embodiments-indigo?style=for-the-badge" alt="Cross-Platform Embodiments" />
   <img src="https://img.shields.io/badge/Mobile-Touch_Optimized-ec4899?style=for-the-badge" alt="Mobile Touch Optimized" />
 </p>
 
@@ -24,20 +24,55 @@
 
 ## 🎯 Overview
 
-**RoboAtlas** is an independent, open-source educational platform and algorithm laboratory designed to bridge the gap between theoretical robotics mathematics and physical algorithmic intuition.
+**RoboAtlas** is an independent, open-source educational platform and interactive algorithm laboratory engineered from first principles.
+
+Rather than being limited to a single robot category (e.g. only mobile rovers or ROS tutorials), RoboAtlas is a **general robotics knowledge platform** designed to teach:
+> **How robots work, how robotics problems are modeled mathematically, how algorithms solve those problems, and how the same fundamental concepts are embodied across different physical robot platforms.**
+
+### The Universal Robotics Pipeline
+
+```text
+             ROBOTICS FUNDAMENTALS
+                     │
+       ┌─────────────┼─────────────┐
+       ↓             ↓             ↓
+   MATHEMATICS    PHYSICS       LOGIC
+       │             │             │
+       └─────────────┼─────────────┘
+                     ↓
+                 ALGORITHMS
+                     │
+       ┌─────────────┼─────────────┐
+       ↓             ↓             ↓
+   KINEMATICS     CONTROL      PERCEPTION
+       │             │             │
+       └─────────────┼─────────────┘
+                     ↓
+               ROBOT SYSTEMS
+                     │
+       ┌───────┬─────┼─────┬───────┐
+       ↓       ↓     ↓     ↓       ↓
+      ARM    MOBILE  UAV   ROV   LEGGED
+       │       │     │     │       │
+       └───────┴─────┴─────┴───────┘
+                     ↓
+              ADVANCED ROBOTICS
+                     │
+       ┌─────────────┼─────────────┐
+       ↓             ↓             ↓
+   Robot AI      Multi-Agent    Research
+```
 
 Synthesizing foundational literature from three classical textbooks:
 1. 📖 **Elements of Robotics** — Marco Ben-Ari & Francesco Mondada (*Springer Open*)
 2. 📖 **Foundations of Robotics: A Multidisciplinary Approach with Python and ROS** — Deepak Herath & David St-Onge (*Springer*)
 3. 📖 **Planning Algorithms** — Steven M. LaValle (*Cambridge University Press*)
 
-RoboAtlas re-imagines robotics education as an original **TypeScript-native interactive textbook + algorithm laboratory** running entirely in your browser with zero backend requirements.
-
 ---
 
-## 🎓 21-Level Master Robotics Curriculum Hierarchy (v1.0)
+## 🎓 21-Level Master Robotics Curriculum Hierarchy (v1.0 / v2.0 Spec)
 
-Organized at **[`/learn`](https://naufaldo.github.io/RoboAtlas/learn/)** and specified in **[`docs/RoboAtlas_Master_Curriculum_v1.md`](docs/RoboAtlas_Master_Curriculum_v1.md)** across 4 progressive learning tiers:
+Organized at **[`/learn`](https://naufaldo.github.io/RoboAtlas/learn/)** and specified in **[`docs/RoboAtlas_Master_Curriculum_v1.md`](docs/RoboAtlas_Master_Curriculum_v1.md)** and **[`docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md`](docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md)**:
 
 ```text
 TIER 1: FOUNDATIONS (LEVELS 0 – 4)
@@ -72,32 +107,42 @@ Level 20: Robotics Research & Emerging Topics (NeRF SLAM, Soft Continuum)
 
 ---
 
+## 🤖 Supported Robot Platforms (Embodiments Hub)
+
+Explore platform-specific implementations at **[`/robots`](https://naufaldo.github.io/RoboAtlas/robots/)**:
+
+- 🦾 **Robotic Arm (Manipulator)**: 6-DOF / 7-DOF Articulated Arms, Denavit-Hartenberg (DH) convention, Analytical & Numerical IK, Operational Space Control, Grasping.
+- 🚗 **Mobile Robot (AMR / AGV)**: Wheeled Planar Autonomy, Differential & Ackermann steering, Wheel Odometry Drift, 2D LiDAR Occupancy Mapping, Path Planning, Trajectory Tracking.
+- 🚁 **Aerial Drone (UAV / Multirotor)**: 6-DOF Quadrotor Flight Dynamics, Euler ZYX / Quaternions, SE(3) Geometric Attitude Control, Differential Flatness, Minimum-Snap.
+- 🌊 **Marine Robot (ROV / AUV / USV)**: Buoyancy & Hydrodynamic Drag, Added Mass, 6-DOF Thruster Allocation Matrix, Acoustic DVL Navigation, Bathymetric Mapping.
+- 🦿 **Legged Robot (Quadruped & Humanoid)**: Zero Moment Point (ZMP), Linear Inverted Pendulum Model (LIPM), Contact Mechanics, Whole-Body Balance Control.
+
+---
+
 ## ✨ Key Platform Features
 
-- 📑 **Canonical MDX Content Layer (`content/`)**: All lessons are authored in structured bilingual MDX (`content/en/` and `content/id/`) with Gray-Matter frontmatter schemas and cross-language stable ID tracking.
+- 📑 **Canonical MDX Content Layer (`content/`)**: Authored in structured bilingual MDX (`content/en/` and `content/id/`) with Gray-Matter frontmatter schemas and cross-language stable ID tracking.
 - 🎓 **Learner-First UI/UX Framework**:
   - `LessonOrientation.tsx`: Answers "Where am I? What am I learning? Why does it matter?" with estimated study time.
   - `MathCodeBridge.tsx`: Direct 1-to-1 visual and conceptual mapping from mathematical formulas to TypeScript code.
   - `AcademicReferences.tsx`: Structured literature cards citing authoritative papers with DOIs and chapter coverage.
   - `ConceptCheck.tsx`: Interactive checkpoint quizzes with instantaneous feedback and pedagogical reasoning.
-  - `LessonNavigation.tsx`: Lesson progression links with suggested interactive simulation challenges.
 - 📐 **7-Step Mathematical Explanation Standard (`FormulaExplainer.tsx`)**:
   - KaTeX rendering $\to$ Intuitive Meaning $\to$ Physical Reasoning ("Why?") $\to$ Dimensional Unit Tables $\to$ Collapsible Step-by-Step Derivations $\to$ Interactive Live Parameter Calculators.
-- 🌓 **Dual-Theme Engine (Dark & Light Mode)**: Seamlessly toggle between a futuristic deep-void robotics laboratory (`#040711`) and a clean clinical light mode (`#f8fafc`) with persistent `localStorage`.
-- 🌐 **Full Bilingual Parity (Bahasa Indonesia & English)**: 1-click language switcher (`ID` / `EN`) in Header covering all navigation, hero sections, interactive simulators, KaTeX math breakdowns, and algorithm matrices.
+- 🌓 **Dual-Theme Engine (Dark & Light Mode)**: Futuristic deep-void robotics laboratory (`#040711`) vs. clean clinical light mode (`#f8fafc`).
+- 🌐 **Full Bilingual Parity (Bahasa Indonesia & English)**: 1-click language switcher (`ID` / `EN`) in Header covering all navigation, hero sections, interactive simulators, and KaTeX math breakdowns.
 - 📱 **Mobile-Adaptive & Touch-First**:
-  - Full touch interactions (`onTouchStart`, `onTouchMove`) across all 60 FPS Canvas simulators (e.g. draw obstacle walls, redirect swarm formations with finger).
-  - Horizontal touch-scroll containers (`overflow-x-auto scrollbar-thin`) for all complex KaTeX equations and matrices, preventing layout overflow on mobile screens.
+  - Full touch interactions (`onTouchStart`, `onTouchMove`) across all 60 FPS Canvas simulators.
+  - Horizontal touch-scroll containers (`overflow-x-auto scrollbar-thin`) for all complex KaTeX equations and matrices.
 - 🎮 **Bespoke In-Browser 60 FPS Simulators**:
   - **`TransformSandbox.tsx`**: $SE(2)$ Homogeneous Matrix & Coordinate Frame Gizmo.
-  - **`SpatialRotation3D.tsx`**: 3D $SO(3)$ Euler Angle Roll-Pitch-Yaw Simulator with real-time matrix inspection.
-  - **`KinematicsSimulator.tsx`**: Differential-drive unicycle velocity integrator with Instantaneous Center of Curvature (ICC).
-  - **`PathPlanningSimulator.tsx`**: Interactive grid search sandbox with custom obstacle wall drawing, A* (Octile, Euclidean, Manhattan heuristics), and Dijkstra.
-  - **`LocalizationSimulator.tsx`**: Monte Carlo Particle Filter (MCL) with landmark beacon triangulation and dead-reckoning drift.
-  - **`ControlSimulator.tsx`**: Pure Pursuit lookahead geometry vs. Stanley cross-track non-linear feedback controller on figure-8 / oval tracks.
-  - **`MappingSimulator.tsx`**: 360° LiDAR Raycaster with Log-Odds Bayesian Occupancy Grid probability updates.
+  - **`SpatialRotation3D.tsx`**: 3D $SO(3)$ Euler Angle Roll-Pitch-Yaw Simulator.
+  - **`KinematicsSimulator.tsx`**: Differential-drive unicycle velocity integrator with ICC projection.
+  - **`PathPlanningSimulator.tsx`**: Interactive grid search sandbox with custom obstacle wall drawing, A*, and Dijkstra.
+  - **`LocalizationSimulator.tsx`**: Monte Carlo Particle Filter (MCL) with landmark beacon triangulation.
+  - **`ControlSimulator.tsx`**: Pure Pursuit lookahead geometry vs. Stanley cross-track feedback controller.
+  - **`MappingSimulator.tsx`**: 360° LiDAR Raycaster with Log-Odds Bayesian Occupancy Grid.
   - **`SlamSimulator.tsx`**: Step-by-step Iterative Closest Point (ICP) scan matching with closed-form SVD rigid alignment.
-  - **`MultiAgentSimulator.tsx`**: Swarm coordination with Graph Laplacian consensus, leader-follower formations (V-shape, Circle, Line), and Boids flocking.
   - **`CoordinateFrameExplorer.tsx`**, **`VectorVisualizer.tsx`**, **`DotProductExplorer.tsx`**: Interactive geometric and mathematical foundations labs.
 - ⚡ **100% Client-Side Architecture**: Pure TypeScript and HTML5 Canvas 2D engine. Zero server latency, zero database overhead, and instant load times.
 
@@ -105,15 +150,15 @@ Level 20: Robotics Research & Emerging Topics (NeRF SLAM, Soft Continuum)
 
 ## 📖 Comprehensive Documentation
 
-- 📚 **[Master Curriculum Specification v1.0](docs/RoboAtlas_Master_Curriculum_v1.md)** — The single source of truth for the 21-level robotics curriculum hierarchy.
+- 📚 **[Master Web & Curriculum Specification v2.0](docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md)** — The master vision for RoboAtlas as a general robotics learning platform.
+- 📚 **[Master Curriculum Hierarchy v1.0](docs/RoboAtlas_Master_Curriculum_v1.md)** — Complete 21-level syllabus, module, lesson, lab, and project breakdown.
 - 📋 **[System Specification](docs/SPECIFICATION.md)** — Architectural design, 5-layer hierarchy, KaTeX standards, and static export rules.
-- 🗺️ **[Feature Roadmap](docs/ROADMAP.md)** — Detailed breakdown of Milestones 1 through 8 and future Phase 2/3 capabilities.
-- 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 16 Core Agentic Rules, 8-Step Workflow Loop, and bilingual/changelog guidelines.
+- 🗺️ **[Feature Roadmap](docs/ROADMAP.md)** — 12-Milestone delivery hierarchy (M1 through M12).
+- 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 16 Core Agentic Rules and 8-Step Workflow Loop.
 - 📜 **[Changelog](CHANGELOG.md)** — Detailed version release history adhering to Keep a Changelog and SemVer.
 - 📑 **[MDX Content Architecture](docs/RoboAtlas_MDX_Content_Architecture.md)** — MDX directory layout, frontmatter schemas, and authoring specifications.
-- 🎨 **[Learner-First UI/UX Specification](docs/RoboAtlas_UI_UX_Learner_First_Spec.md)** — Cognitive load reduction, design personality, Math-Code bridge, and reference guidelines.
+- 🎨 **[Learner-First UI/UX Specification](docs/RoboAtlas_UI_UX_Learner_First_Spec.md)** — Cognitive load reduction and design personality.
 - 📐 **[Mathematical Explanation Rules](docs/RoboAtlas_Mathematical_Explanation_Rules.md)** — 7-step pedagogical standard for robotics equations.
-- 📚 **[Content Specification](book/RoboAtlas_Agentic_Content_Spec.md)** — Pedagogical framework, textbook reference mapping, and agent instructions.
 - 🏗️ **[Architecture Overview](ARCHITECTURE.md)** — Modular 5-layer system overview.
 - 🤝 **[Contributing Guide](CONTRIBUTING.md)** — Development standards and pull request workflows.
 - 📜 **[Third-Party Notices](THIRD_PARTY_NOTICES.md)** — Attribution to PythonRobotics and academic citations.
@@ -121,12 +166,6 @@ Level 20: Robotics Research & Emerging Topics (NeRF SLAM, Soft Continuum)
 ---
 
 ## 🚀 Quick Start
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v24 LTS or v20+)
-- `npm`
-
-### Installation & Local Development
 
 ```bash
 # 1. Clone repository
@@ -139,21 +178,7 @@ npm install
 # 3. Start local development server
 npm run dev
 
-# 4. Open in your browser
-# http://localhost:3000
-```
-
-### Verification & Testing
-
-```bash
-# Run unit tests (Vitest)
-npm test
-
-# Run TypeScript typecheck
-npm run typecheck
-
-# Build static production export
-npm run build
+# 4. Open in browser: http://localhost:3000
 ```
 
 ---
@@ -161,4 +186,4 @@ npm run build
 ## 📜 License & Attribution
 
 - **License**: Released under the [MIT License](LICENSE).
-- **Academic Inspiration**: Inspired by [PythonRobotics](https://github.com/AtsushiSakai/PythonRobotics) by Atsushi Sakai and foundational literature by Ben-Ari, Mondada, Herath, St-Onge, and LaValle. All educational text and TypeScript simulation engines are engineered independently from first principles.
+- **Academic Citations**: Inspired by foundational literature by Ben-Ari, Mondada, Herath, St-Onge, LaValle, and algorithmic inspiration from Atsushi Sakai's PythonRobotics. All educational text and TypeScript engines are engineered independently from first principles.

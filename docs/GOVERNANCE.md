@@ -1,120 +1,99 @@
-# Agentic Governance & Collaboration Guidelines
+# RoboAtlas Governance & Agentic Collaboration Protocols
 
-This document outlines the operational rules, quality standards, and development protocols for **AI Coding Agents** and **Human Contributors** developing RoboAtlas.
+> **Version:** 2.0  
+> **Status:** Active & Mandatory  
+> **Canonical Reference:** [`docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md`](RoboAtlas_Master_Web_Curriculum_Spec_v2.md)
 
 ---
 
-## 🤖 15 Core Agentic Rules
+## 1. The 16 Core Agentic Rules
 
-### Rule 1: Inspect Before Modifying
-Before modifying or creating files:
-1. Inspect the existing repository directory structure.
-2. Review `package.json`, configuration files, and related dependencies.
-3. Understand existing architectural conventions and component patterns.
-4. **Never blindly overwrite existing working code.**
+### Rule 1: TypeScript-First & Zero Runtime Overhead
+- All algorithm implementations, kinematics equations, filters, and planning solvers must be written in strict, pure TypeScript (`strict: true`, `noImplicitAny: true`).
+- Algorithm modules must remain framework-agnostic and free from React hooks/DOM dependencies.
 
-### Rule 2: Work Incrementally
-- Never implement an entire multi-algorithm system in a single massive unverified change.
-- Break work into distinct milestones and small, testable increments.
+### Rule 2: Client-Side Static Export Compatibility
+- The application must compile to a static production bundle (`output: 'export'`) without server-side Node.js dependencies at runtime.
+- Use relative or `basePath`-aware URLs for asset resolution to guarantee seamless GitHub Pages compatibility.
 
-### Rule 3: One Feature at a Time
-Every feature or algorithm pull request / commit must contain:
-1. Pure algorithm implementation (`lib/` or `algorithms/`).
-2. Mathematical model documentation with KaTeX equations (`app/learn/` or `content/`).
-3. Unit tests verifying mathematical and edge-case correctness (`tests/`).
-4. Interactive simulation canvas with step execution (`components/simulation/`).
+### Rule 3: 7-Step Mathematical Explanation Standard
+- Never introduce a robotics formula in isolation without completing the 7-step pedagogical standard:
+  $$\text{Formula} \to \text{Variables \& Units} \to \text{Intuition} \to \text{Derivation} \to \text{Physical Meaning} \to \text{Robot Application} \to \text{Limitations}$$
+- Always utilize `FormulaExplainer` with variable tables and interactive live parameter calculators.
 
-### Rule 4: Preserve Working Features
-Do not refactor unrelated modules or change public interfaces while implementing a new feature.
+### Rule 4: Fundamentals First
+- When analyzing a robotics problem or reference source, always identify and teach the general robotics principles (e.g. rotation geometry, kinematics, state estimation) before presenting robot-specific implementations.
 
-### Rule 5: Prefer Simple, Maintainable Architecture
-- Avoid introducing heavy third-party dependencies unless strictly necessary.
-- Ask: *Can this be implemented reliably with our standard TypeScript and Canvas stack?*
+### Rule 5: One Concept, Multiple Applications
+- Never duplicate fundamental lessons for each individual robot platform.
+- Author one robust, canonical lesson for the foundational theory, then illustrate its application across Robotic Arms, Mobile AMRs, UAV Drones, Marine ROVs, and Legged Quadrupeds.
 
-### Rule 6: Zero Backend Creep in Phase 1
-- Do not introduce server APIs, Express, databases, Redis, or external backend services.
-- RoboAtlas Phase 1 is strictly an in-browser static export platform deployed to GitHub Pages.
+### Rule 6: No Forced Multi-Agent Content
+- Multi-Agent Robotics and Swarm Intelligence are advanced specializations (Level 18), not the default destination of every lesson.
+- Do not inject swarm or consensus concepts into unrelated foundational lessons.
 
-### Rule 7: Pure Algorithms Must Remain Framework-Independent
-- Algorithm logic must not import React, JSX, or Canvas drawing contexts.
-- Algorithms accept parameters and return serializable state objects (e.g. `{ path, exploredNodes, cost, success }`).
+### Rule 7: Academic Literature & Source Hierarchy
+- Respect the three-tier literature hierarchy:
+  - **Tier 1 (Authoritative Primary Sources)**: Textbooks (*Elements of Robotics*, *Foundations of Robotics*, *Planning Algorithms*), peer-reviewed papers, and university lectures.
+  - **Tier 2 (Open Engineering Standards)**: Established open-source algorithms (e.g. *PythonRobotics* by Atsushi Sakai, ROS 2 Nav2/MoveIt standards).
+  - **Tier 3 (Supplementary)**: Technical blogs and tutorials (never the sole authority for mathematical proofs).
 
-### Rule 8: Explainability is a First-Class Feature
-Do not optimize away intermediate algorithmic states (such as open/closed sets, particle distributions, or candidate branches) if they are needed for educational visualization.
+### Rule 8: PythonRobotics as Reference, Not Curriculum Dictator
+- Use *PythonRobotics* as an algorithmic and visualization reference.
+- Do not mechanically translate Python code into TypeScript. Understand the algorithm, re-derive the mathematical steps independently, and engineer a pure TypeScript implementation.
 
-### Rule 9: Test Mathematical Correctness
-Visual plausibility is not enough. All algorithms and mathematical functions must be verified with automated unit tests for:
-- Standard scenarios
-- Boundary conditions (e.g. angle wrapping at $\pi$, zero vectors, collinear points)
-- Blocked / unreachable goal conditions
-- Deterministic seed reproducibility
+### Rule 9: Full Bilingual Parity (EN & ID)
+- Every new MDX lesson, translation key, and user-facing interface element must maintain 100% parity across English (`en`) and Indonesian (`id`).
+- Validate parity through automated tests (`tests/mdx/content.test.ts`).
 
-### Rule 10: Original Content & Strict Attribution
-- All educational explanations and TypeScript implementations must be written from first principles.
-- Maintain [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) and cite classical academic papers whenever referencing an algorithm.
+### Rule 10: Dual-Theme Consistency (Dark & Light Mode)
+- All UI panels, typography, KaTeX blocks, and Canvas simulation graphics must adapt automatically to the selected theme (`dark` and `light`).
 
-### Rule 11: Continuous Semantic Versioning & CHANGELOG Maintenance
-- Every release, milestone completion, or major feature addition MUST update `package.json` version and document changes in [`CHANGELOG.md`](../CHANGELOG.md) using the Keep a Changelog standard.
-- Avoid unversioned commits for public releases.
+### Rule 11: 60 FPS Deterministic Simulation Engine
+- Canvas simulators must render at 60 FPS using `requestAnimationFrame`.
+- Simulations must support play/pause, step-forward, parameter adjustments, and seedable/reproducible behavior.
 
-### Rule 12: Bilingual Parity Requirement (English & Indonesian)
-- All user-facing UI, documentation, educational explanations, mathematical breakdowns, and simulator tooltips MUST support both **Bahasa Indonesia (`id`)** and **English (`en`)**.
-- Maintain dictionary synchronization in [`lib/i18n/translations.ts`](../lib/i18n/translations.ts).
+### Rule 12: Mobile-Adaptive & Touch-First Design
+- Every interactive simulation canvas must implement touch handlers (`onTouchStart`, `onTouchMove`).
+- Wrap KaTeX mathematical matrices and equations in responsive horizontal touch-scroll containers (`overflow-x-auto`).
 
-### Rule 13: Canonical MDX Content Architecture & Frontmatter Parity
-- Follow [`docs/RoboAtlas_MDX_Content_Architecture.md`](RoboAtlas_MDX_Content_Architecture.md).
-- Lessons written in MDX must reside in `content/en/` and `content/id/` with matching stable `id` fields.
-- Frontmatter must include `title`, `slug`, `category`, `difficulty`, `language`, `interactive`, `estimatedMinutes`, `prerequisites`, `references`, and `components`.
+### Rule 13: Learner-First UI/UX Integration
+- Every lesson must feature:
+  - `LessonOrientation`: "Where am I? What am I learning? Why does it matter?"
+  - `MathCodeBridge`: Direct 1-to-1 visual mapping between mathematical formulas and TypeScript code.
+  - `ConceptCheck`: Interactive checkpoint quizzes with instant pedagogical feedback.
+  - `AcademicReferences`: Literature citation cards with DOIs and chapter references.
 
-### Rule 14: Learner-First Cognitive Load & Math-to-Code Bridges
-- Follow [`docs/RoboAtlas_UI_UX_Learner_First_Spec.md`](RoboAtlas_UI_UX_Learner_First_Spec.md) and [`docs/RoboAtlas_Mathematical_Explanation_Rules.md`](RoboAtlas_Mathematical_Explanation_Rules.md).
-- Include `LessonOrientation` ("Where am I? What am I learning? Why does it matter?"), `MathCodeBridge` (Section 38), `AcademicReferences` (Section 39), and `LessonNavigation` on all core learning modules.
-- Ensure every equation explains its intuitive meaning, physical reasoning ("Why?"), variable units, derivations, and numerical examples.
+### Rule 14: Canonical Gray-Matter MDX Layer
+- All educational content must reside in `content/en/{domain}/{slug}.mdx` and `content/id/{domain}/{slug}.mdx` with strict YAML frontmatter validation.
 
-### Rule 15: Content Quality Over Content Volume
-- Never generate large amounts of shallow, low-quality material merely to fill folders.
-- Prioritize deeply explained, rigorously verified, interactive lessons over surface-level content volume.
+### Rule 15: Rigorous Verification Before Delivery
+- Before completing any feature or lesson, verify the build pipeline:
+  ```bash
+  npm test && npm run typecheck && npm run build
+  ```
 
 ### Rule 16: Master Curriculum Alignment
-- All educational modules, algorithm matrices, MDX lessons, and simulators must align with the **21-Level Master Robotics Curriculum** defined in [`docs/RoboAtlas_Master_Curriculum_v1.md`](RoboAtlas_Master_Curriculum_v1.md).
-- Ensure explicit level mappings (Level 0 through Level 20), prerequisite tracking, and smooth cognitive progression across all learning domains.
+- All educational modules, algorithm matrices, MDX lessons, and simulators must align with the **21-Level Master Robotics Curriculum** defined in [`docs/RoboAtlas_Master_Curriculum_v1.md`](RoboAtlas_Master_Curriculum_v1.md) and [`docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md`](RoboAtlas_Master_Web_Curriculum_Spec_v2.md).
 
 ---
 
-## 🔄 8-Step Agent Workflow Loop
+## 2. The 8-Step Agentic Execution Workflow
 
-Every agentic programming task must execute the following cycle:
-
+```text
+Step 1: Read & Understand Source / Requirement
+                 ↓
+Step 2: Map to Universal Robotics Hierarchy (Level, Domain, Robot Platform)
+                 ↓
+Step 3: Check Existing Lessons & Prevent Duplications
+                 ↓
+Step 4: Author / Update Canonical Bilingual MDX (EN + ID)
+                 ↓
+Step 5: Implement Pure TypeScript Algorithms & Unit Tests
+                 ↓
+Step 6: Integrate Interactive Canvas Visualizer / FormulaExplainer
+                 ↓
+Step 7: Verify (npm test && npm run typecheck && npm run build)
+                 ↓
+Step 8: Update Documentation, CHANGELOG.md, and Commit Cleanly
 ```
-[1] Understand Requirement
-       ↓
-[2] Inspect Related Files & Architecture
-       ↓
-[3] Formulate Incremental Implementation Plan
-       ↓
-[4] Implement Smallest Correct Change
-       ↓
-[5] Run Verification: Typecheck + Lint + Test + Build
-       ↓
-[6] Diagnose & Fix Any Failures
-       ↓
-[7] Audit: Mobile Layout + A11y + GitHub Pages Compatibility
-       ↓
-[8] Report Results & Update Documentation
-```
-
----
-
-## ✅ Definition of Done (DoD)
-
-A milestone or feature is complete only when:
-- [ ] **TypeScript Safety**: `npm run typecheck` passes with zero type errors (`strict: true`).
-- [ ] **Linter**: `npm run lint` passes with zero warnings or errors.
-- [ ] **Unit Tests**: `npm test` passes all test suites.
-- [ ] **Static Build**: `npm run build` generates the `out/` static directory with no errors.
-- [ ] **GitHub Pages Path**: Relative paths and asset URLs function under both root `/` and subpath `/RoboAtlas/`.
-- [ ] **Algorithm Separation**: Algorithm logic is separated from UI/Canvas rendering.
-- [ ] **Educational Documentation**: The topic page explains problem motivation, mathematical equations (KaTeX), and complexity.
-- [ ] **Academic Citations**: Classical paper citations are included.
-- [ ] **Bilingual Parity**: English and Indonesian representations are in sync.
-- [ ] **Changelog & Versioning**: Version is bumped and recorded in `CHANGELOG.md`.

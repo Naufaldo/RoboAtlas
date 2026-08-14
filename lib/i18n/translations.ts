@@ -5,6 +5,7 @@ export const translations = {
     // Navigation
     nav: {
       curriculum: 'Curriculum',
+      robots: 'Robot Platforms',
       algorithms: 'Algorithm Lab',
       pathPlanning: 'Path Planning',
       kinematics: 'Kinematics',
@@ -134,6 +135,7 @@ export const translations = {
     // Navigation
     nav: {
       curriculum: 'Kurikulum',
+      robots: 'Platform Robot',
       algorithms: 'Lab Algoritma',
       pathPlanning: 'Perencanaan Jalur',
       kinematics: 'Kinematika',

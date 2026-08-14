@@ -5,6 +5,20 @@ All notable changes to the **RoboAtlas** project are tracked in the root [`CHANG
 ## Current Version: [0.4.0] - 2026-08-14
 
 ### Added
+- **Master Web & Curriculum Specification v2.0** (`docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md`):
+  - Upgraded RoboAtlas architectural identity into a **General Robotics Knowledge Platform** bridging fundamentals to multiple physical embodiments.
+  - Universal pipeline: $\text{Fundamentals} \to \text{Math / Physics / Logic} \to \text{Algorithms} \to \text{Kinematics / Control / Perception} \to \text{Robot Systems} \to \text{Advanced Robotics}$.
+- **Robot Platforms Hub** (`app/robots/page.tsx`):
+  - Interactive platform workstation mapping universal robotics concepts across 5 embodiments:
+    - 🦾 **Robotic Arm (Manipulator)**: 6-DOF / 7-DOF Articulated Arms, DH Parameters, Analytical & Numerical IK.
+    - 🚗 **Mobile Robot (AMR / AGV)**: Differential Drive, Ackermann, Mecanum, Wheel Odometry Drift, 2D LiDAR Mapping.
+    - 🚁 **Aerial Drone (UAV / Multirotor)**: 6-DOF Quadrotor, Attitude SE(3), Differential Flatness.
+    - 🌊 **Marine Robot (ROV / AUV)**: Buoyancy, Added Mass, 6-DOF Thruster Allocation, Acoustic DVL Navigation.
+    - 🦿 **Legged Robot (Quadruped & Humanoid)**: ZMP, LIPM, Gait sequencing, Whole-Body Balance.
+- **4 Persona "Start Learning" Pathways** on Homepage (`app/page.tsx`):
+  - Beginner (Level 0: Orientation), Fundamentals (Math & Kinematics), Algorithms (Planning & Estimation), Build (Labs & Projects).
+- **12-Milestone System** (`docs/ROADMAP.md`):
+  - Restructured roadmap from M1 (Robotics Foundations) through M12 (Frontier Research).
 - **21-Level Master Robotics Curriculum Hierarchy v1.0** (`docs/RoboAtlas_Master_Curriculum_v1.md`):
   - Progressive learning dependency graph organized across 4 primary tiers and 21 technical levels (Levels 0 through 20):
     - **Tier 1 (Foundations)**: Level 0 (Orientation), Level 1 (Math Foundations), Level 2 (Coordinate Frames), Level 3 (Kinematics), Level 4 (Differential Motion).
