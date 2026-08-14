@@ -6,23 +6,37 @@ import { ThemeProvider } from '@/lib/theme/ThemeContext';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 
 export const metadata: Metadata = {
-  title: 'RoboAtlas — Interactive Robotics Learning Platform & Algorithm Laboratory',
+  title: 'RoboAtlas — Interactive General Robotics Platform & Algorithm Laboratory',
   description:
-    'Visual, mathematical, and interactive explanations of mobile robotics algorithms, kinematics, path planning, localization, SLAM, and multi-agent systems.',
+    'Mathematically grounded, visual, and interactive platform for learning robotics fundamentals, kinematics, dynamics, control, perception, and multi-embodiment implementations (Robotic Arms, AMRs, UAVs, ROVs, Quadrupeds).',
   keywords: [
     'Robotics',
-    'Robotics Algorithms',
+    'Robotics Mathematics',
+    'Kinematics',
+    'Dynamics',
+    'Control Theory',
+    'Robotic Arms',
+    'Mobile Robots',
+    'UAV Drones',
+    'Marine ROV',
+    'Legged Robotics',
     'Path Planning',
     'A* Search',
-    'Dijkstra',
+    'State Estimation',
     'Particle Filter',
-    'EKF',
     'SLAM',
     'Pure Pursuit',
-    'Multi-Agent Robotics',
-    'TypeScript Simulator',
+    'TypeScript Robotics Engine',
   ],
   authors: [{ name: 'RoboAtlas Team' }],
+  metadataBase: new URL('https://naufaldo.github.io/RoboAtlas/'),
+  openGraph: {
+    title: 'RoboAtlas — Interactive General Robotics Platform',
+    description: 'Learn robotics from first principles to real robot implementations.',
+    url: 'https://naufaldo.github.io/RoboAtlas/',
+    siteName: 'RoboAtlas',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       applyTheme(savedTheme);
     } else {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initial = prefersDark ? 'dark' : 'dark'; // default to dark
+      const initial = prefersDark ? 'dark' : 'light';
       setThemeState(initial);
       applyTheme(initial);
     }
