@@ -1,0 +1,133 @@
+---
+id: state-space-and-feedback
+title: "State-Space Representation, Phase Portraits & Full-State Feedback (M27)"
+slug: state-space-and-feedback
+category: control
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - pid-and-lqr-control
+  - vectors-and-coordinate-geometry
+references:
+  - "Karl J. Astrom & Richard M. Murray (2008). Feedback Systems: An Introduction for Scientists and Engineers (Chapter 3: State Space Models). Princeton University Press."
+  - "Katsuhiko Ogata (2010). Modern Control Engineering (Chapter 9 & 10: State-Space Analysis). Prentice Hall."
+components:
+  - StateSpaceSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# State-Space Representation, Phase Portraits & Full-State Feedback (M27)
+
+> "How do modern aerospace autopilots, robotic manipulators, and active suspension systems control complex multi-variable systems with multiple inputs and outputs simultaneously?"
+
+**State-Space Modeling** reformulates high-order differential equations into a compact first-order vector matrix differential system:
+
+$$
+\begin{aligned}
+\dot{\mathbf{x}}(t) &= A\mathbf{x}(t) + B\mathbf{u}(t) \\
+\mathbf{y}(t) &= C\mathbf{x}(t) + D\mathbf{u}(t)
+\end{aligned}
+$$
+
+---
+
+## 1. Converting Physical Systems to State-Space: The Mass-Spring-Damper
+
+Consider a mechanical system of mass $m$, spring constant $k$, and damping coefficient $c$ driven by actuator force $u(t)$:
+
+$$
+m \ddot{x} + c \dot{x} + k x = u(t)
+$$
+
+### 1.1 State Vector Definition
+Define state variables: $x_1 = x$ (position) and $x_2 = \dot{x}$ (velocity):
+
+$$
+\mathbf{x} = \begin{bmatrix} x_1 \\ x_2 \end{bmatrix} = \begin{bmatrix} x \\ \dot{x} \end{bmatrix}
+$$
+
+### 1.2 State Equations
+Taking time derivatives:
+
+$$
+\begin{aligned}
+\dot{x}_1 &= x_2 \\
+\dot{x}_2 &= \ddot{x} = -\frac{k}{m}x_1 - \frac{c}{m}x_2 + \frac{1}{m}u
+\end{aligned}
+$$
+
+In matrix form $\dot{\mathbf{x}} = A\mathbf{x} + B\mathbf{u}$:
+
+$$
+\begin{bmatrix} \dot{x}_1 \\ \dot{x}_2 \end{bmatrix} = \begin{bmatrix} 0 & 1 \\ -\frac{k}{m} & -\frac{c}{m} \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \end{bmatrix} + \begin{bmatrix} 0 \\ \frac{1}{m} \end{bmatrix} u
+$$
+
+---
+
+## 2. Full-State Feedback Control: $u = -K\mathbf{x}$
+
+By measuring all state variables ($x, \dot{x}$), we apply linear state feedback:
+
+$$
+u = -K\mathbf{x} = -\begin{bmatrix} K_1 & K_2 \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \end{bmatrix} = -K_1 x - K_2 \dot{x}
+$$
+
+Substituting $u$ into the system dynamics yields the **closed-loop state equation**:
+
+$$
+\dot{\mathbf{x}} = (A - BK)\mathbf{x}
+$$
+
+The closed-loop eigenvalues (poles) $\det(sI - (A - BK)) = 0$ can be placed anywhere in the stable left-half complex plane to achieve desired settling times and damping ratios.
+
+---
+
+## 3. Video Lecture: State Space Control & Pole Placement
+
+<VideoEmbed
+  title="State Space Representation and Feedback Control"
+  videoId="ApMz1-MK9IQ"
+/>
+
+---
+
+## 4. Interactive State-Space & Phase Plane Laboratory
+
+Observe the physical mass-spring-damper on the left and its corresponding **Phase Plane trajectory $(x, \dot{x})$** spiraling to the origin on the right:
+
+<StateSpaceSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m27"
+  question="What condition guarantees that a linear time-invariant system x_dot = Ax + Bu can be stabilized using full state feedback u = -Kx?"
+  options={[
+    {
+      id: "A",
+      text: "Controllability: The controllability matrix C = [B, AB, A^2B, ..., A^(n-1)B] must have full rank n.",
+      isCorrect: true,
+      explanation: "Exact! Kalman's Controllability Rank Condition guarantees that all eigenvalues of (A - BK) can be placed arbitrarily via state feedback gain K."
+    },
+    {
+      id: "B",
+      text: "The matrix A must be diagonal.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "The input u must always be greater than zero.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Recall Kalman's Controllability Matrix rank test."
+/>

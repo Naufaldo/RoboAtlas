@@ -1,0 +1,138 @@
+---
+id: jacobian-and-singularity
+title: "Manipulator Jacobian, Velocity Ellipsoids & Kinematic Singularities (M20)"
+slug: jacobian-and-singularity
+category: manipulation
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - 2dof-forward-kinematics
+  - 2dof-inverse-kinematics
+references:
+  - "John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 5: Jacobians: Velocities and Static Forces). Pearson."
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Chapter 5: Velocity Kinematics and Statics). Cambridge University Press."
+components:
+  - JacobianSingularitySimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Manipulator Jacobian, Velocity Ellipsoids & Kinematic Singularities (M20)
+
+> "What mathematical tool translates instantaneous motor rotational speeds into smooth tool tip velocities, and why does an outstretched arm lose the ability to move radially outward?"
+
+The **Manipulator Jacobian Matrix $J(\mathbf{q})$** is the differential bridge linking joint velocity space $\dot{\mathbf{q}}$ to operational Cartesian velocity space $\dot{\mathbf{x}}$.
+
+---
+
+## 1. Mathematical Derivation of the 2-DOF Planar Jacobian
+
+From forward kinematics:
+
+$$
+\begin{aligned}
+x &= L_1 \cos(q_1) + L_2 \cos(q_1 + q_2) \\
+y &= L_1 \sin(q_1) + L_2 \sin(q_1 + q_2)
+\end{aligned}
+$$
+
+Taking the time derivatives using the chain rule ($\dot{x} = \frac{\partial x}{\partial q_1}\dot{q}_1 + \frac{\partial x}{\partial q_2}\dot{q}_2$):
+
+$$
+\begin{bmatrix} \dot{x} \\ \dot{y} \end{bmatrix} = \begin{bmatrix} -L_1 \sin q_1 - L_2 \sin(q_1+q_2) & -L_2 \sin(q_1+q_2) \\ L_1 \cos q_1 + L_2 \cos(q_1+q_2) & L_2 \cos(q_1+q_2) \end{bmatrix} \begin{bmatrix} \dot{q}_1 \\ \dot{q}_2 \end{bmatrix}
+$$
+
+In compact matrix form:
+
+$$
+\dot{\mathbf{x}} = J(\mathbf{q}) \dot{\mathbf{q}}
+$$
+
+---
+
+## 2. Jacobian Determinant & Singularity Conditions
+
+The determinant of the $2 \times 2$ Jacobian matrix is:
+
+$$
+\begin{aligned}
+\det(J) &= J_{11} J_{22} - J_{12} J_{21} \\
+&= (-L_1 s_1 - L_2 s_{12})(L_2 c_{12}) - (-L_2 s_{12})(L_1 c_1 + L_2 c_{12}) \\
+&= -L_1 L_2 (s_1 c_{12} - c_1 s_{12}) \\
+&= L_1 L_2 \sin(q_2)
+\end{aligned}
+$$
+
+### Kinematic Singularities
+A singularity occurs whenever $\det(J) = 0$, which happens when:
+
+$$
+\sin(q_2) = 0 \implies q_2 = 0^\circ \quad \text{or} \quad q_2 = 180^\circ
+$$
+
+1. **Boundary Singularity ($q_2 = 0^\circ$)**: The arm is fully outstretched ($r = L_1 + L_2$). No joint combination can produce an instantaneous velocity in the radial direction outward.
+2. **Interior Singularity ($q_2 = 180^\circ$)**: The forearm folds back directly onto the upper arm ($r = |L_1 - L_2|$).
+
+---
+
+## 3. Manipulability Ellipsoid (Velocity Ellipse)
+
+Mapping a unit hypersphere of joint velocities $\|\dot{\mathbf{q}}\|^2 \le 1$ into Cartesian velocity space produces a **Velocity Ellipse**:
+
+$$
+\dot{\mathbf{x}}^T (J J^T)^{-1} \dot{\mathbf{x}} \le 1
+$$
+
+- When the arm is well-conditioned ($\sin q_2 \approx 1$), the ellipse is round and isotropic.
+- As the robot approaches a singularity ($\det(J) \to 0$), the ellipse collapses into a 1D line segment. Yoshikawa's manipulability index $w = \sqrt{\det(J J^T)} = |\det(J)| \to 0$.
+
+---
+
+## 4. Video Lecture: Robot Arm Jacobian & Singularities
+
+<VideoEmbed
+  title="Robotic Arm Jacobian & Velocity Kinematics"
+  videoId="Z7n8J0Q6N_g"
+/>
+
+---
+
+## 5. Interactive Jacobian & Velocity Ellipse Laboratory
+
+Adjust $q_1$ and $q_2$ to observe the velocity ellipse at the end-effector. Click **Snap Singularity ($q_2=0^\circ$)** to watch $\det(J)$ vanish:
+
+<JacobianSingularitySimulator />
+
+---
+
+## 6. Concept Check
+
+<ConceptCheck
+  id="quiz-m20"
+  question="If an industrial robot is requested to move at a constant Cartesian tool speed v while passing directly through a singular configuration, what happens to the required motor joint speeds q_dot?"
+  options={[
+    {
+      id: "A",
+      text: "The required motor joint speeds approach infinity (q_dot = J^(-1) * v diverges), triggering motor over-current and tracking fault alarms.",
+      isCorrect: true,
+      explanation: "Exact! Because det(J) -> 0, the inverse Jacobian J^(-1) has unbounded entries, demanding impossible infinite motor velocities."
+    },
+    {
+      id: "B",
+      text: "The motors automatically freeze and consume zero power.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "The robot teleports instantly to the goal.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Recall the matrix inversion formula J^(-1) = (1 / det(J)) * adj(J)."
+/>

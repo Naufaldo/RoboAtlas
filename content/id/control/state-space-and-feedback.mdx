@@ -1,0 +1,133 @@
+---
+id: state-space-and-feedback
+title: "Representasi Ruang Status, Diagram Fase & Umpan Balik Status Penuh (M27)"
+slug: state-space-and-feedback
+category: control
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - pid-and-lqr-control
+  - vectors-and-coordinate-geometry
+references:
+  - "Karl J. Astrom & Richard M. Murray (2008). Feedback Systems: An Introduction for Scientists and Engineers (Chapter 3: State Space Models). Princeton University Press."
+  - "Katsuhiko Ogata (2010). Modern Control Engineering (Chapter 9 & 10: State-Space Analysis). Prentice Hall."
+components:
+  - StateSpaceSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Representasi Ruang Status, Diagram Fase & Umpan Balik Status Penuh (M27)
+
+> "Bagaimana sistem autopilot penerbangan, lengan robot multi-sendi, dan suspensi aktif mengendalikan sistem multi-variabel rumit dengan banyak input dan output sekaligus secara terkoordinasi?"
+
+**Pemodelan Ruang Status (*State-Space Representation*)** menyusun kembali persamaan diferensial orde tinggi menjadi sistem diferensial matriks vektor orde satu yang ringkas:
+
+$$
+\begin{aligned}
+\dot{\mathbf{x}}(t) &= A\mathbf{x}(t) + B\mathbf{u}(t) \\
+\mathbf{y}(t) &= C\mathbf{x}(t) + D\mathbf{u}(t)
+\end{aligned}
+$$
+
+---
+
+## 1. Mengubah Sistem Fisik ke Bentuk Ruang Status: Massa-Pegas-Redaman
+
+Tinjau sistem mekanik berbobot massa $m$, konstanta pegas $k$, dan redaman viskos $c$ yang digerakkan gaya kendali $u(t)$:
+
+$$
+m \ddot{x} + c \dot{x} + k x = u(t)
+$$
+
+### 1.1 Definisi Vektor Status
+Pilih variabel status: $x_1 = x$ (posisi) dan $x_2 = \dot{x}$ (kecepatan):
+
+$$
+\mathbf{x} = \begin{bmatrix} x_1 \\ x_2 \end{bmatrix} = \begin{bmatrix} x \\ \dot{x} \end{bmatrix}
+$$
+
+### 1.2 Persamaan Status
+Menurunkan terhadap waktu:
+
+$$
+\begin{aligned}
+\dot{x}_1 &= x_2 \\
+\dot{x}_2 &= \ddot{x} = -\frac{k}{m}x_1 - \frac{c}{m}x_2 + \frac{1}{m}u
+\end{aligned}
+$$
+
+Dalam format matriks $\dot{\mathbf{x}} = A\mathbf{x} + B\mathbf{u}$:
+
+$$
+\begin{bmatrix} \dot{x}_1 \\ \dot{x}_2 \end{bmatrix} = \begin{bmatrix} 0 & 1 \\ -\frac{k}{m} & -\frac{c}{m} \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \end{bmatrix} + \begin{bmatrix} 0 \\ \frac{1}{m} \end{bmatrix} u
+$$
+
+---
+
+## 2. Kendali Umpan Balik Status Penuh (*Full-State Feedback*): $u = -K\mathbf{x}$
+
+Dengan mengukur seluruh variabel status ($x, \dot{x}$), kendali linier diterapkan:
+
+$$
+u = -K\mathbf{x} = -\begin{bmatrix} K_1 & K_2 \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \end{bmatrix} = -K_1 x - K_2 \dot{x}
+$$
+
+Substitusi $u$ ke dinamika sistem menghasilkan **persamaan status loop tertutup**:
+
+$$
+\dot{\mathbf{x}} = (A - BK)\mathbf{x}
+$$
+
+Nilai eigen loop tertutup (kutub sistem) $\det(sI - (A - BK)) = 0$ dapat ditempatkan di bidang kompleks kiri untuk mengatur waktu respon (*settling time*) dan rasio redaman sesuai target.
+
+---
+
+## 3. Video Pembelajaran: Kendali Ruang Status & Pole Placement
+
+<VideoEmbed
+  title="State Space Representation and Feedback Control"
+  videoId="ApMz1-MK9IQ"
+/>
+
+---
+
+## 4. Simulator Interaktif Ruang Status & Diagram Fase
+
+Amati osilasi fisik massa-pegas-redaman di sisi kiri dan lintasan spiralnya pada **Diagram Fase (Phase Plane $(x, \dot{x})$)** menuju titik kesetimbangan origin $(0, 0)$ di sisi kanan:
+
+<StateSpaceSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m27"
+  question="Syarat apa yang harus dipenuhi agar sistem linier x_dot = Ax + Bu dapat distabilkan menggunakan umpan balik status penuh u = -Kx?"
+  options={[
+    {
+      id: "A",
+      text: "Keterkendalian (Controllability): Matriks keterkendalian C = [B, AB, A^2B, ..., A^(n-1)B] harus memiliki rank penuh n.",
+      isCorrect: true,
+      explanation: "Tepat! Uji Rank Keterkendalian Kalman menjamin seluruh kutub (A - BK) dapat ditempatkan secara bebas di bidang stabil."
+    },
+    {
+      id: "B",
+      text: "Matriks A harus berupa matriks diagonal.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Input kendali u harus selalu bernilai positif.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Ingat teorema Rank Matriks Keterkendalian Kalman."
+/>

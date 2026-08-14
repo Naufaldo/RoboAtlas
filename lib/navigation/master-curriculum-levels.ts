@@ -349,6 +349,22 @@ export const MASTER_CURRICULUM_LEVELS: CurriculumLevel[] = [
         href: '/learn/control/pid-and-lqr-control',
         isInteractive: true,
       },
+      {
+        id: 'state-space-and-feedback',
+        titleEn: 'State-Space Dynamics & Full-State Feedback (M27)',
+        titleId: 'Dinamika Ruang Status & Umpan Balik Status (M27)',
+        topicsCount: 6,
+        href: '/learn/control/state-space-and-feedback',
+        isInteractive: true,
+      },
+      {
+        id: 'discrete-time-simulation',
+        titleEn: 'Discrete-Time Simulation: Euler vs RK4 (M28)',
+        titleId: 'Simulasi Waktu Diskret: Euler vs RK4 (M28)',
+        topicsCount: 6,
+        href: '/learn/control/discrete-time-simulation',
+        isInteractive: true,
+      },
     ],
   },
   {
@@ -521,6 +537,14 @@ export const MASTER_CURRICULUM_LEVELS: CurriculumLevel[] = [
         titleId: 'Kinematika Invers Lengan Robot 2-DOF (M19)',
         topicsCount: 6,
         href: '/learn/manipulation/2dof-inverse-kinematics',
+        isInteractive: true,
+      },
+      {
+        id: 'jacobian-and-singularity',
+        titleEn: 'Jacobian & Kinematic Singularities (M20)',
+        titleId: 'Jacobian & Singularitas Kinematik (M20)',
+        topicsCount: 6,
+        href: '/learn/manipulation/jacobian-and-singularity',
         isInteractive: true,
       },
       {

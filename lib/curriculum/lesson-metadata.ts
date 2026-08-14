@@ -350,6 +350,60 @@ export const LESSON_PEDAGOGY_MAP: Record<string, LessonPedagogyData> = {
     progressionStepsEn: ['Law of Cosines IK', 'Branch Configurations', 'Interactive IK Reticle', 'Workspace Singularity'],
     progressionStepsId: ['Hukum Kosinus IK', 'Konfigurasi Cabang', 'Lab Retikel IK', 'Singularitas Ruang Kerja'],
   },
+  'jacobian-and-singularity': {
+    learningObjectivesEn: [
+      'Derive the 2-DOF planar robot Jacobian matrix J(q) mapping joint velocities to tool tip speeds.',
+      'Compute the Jacobian determinant det(J) = L1*L2*sin(q2) and identify boundary singularities (q2 = 0, 180 deg).',
+      'Analyze the velocity manipulability ellipsoid using singular value decomposition (SVD).',
+      'Explain why required joint motor speeds diverge toward infinity near kinematic singularities.',
+    ],
+    learningObjectivesId: [
+      'Menurunkan matriks Jacobian J(q) lengan 2-DOF planar yang memetakan kecepatan sendi ke kecepatan ujung gripper.',
+      'Menghitung determinan Jacobian det(J) = L1*L2*sin(q2) dan mengidentifikasi singularitas batas (q2 = 0, 180 deg).',
+      'Menganalisis elips manipulabilitas kecepatan menggunakan dekomposisi nilai singular (SVD).',
+      'Menjelaskan mengapa kecepatan motor melonjak menuju tak hingga saat melintasi singularitas kinematik.',
+    ],
+    whyItMattersEn: 'Jacobian analysis is the bedrock for velocity control, inverse velocity kinematics, and robotic force compliance.',
+    whyItMattersId: 'Analisis Jacobian adalah fondasi utama untuk kendali kecepatan, invers kinematika diferensial, dan kepatuhan gaya robotika.',
+    progressionStepsEn: ['Jacobian Derivation', 'Determinant & Singularity', 'Interactive Ellipse Lab', 'Velocity Conditioning'],
+    progressionStepsId: ['Penurunan Jacobian', 'Determinan & Singularitas', 'Lab Elips Interaktif', 'Kondisi Kecepatan'],
+  },
+  'state-space-and-feedback': {
+    learningObjectivesEn: [
+      'Formulate high-order differential equations into continuous state-space form: x_dot = Ax + Bu, y = Cx + Du.',
+      'Model physical mass-spring-damper dynamics in state vector representation x = [x, x_dot]^T.',
+      'Design linear full-state feedback controllers u = -Kx to place closed-loop poles arbitrarily.',
+      'Interpret state trajectories and convergence behavior on 2D phase portrait phase planes.',
+    ],
+    learningObjectivesId: [
+      'Menyusun persamaan diferensial orde tinggi ke dalam representasi ruang status kontinu: x_dot = Ax + Bu, y = Cx + Du.',
+      'Memodelkan dinamika sistem massa-pegas-redaman ke dalam representasi vektor status x = [x, x_dot]^T.',
+      'Merancang kontroler umpan balik status penuh u = -Kx untuk menempatkan kutub loop tertutup secara bebas.',
+      'Menginterpretasikan lintasan status dan konvergensi kestabilan pada diagram fase (Phase Portrait 2D).',
+    ],
+    whyItMattersEn: 'State-space control provides the universal framework for modern multivariable control, LQR, and Kalman state estimators.',
+    whyItMattersId: 'Kendali ruang status menyediakan kerangka universal bagi kendali multivariabel modern, regulator LQR, dan estimator status Kalman.',
+    progressionStepsEn: ['State-Space Formulation', 'Mass-Spring-Damper Model', 'Interactive Phase Lab', 'State Feedback Control'],
+    progressionStepsId: ['Formulasi Ruang Status', 'Model Massa-Pegas-Redaman', 'Lab Diagram Fase', 'Kendali Umpan Balik'],
+  },
+  'discrete-time-simulation': {
+    learningObjectivesEn: [
+      'Discretize continuous robotic differential equations using Forward Euler, Midpoint, and Runge-Kutta 4th Order (RK4).',
+      'Analyze numerical stability bounds |1 + lambda*dt| <= 1 for linear oscillators and avoid energy explosion.',
+      'Quantify local and global truncation error orders: O(dt) vs O(dt^4).',
+      'Distinguish between internal physics simulation integration rates (e.g. 1000 Hz) and render display FPS.',
+    ],
+    learningObjectivesId: [
+      'Mendiskritisasikan persamaan diferensial robotika kontinu menggunakan Forward Euler, Midpoint, dan Runge-Kutta Orde 4 (RK4).',
+      'Menganalisis batas stabilitas numerik |1 + lambda*dt| <= 1 untuk osilator linier dan mencegah ledakan energi palsu.',
+      'Mengkuantifikasi orde galat pemotongan lokal dan global: O(dt) vs O(dt^4).',
+      'Membedakan antara frekuensi integrasi simulasi fisika internal (misal 1000 Hz) dan refresh rate tampilan layar.',
+    ],
+    whyItMattersEn: 'Essential for developing stable robotic physics simulators (MuJoCo, Gazebo) and deploying controllers on real-time microcontrollers.',
+    whyItMattersId: 'Sangat esensial untuk membangun simulator fisika robotika yang stabil (MuJoCo, Gazebo) dan menerapkan kendali pada mikrokontroler waktu-nyata.',
+    progressionStepsEn: ['Continuous to Discrete', 'Euler vs RK4 Solvers', 'Interactive Discretization Lab', 'Stability Limits'],
+    progressionStepsId: ['Kontinu ke Diskret', 'Solver Euler vs RK4', 'Lab Diskritisasi Interaktif', 'Batas Stabilitas'],
+  },
   'astar-vs-dijkstra-search': {
     learningObjectivesEn: [
       'Evaluate mathematical cost f(n) = g(n) + h(n) and prove equivalence to Dijkstra when h(n) = 0.',

@@ -1,0 +1,120 @@
+---
+id: discrete-time-simulation
+title: "Simulasi Numerik Waktu Diskret: Euler, RK4 & Batas Stabilitas (M28)"
+slug: discrete-time-simulation
+category: control
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - mathematical-foundations
+  - differential-drive-kinematics
+references:
+  - "William H. Press et al. (2007). Numerical Recipes: The Art of Scientific Computing (Chapter 17: Integration of Ordinary Differential Equations). Cambridge University Press."
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Appendix C: Numerical Methods). Cambridge University Press."
+components:
+  - NumericalDiscretizationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Simulasi Numerik Waktu Diskret: Euler, RK4 & Batas Stabilitas (M28)
+
+> "Hukum fisika robotika bekerja secara kontinu, namun mikrokontroler digital mengeksekusi algoritma dalam langkah waktu diskret (dt). Apa yang menyebabkan simulasi fisika mengalami drift atau meledak tidak stabil?"
+
+Dalam komputer digital, persamaan diferensial kontinu $\dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})$ tidak dapat diintegrasikan dengan kecepatan tak hingga. Persamaan tersebut harus diubah menjadi **persamaan beda diskret** yang dieksekusi pada interval waktu tetap $\Delta t$.
+
+---
+
+## 1. Taksonomi Metode Integrasi Numerik Solver
+
+Diberikan masalah nilai awal $\dot{\mathbf{x}} = f(\mathbf{x}, t)$ dengan interval langkah waktu $\Delta t$:
+
+### 1.1 Metode Forward Euler (Orde Pertama $\mathcal{O}(\Delta t)$)
+$$
+\mathbf{x}_{k+1} = \mathbf{x}_k + \Delta t \cdot f(\mathbf{x}_k, t_k)
+$$
+- Paling ringan dihitung (1 evaluasi fungsi per langkah).
+- Mengakumulasi galat pemotongan lokal $\mathcal{O}(\Delta t^2)$ dan galat global $\mathcal{O}(\Delta t)$.
+
+### 1.2 Metode Runge-Kutta Orde 4 / RK4 (Orde Keempat $\mathcal{O}(\Delta t^4)$)
+$$
+\begin{aligned}
+\mathbf{k}_1 &= f(\mathbf{x}_k, t_k) \\
+\mathbf{k}_2 &= f\left(\mathbf{x}_k + \frac{\Delta t}{2}\mathbf{k}_1, \, t_k + \frac{\Delta t}{2}\right) \\
+\mathbf{k}_3 &= f\left(\mathbf{x}_k + \frac{\Delta t}{2}\mathbf{k}_2, \, t_k + \frac{\Delta t}{2}\right) \\
+\mathbf{k}_4 &= f\left(\mathbf{x}_k + \Delta t \mathbf{k}_3, \, t_k + \Delta t\right) \\
+\mathbf{x}_{k+1} &= \mathbf{x}_k + \frac{\Delta t}{6}(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4)
+\end{aligned}
+$$
+- Standar utama simulator robotika canggih (seperti Gazebo, MuJoCo, Isaac Sim).
+
+---
+
+## 2. Batas Stabilitas Numerik & Ledakan Energi Palsu
+
+Untuk sistem osilator linier $\dot{x} = \lambda x$ ($\lambda \in \mathbb{C}$):
+
+Metode Forward Euler menghasilkan:
+
+$$
+x_{k+1} = (1 + \lambda \Delta t) x_k
+$$
+
+Integrasi numerik dijamin **stabil** jika dan hanya jika:
+
+$$
+|1 + \lambda \Delta t| \le 1
+$$
+
+Pada sistem osilasi murni ($\lambda = \pm j\omega$), Forward Euler memiliki $|1 \pm j\omega\Delta t| = \sqrt{1 + \omega^2\Delta t^2} > 1$, yang **secara artifisial menyuntikkan energi numerik palsu pada setiap langkah**, menyebabkan amplitudo berosilasi semakin membesar (divergen)!
+
+---
+
+## 3. Video Pembelajaran: Integrasi Numerik Euler vs RK4
+
+<VideoEmbed
+  title="Euler vs RK4 Numerical Integration"
+  videoId="mZzZp0aXw-8"
+/>
+
+---
+
+## 4. Simulator Interaktif Integrasi Numerik Waktu Diskret
+
+Bandingkan performa **Euler vs Midpoint vs RK4** pada osilator harmonik. Naikkan nilai $\Delta t$ untuk melihat bagaimana lintasan Forward Euler menyimpang dari solusi analitik sesungguhnya:
+
+<NumericalDiscretizationSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m28"
+  question="Mengapa engine simulasi fisika robotika seperti Gazebo atau MuJoCo menghitung kalkulasi kontak fisika pada frekuensi internal tinggi (misal 500 Hz / 1000 Hz, dt = 0.001 s) meskipun layar hanya merender pada 60 FPS?"
+  options={[
+    {
+      id: "A",
+      text: "Untuk memenuhi batas stabilitas numerik, mencegah ledakan energi palsu saat terjadi kontak tabrakan benda kaku (rigid body collisions), dan menjaga presisi integrasi sub-milimeter.",
+      isCorrect: true,
+      explanation: "Tepat! Dinamika kontak kaku membutuhkan langkah waktu dt yang sangat kecil agar integrasi tetap stabil, tidak bergantung pada refresh rate monitor."
+    },
+    {
+      id: "B",
+      text: "Karena layar komputer tidak bisa menampilkan gambar tanpa kalkulasi 1000 Hz.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena engine fisika mengonsumsi lebih sedikit CPU pada 1000 Hz.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi pada galat numerik saat dt bernilai besar pada tabrakan berkecepatan tinggi."
+/>

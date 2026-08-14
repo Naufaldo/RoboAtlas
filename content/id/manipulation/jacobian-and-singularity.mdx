@@ -1,0 +1,138 @@
+---
+id: jacobian-and-singularity
+title: "Matriks Jacobian, Elips Manipulabilitas & Singularitas Kinematik (M20)"
+slug: jacobian-and-singularity
+category: manipulation
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - 2dof-forward-kinematics
+  - 2dof-inverse-kinematics
+references:
+  - "John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 5: Jacobians: Velocities and Static Forces). Pearson."
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Chapter 5: Velocity Kinematics and Statics). Cambridge University Press."
+components:
+  - JacobianSingularitySimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Matriks Jacobian, Elips Manipulabilitas & Singularitas Kinematik (M20)
+
+> "Alat matematika apa yang menerjemahkan kecepatan rotasi motor sesaat menjadi kecepatan ujung gripper yang mulus, dan mengapa lengan yang terentang lurus kehilangan kemampuan bergerak ke arah luar?"
+
+**Matriks Jacobian Manipulator $J(\mathbf{q})$** adalah jembatan diferensial yang menghubungkan ruang kecepatan sendi motor $\dot{\mathbf{q}}$ ke ruang kecepatan operasional Kartesius ujung kerja $\dot{\mathbf{x}}$.
+
+---
+
+## 1. Penurunan Matematis Jacobian Lengan 2-DOF Planar
+
+Dari kinematika maju:
+
+$$
+\begin{aligned}
+x &= L_1 \cos(q_1) + L_2 \cos(q_1 + q_2) \\
+y &= L_1 \sin(q_1) + L_2 \sin(q_1 + q_2)
+\end{aligned}
+$$
+
+Mengambil turunan waktu parsial menggunakan aturan rantai kalkulus ($\dot{x} = \frac{\partial x}{\partial q_1}\dot{q}_1 + \frac{\partial x}{\partial q_2}\dot{q}_2$):
+
+$$
+\begin{bmatrix} \dot{x} \\ \dot{y} \end{bmatrix} = \begin{bmatrix} -L_1 \sin q_1 - L_2 \sin(q_1+q_2) & -L_2 \sin(q_1+q_2) \\ L_1 \cos q_1 + L_2 \cos(q_1+q_2) & L_2 \cos(q_1+q_2) \end{bmatrix} \begin{bmatrix} \dot{q}_1 \\ \dot{q}_2 \end{bmatrix}
+$$
+
+Dalam notasi matriks ringkas:
+
+$$
+\dot{\mathbf{x}} = J(\mathbf{q}) \dot{\mathbf{q}}
+$$
+
+---
+
+## 2. Determinan Jacobian & Kondisi Singularitas
+
+Determinan dari matriks Jacobian $2 \times 2$ adalah:
+
+$$
+\begin{aligned}
+\det(J) &= J_{11} J_{22} - J_{12} J_{21} \\
+&= (-L_1 s_1 - L_2 s_{12})(L_2 c_{12}) - (-L_2 s_{12})(L_1 c_1 + L_2 c_{12}) \\
+&= -L_1 L_2 (s_1 c_{12} - c_1 s_{12}) \\
+&= L_1 L_2 \sin(q_2)
+\end{aligned}
+$$
+
+### Singularitas Kinematik
+Singularitas terjadi tepat saat $\det(J) = 0$, yaitu pada kondisi:
+
+$$
+\sin(q_2) = 0 \implies q_2 = 0^\circ \quad \text{atau} \quad q_2 = 180^\circ
+$$
+
+1. **Singularitas Batas Luar ($q_2 = 0^\circ$)**: Lengan terentang lurus maksimal ($r = L_1 + L_2$). Tidak ada kombinasi putaran motor yang mampu menghasilkan kecepatan instan ke arah radial menjauhi pangkal.
+2. **Singularitas Batas Dalam ($q_2 = 180^\circ$)**: Lengan menekuk penuh menumpuk di atas lengan pertama ($r = |L_1 - L_2|$).
+
+---
+
+## 3. Elips Manipulabilitas (Velocity Ellipse)
+
+Memetakan bola satuan kecepatan motor $\|\dot{\mathbf{q}}\|^2 \le 1$ ke ruang Kartesius menghasilkan bangun **Elips Kecepatan**:
+
+$$
+\dot{\mathbf{x}}^T (J J^T)^{-1} \dot{\mathbf{x}} \le 1
+$$
+
+- Ketika lengan fleksibel ($\sin q_2 \approx 1$), elips berbentuk bulat dan isotropik ke segala arah.
+- Saat mendekati konfigurasi singular ($\det(J) \to 0$), elips memipih menjadi garis segmen 1D. Indeks manipulabilitas Yoshikawa $w = \sqrt{\det(J J^T)} = |\det(J)| \to 0$.
+
+---
+
+## 4. Video Pembelajaran: Jacobian & Singularitas Manipulator
+
+<VideoEmbed
+  title="Robotic Arm Jacobian & Velocity Kinematics"
+  videoId="Z7n8J0Q6N_g"
+/>
+
+---
+
+## 5. Simulator Interaktif Matriks Jacobian & Elips Kecepatan
+
+Putar sudut $q_1$ dan $q_2$ untuk melihat elips kecepatan pada ujung lengan. Klik **Uji Singularitas ($q_2=0^\circ$)** untuk menyaksikan hilangnya nilai $\det(J)$:
+
+<JacobianSingularitySimulator />
+
+---
+
+## 6. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m20"
+  question="Jika robot industri diperintahkan bergerak dengan kecepatan Kartesius konstan saat melintasi konfigurasi singular secara langsung, apa yang terjadi pada kecepatan motor joint q_dot yang diminta?"
+  options={[
+    {
+      id: "A",
+      text: "Kecepatan motor melonjak menuju tak hingga (q_dot = J^(-1) * v meledak divergen), memicu alarm kelebihan arus motor (over-current) dan tracking fault.",
+      isCorrect: true,
+      explanation: "Tepat! Karena det(J) -> 0, invers matriks Jacobian memiliki nilai pembagian nol yang menuntut kecepatan motor tak hingga yang mustahil secara fisik."
+    },
+    {
+      id: "B",
+      text: "Motor otomatis mati dan tidak mengonsumsi daya listrik sama sekali.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Robot melakukan teleportasi instan ke titik tujuan.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Ingat rumus invers matriks J^(-1) = (1 / det(J)) * adj(J)."
+/>

@@ -33,6 +33,9 @@ import { PurePursuitSimulator } from '@/components/simulation/PurePursuitSimulat
 import { AStarVsDijkstraSimulator } from '@/components/simulation/AStarVsDijkstraSimulator';
 import { RrtExplorationSimulator } from '@/components/simulation/RrtExplorationSimulator';
 import { ArmInverseKinematicsSimulator } from '@/components/simulation/ArmInverseKinematicsSimulator';
+import { JacobianSingularitySimulator } from '@/components/simulation/JacobianSingularitySimulator';
+import { StateSpaceSimulator } from '@/components/simulation/StateSpaceSimulator';
+import { NumericalDiscretizationSimulator } from '@/components/simulation/NumericalDiscretizationSimulator';
 import { ConceptCheck } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
@@ -283,6 +286,21 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<ArmInverseKinematicsSimulator')) {
         nodes.push(<ArmInverseKinematicsSimulator key={`comp-aiks-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<JacobianSingularitySimulator')) {
+        nodes.push(<JacobianSingularitySimulator key={`comp-jss-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<StateSpaceSimulator')) {
+        nodes.push(<StateSpaceSimulator key={`comp-sss-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<NumericalDiscretizationSimulator')) {
+        nodes.push(<NumericalDiscretizationSimulator key={`comp-nds-${i}`} />);
         i++;
         continue;
       }

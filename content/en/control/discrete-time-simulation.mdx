@@ -1,0 +1,120 @@
+---
+id: discrete-time-simulation
+title: "Discrete-Time Numerical Simulation: Euler, RK4 & Stability (M28)"
+slug: discrete-time-simulation
+category: control
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - mathematical-foundations
+  - differential-drive-kinematics
+references:
+  - "William H. Press et al. (2007). Numerical Recipes: The Art of Scientific Computing (Chapter 17: Integration of Ordinary Differential Equations). Cambridge University Press."
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Appendix C: Numerical Methods). Cambridge University Press."
+components:
+  - NumericalDiscretizationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Discrete-Time Numerical Simulation: Euler, RK4 & Stability (M28)
+
+> "Robots obey continuous laws of physics, but digital microcontrollers execute algorithms in discrete time steps (dt). What causes numerical simulation to drift or explode?"
+
+In digital computers, continuous differential equations $\dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})$ cannot be integrated infinitely fast. They are converted into **discrete difference equations** executed at fixed intervals $\Delta t$.
+
+---
+
+## 1. Discretization Solvers Taxonomy
+
+Given the initial value problem $\dot{\mathbf{x}} = f(\mathbf{x}, t)$ with step size $\Delta t$:
+
+### 1.1 Forward Euler Method (First-Order $\mathcal{O}(\Delta t)$)
+$$
+\mathbf{x}_{k+1} = \mathbf{x}_k + \Delta t \cdot f(\mathbf{x}_k, t_k)
+$$
+- Simplest to compute (1 function evaluation per step).
+- Accumulates local truncation error $\mathcal{O}(\Delta t^2)$ and global error $\mathcal{O}(\Delta t)$.
+
+### 1.2 Runge-Kutta 4th Order / RK4 (Fourth-Order $\mathcal{O}(\Delta t^4)$)
+$$
+\begin{aligned}
+\mathbf{k}_1 &= f(\mathbf{x}_k, t_k) \\
+\mathbf{k}_2 &= f\left(\mathbf{x}_k + \frac{\Delta t}{2}\mathbf{k}_1, \, t_k + \frac{\Delta t}{2}\right) \\
+\mathbf{k}_3 &= f\left(\mathbf{x}_k + \frac{\Delta t}{2}\mathbf{k}_2, \, t_k + \frac{\Delta t}{2}\right) \\
+\mathbf{k}_4 &= f\left(\mathbf{x}_k + \Delta t \mathbf{k}_3, \, t_k + \Delta t\right) \\
+\mathbf{x}_{k+1} &= \mathbf{x}_k + \frac{\Delta t}{6}(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4)
+\end{aligned}
+$$
+- Standard workhorse for robotics simulations (e.g. Gazebo, MuJoCo, Isaac Sim).
+
+---
+
+## 2. Numerical Stability Limits & Energy Drift
+
+For a linear oscillator $\dot{x} = \lambda x$ ($\lambda \in \mathbb{C}$):
+
+Applying Forward Euler gives:
+
+$$
+x_{k+1} = (1 + \lambda \Delta t) x_k
+$$
+
+The numerical integration is **stable** if and only if:
+
+$$
+|1 + \lambda \Delta t| \le 1
+$$
+
+For pure oscillatory systems ($\lambda = \pm j\omega$), Forward Euler has $|1 \pm j\omega\Delta t| = \sqrt{1 + \omega^2\Delta t^2} > 1$, which **artificially injects numerical energy on every step**, causing the amplitude to diverge exponentially!
+
+---
+
+## 3. Video Lecture: Numerical Integration of ODEs
+
+<VideoEmbed
+  title="Euler vs RK4 Numerical Integration"
+  videoId="mZzZp0aXw-8"
+/>
+
+---
+
+## 4. Interactive Numerical Integration Laboratory
+
+Compare **Euler vs Midpoint vs RK4** on a harmonic oscillator. Increase the timestep $\Delta t$ to watch the Forward Euler trajectory diverge from the exact analytical solution:
+
+<NumericalDiscretizationSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m28"
+  question="Why do robotic physics engines like Gazebo or MuJoCo compute physics at high internal frequencies (e.g. 500 Hz / 1000 Hz, dt = 0.001 s) even if graphics render at only 60 FPS?"
+  options={[
+    {
+      id: "A",
+      text: "To satisfy numerical stability limits, prevent artificial energy explosion during rapid rigid-body contact collisions, and maintain sub-millimeter integration precision.",
+      isCorrect: true,
+      explanation: "Exact! Stiff contact dynamics require small timesteps dt to avoid numerical instability, independent of monitor refresh rates."
+    },
+    {
+      id: "B",
+      text: "Because computer monitors cannot display graphics without 1000 Hz physics.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because physics engines consume less CPU at 1000 Hz.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about what happens to numerical error when dt is small versus large during high-speed collisions."
+/>

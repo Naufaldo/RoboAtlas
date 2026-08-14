@@ -32,6 +32,9 @@ import { PurePursuitSimulator } from '@/components/simulation/PurePursuitSimulat
 import { AStarVsDijkstraSimulator } from '@/components/simulation/AStarVsDijkstraSimulator';
 import { RrtExplorationSimulator } from '@/components/simulation/RrtExplorationSimulator';
 import { ArmInverseKinematicsSimulator } from '@/components/simulation/ArmInverseKinematicsSimulator';
+import { JacobianSingularitySimulator } from '@/components/simulation/JacobianSingularitySimulator';
+import { StateSpaceSimulator } from '@/components/simulation/StateSpaceSimulator';
+import { NumericalDiscretizationSimulator } from '@/components/simulation/NumericalDiscretizationSimulator';
 import {
   Compass,
   Cpu,
@@ -403,6 +406,42 @@ export default function LabsPage() {
       icon: '🎯',
       lessonHref: '/learn/manipulation/2dof-inverse-kinematics',
       component: <ArmInverseKinematicsSimulator />,
+    },
+    {
+      id: 'jacobian-singularity',
+      category: 'manipulation',
+      titleEn: 'Jacobian Matrix & Velocity Ellipse Lab (M20)',
+      titleId: 'Laboratorium Matriks Jacobian & Elips Kecepatan (M20)',
+      descEn: 'Observe velocity manipulability ellipse collapse as det(J) vanishes into a kinematic singularity.',
+      descId: 'Amati kolapsnya elips manipulabilitas kecepatan saat det(J) bernilai nol (singularitas).',
+      levelBadge: 'Level 14',
+      icon: '📐',
+      lessonHref: '/learn/manipulation/jacobian-and-singularity',
+      component: <JacobianSingularitySimulator />,
+    },
+    {
+      id: 'state-space',
+      category: 'control',
+      titleEn: 'State-Space Dynamics & Phase Plane Lab (M27)',
+      titleId: 'Laboratorium Ruang Status & Diagram Fase (M27)',
+      descEn: 'Simulate mass-spring-damper phase portrait trajectory converging under full state feedback.',
+      descId: 'Simulasikan diagram fase sistem massa-pegas-redaman dengan umpan balik status penuh.',
+      levelBadge: 'Level 7',
+      icon: '🎛️',
+      lessonHref: '/learn/control/state-space-and-feedback',
+      component: <StateSpaceSimulator />,
+    },
+    {
+      id: 'discrete-simulation',
+      category: 'control',
+      titleEn: 'Discrete Simulation: Euler vs RK4 Lab (M28)',
+      titleId: 'Laboratorium Simulasi Diskret: Euler vs RK4 (M28)',
+      descEn: 'Compare numerical drift and energy divergence across Euler, Midpoint, and RK4 solvers.',
+      descId: 'Bandingkan galat numerik dan divergensi energi antara solver Euler, Midpoint, dan RK4.',
+      levelBadge: 'Level 7',
+      icon: '⏱️',
+      lessonHref: '/learn/control/discrete-time-simulation',
+      component: <NumericalDiscretizationSimulator />,
     },
   ];
 
