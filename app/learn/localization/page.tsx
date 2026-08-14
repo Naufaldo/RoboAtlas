@@ -1,63 +1,65 @@
 import React from 'react';
-import { MathBlock, InlineMath } from '@/components/mathematics/MathBlock';
-import { MapPin } from 'lucide-react';
-import Link from 'next/link';
+import { LocalizationSimulator } from '@/components/simulation/LocalizationSimulator';
+import { MathBlock } from '@/components/mathematics/MathBlock';
+import { MapPin, Sparkles, BookOpen, Code2 } from 'lucide-react';
 
 export default function LocalizationPage() {
   return (
-    <div className="space-y-10 max-w-4xl">
-      <div className="border-b border-slate-800 pb-6">
-        <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-2">
-          <MapPin className="w-4 h-4" />
-          <span>Domain 02 / Milestone 5</span>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="border-b border-slate-800/80 pb-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono mb-3">
+          <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Milestone 5 • Domain Laboratory</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-100">
           Robot Localization & State Estimation
         </h1>
-        <p className="text-sm text-slate-400 mt-2 leading-relaxed">
-          Recursive Bayesian state estimation under noisy sensors and uncertain wheel odometry using Extended Kalman Filters (EKF) and Monte Carlo Particle Filters (MCL).
+        <p className="text-sm text-slate-300 mt-2 max-w-3xl leading-relaxed">
+          Estimate true robot poses from noisy sensor measurements and drifting dead-reckoning odometry using recursive Bayesian filtering and Monte Carlo Particle Filters (MCL).
         </p>
       </div>
 
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-          <span className="text-cyan-400 font-mono text-base">1.</span> What Problem Does Localization Solve?
-        </h2>
-        <p className="text-sm text-slate-300 leading-relaxed">
-          Wheel encoders accumulate slippage drift over time (dead reckoning failure). Localization fuses motion commands <InlineMath latex="u_t" /> with landmark/sensor observations <InlineMath latex="z_t" /> to maintain an accurate probability distribution <InlineMath latex="p(x_t)" /> over the robot&apos;s true pose.
-        </p>
-      </section>
+      {/* 1. Interactive Simulator Module */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-mono font-bold text-slate-100 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-cyan-400" />
+            <span>Interactive Monte Carlo Particle Filter Sandbox</span>
+          </h2>
+          <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/20">
+            Bayesian Sensor Fusion
+          </span>
+        </div>
+        <LocalizationSimulator />
+      </div>
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-          <span className="text-cyan-400 font-mono text-base">2.</span> Mathematical Foundations
-        </h2>
+      {/* 2. Mathematical Rigor & KaTeX */}
+      <div className="p-6 rounded-2xl glass-panel space-y-6">
+        <div className="flex items-center gap-2 text-cyan-400 font-mono text-sm font-bold border-b border-slate-800/80 pb-3">
+          <BookOpen className="w-4 h-4" />
+          <span>Recursive Bayesian Filter Equations</span>
+        </div>
 
-        <MathBlock
-          title="Bayes Filter Recursive State Update"
-          latex={`p(x_t \\mid z_{1:t}, u_{1:t}) = \\eta \\, p(z_t \\mid x_t) \\int p(x_t \\mid x_{t-1}, u_t) p(x_{t-1} \\mid z_{1:t-1}, u_{1:t-1}) \\, dx_{t-1}`}
-          explanation="Predict step integrates previous belief through motion model; update step multiplies by observation likelihood."
-        />
-
-        <MathBlock
-          title="EKF Measurement Update & Kalman Gain"
-          latex={`K_t = \\bar{\\Sigma}_t H_t^T (H_t \\bar{\\Sigma}_t H_t^T + R_t)^{-1}, \\quad \\mu_t = \\bar{\\mu}_t + K_t (z_t - h(\\bar{\\mu}_t))`}
-          explanation="H_t is the Jacobian matrix of nonlinear observation model h(x); R_t is measurement sensor noise covariance."
-        />
-      </section>
-
-      <section className="pt-6 border-t border-slate-800 flex items-center justify-between">
-        <Link href="/learn/planning" className="text-xs font-mono text-slate-400 hover:text-slate-200">
-          ← Path Planning
-        </Link>
-        <Link
-          href="/learn/control"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-mono font-medium border border-cyan-500/30 transition-colors"
-        >
-          <span>Next: Robot Control</span>
-          <span>→</span>
-        </Link>
-      </section>
+        <div>
+          <h3 className="text-sm font-bold text-slate-200">1. Bayes Filter Prediction & Measurement Update</h3>
+          <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+            The probability belief state bel(x_t) conditioned on control inputs u_1:t and measurements z_1:t:
+          </p>
+          <div className="mt-3">
+            <MathBlock
+              latex="\overline{\text{bel}}(x_t) = \int p(x_t \mid u_t, x_{t-1})\, \text{bel}(x_{t-1})\, dx_{t-1}"
+              title="Prediction Step (Chapman-Kolmogorov Motion Update)"
+            />
+          </div>
+          <div className="mt-3">
+            <MathBlock
+              latex="\text{bel}(x_t) = \eta \cdot p(z_t \mid x_t)\, \overline{\text{bel}}(x_t)"
+              title="Measurement Update (Bayes Rule Weighting)"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
