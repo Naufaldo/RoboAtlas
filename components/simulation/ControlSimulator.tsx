@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, RotateCcw, Cpu, Sliders, Activity } from 'lucide-react';
 import { wrapToPi } from '@/lib/math/vector2d';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useTheme } from '@/lib/theme/ThemeContext';
 
 export function ControlSimulator() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -12,6 +14,10 @@ export function ControlSimulator() {
   const [stanleyGain, setStanleyGain] = useState(1.4);
   const [speed, setSpeed] = useState(2.2);
   const [trackShape, setTrackShape] = useState<'lemniscate' | 'racetrack' | 'scurve'>('lemniscate');
+
+  const { theme } = useTheme();
+  const { locale } = useLanguage();
+  const isId = locale === 'id';
 
   const [telemetry, setTelemetry] = useState({
     crossTrackError: 0,
@@ -84,93 +90,101 @@ export function ControlSimulator() {
     if (!ctx) return;
 
     let animId: number;
-    let lastFrame = performance.now();
+    let lastTime = performance.now();
     const track = generateTrack();
 
+    const isLight = theme === 'light';
+
     const render = (time: number) => {
-      const dt = Math.min((time - lastFrame) / 1000, 0.1);
-      lastFrame = time;
+      const dt = Math.min((time - lastTime) / 1000, 0.05);
+      lastTime = time;
 
-      const s = state.current;
-      const { robot, wheelbase } = s;
+      const { robot, wheelbase, trail } = state.current;
 
-      let targetPoint = track[0];
-      let crossTrackErr = 0;
-      let headingErr = 0;
-      let deltaSteer = 0;
-
-      if (isRunning) {
-        // Find closest point on path
-        let minDist = Infinity;
+      if (isRunning && track.length > 0) {
+        // Find closest point on track
         let closestIdx = 0;
+        let minDistSq = Infinity;
         for (let i = 0; i < track.length; i++) {
-          const d = Math.hypot(track[i].x - robot.x, track[i].y - robot.y);
-          if (d < minDist) {
-            minDist = d;
+          const d2 =
+            (track[i].x - robot.x) ** 2 + (track[i].y - robot.y) ** 2;
+          if (d2 < minDistSq) {
+            minDistSq = d2;
             closestIdx = i;
           }
         }
 
         const closestPt = track[closestIdx];
-        const nextPt = track[(closestIdx + 1) % track.length];
-        const pathHeading = Math.atan2(nextPt.y - closestPt.y, nextPt.x - closestPt.x);
+        const nextIdx = (closestIdx + 1) % track.length;
+        const pathAngle = Math.atan2(
+          track[nextIdx].y - closestPt.y,
+          track[nextIdx].x - closestPt.x
+        );
 
-        // Cross-track error vector (signed distance)
-        const dx = robot.x - closestPt.x;
-        const dy = robot.y - closestPt.y;
-        crossTrackErr = -Math.sin(pathHeading) * dx + Math.cos(pathHeading) * dy;
-        headingErr = wrapToPi(robot.theta - pathHeading);
+        let delta = 0; // steering angle command
+        let eCross = 0;
+        let eHeading = wrapToPi(pathAngle - robot.theta);
 
         if (controller === 'pure_pursuit') {
-          // Pure Pursuit: Find lookahead target point
-          let lookaheadIdx = closestIdx;
+          // Find lookahead target point
+          let targetIdx = closestIdx;
           for (let i = 0; i < track.length; i++) {
             const idx = (closestIdx + i) % track.length;
-            const d = Math.hypot(track[idx].x - robot.x, track[idx].y - robot.y);
-            if (d >= lookaheadDist) {
-              lookaheadIdx = idx;
+            const dist = Math.hypot(track[idx].x - robot.x, track[idx].y - robot.y);
+            if (dist >= lookaheadDist) {
+              targetIdx = idx;
               break;
             }
           }
-          targetPoint = track[lookaheadIdx];
 
+          const targetPt = track[targetIdx];
           const alpha = wrapToPi(
-            Math.atan2(targetPoint.y - robot.y, targetPoint.x - robot.x) - robot.theta
+            Math.atan2(targetPt.y - robot.y, targetPt.x - robot.x) - robot.theta
           );
-          deltaSteer = Math.atan2(2 * wheelbase * Math.sin(alpha), lookaheadDist);
+
+          // Pure Pursuit steering law: delta = atan2(2 * L * sin(alpha), L_f)
+          delta = Math.atan2(2 * wheelbase * Math.sin(alpha), lookaheadDist);
+          eCross = Math.sqrt(minDistSq);
         } else {
-          // Stanley Controller: delta = (theta_path - theta_robot) + atan2(k * e_ct, v)
-          const thetaError = wrapToPi(pathHeading - robot.theta);
-          const ctCorrection = Math.atan2(stanleyGain * -crossTrackErr, speed * 25);
-          deltaSteer = wrapToPi(thetaError + ctCorrection);
+          // Stanley Controller: delta = e_theta + atan(k * e_y / (v + 0.1))
+          const dx = robot.x - closestPt.x;
+          const dy = robot.y - closestPt.y;
+          // Cross product to get signed lateral error
+          const cross = Math.cos(pathAngle) * dy - Math.sin(pathAngle) * dx;
+          eCross = cross;
+
+          delta = eHeading + Math.atan((stanleyGain * eCross) / (speed * 15 + 0.1));
         }
 
-        // Steering limits
-        deltaSteer = Math.max(-0.65, Math.min(0.65, deltaSteer));
+        // Clamp steering angle
+        const maxSteer = Math.PI / 4.5;
+        delta = Math.max(-maxSteer, Math.min(maxSteer, delta));
 
-        // Bicycle kinematic model integration
-        robot.theta = wrapToPi(robot.theta + ((speed * 30) / wheelbase) * Math.tan(deltaSteer) * dt);
-        robot.x += Math.cos(robot.theta) * speed * 30 * dt;
-        robot.y += Math.sin(robot.theta) * speed * 30 * dt;
+        // Kinematic bicycle update
+        const v = speed * 45;
+        robot.theta = wrapToPi(robot.theta + (v / wheelbase) * Math.tan(delta) * dt);
+        robot.x += v * Math.cos(robot.theta) * dt;
+        robot.y += v * Math.sin(robot.theta) * dt;
 
-        s.trail.push({ x: robot.x, y: robot.y });
-        if (s.trail.length > 200) s.trail.shift();
-
-        s.errorHistory.push(Math.abs(crossTrackErr));
-        if (s.errorHistory.length > 80) s.errorHistory.shift();
+        trail.push({ x: robot.x, y: robot.y });
+        if (trail.length > 180) trail.shift();
 
         setTelemetry({
-          crossTrackError: Number(crossTrackErr.toFixed(2)),
-          headingError: Number(headingErr.toFixed(2)),
-          steeringAngle: Number(((deltaSteer * 180) / Math.PI).toFixed(1)),
+          crossTrackError: Number(Math.abs(eCross).toFixed(2)),
+          headingError: Number(((eHeading * 180) / Math.PI).toFixed(1)),
+          steeringAngle: Number(((delta * 180) / Math.PI).toFixed(1)),
         });
       }
 
-      // Drawing
+      // RENDER
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Background
+      ctx.fillStyle = isLight ? '#f1f5f9' : '#050811';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       // Grid
-      ctx.strokeStyle = 'rgba(51, 65, 85, 0.2)';
+      ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(51, 65, 85, 0.25)';
       ctx.lineWidth = 1;
       for (let x = 0; x < canvas.width; x += 30) {
         ctx.beginPath();
@@ -185,77 +199,77 @@ export function ControlSimulator() {
         ctx.stroke();
       }
 
-      // Reference Track
-      ctx.beginPath();
-      ctx.moveTo(track[0].x, track[0].y);
-      for (let i = 1; i < track.length; i++) {
-        ctx.lineTo(track[i].x, track[i].y);
-      }
-      if (trackShape !== 'scurve') ctx.closePath();
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
-      // Robot Trajectory Trail (cyan)
-      if (s.trail.length > 1) {
+      // Draw Reference Track
+      if (track.length > 1) {
         ctx.beginPath();
-        ctx.moveTo(s.trail[0].x, s.trail[0].y);
-        for (let i = 1; i < s.trail.length; i++) {
-          ctx.lineTo(s.trail[i].x, s.trail[i].y);
+        ctx.moveTo(track[0].x, track[0].y);
+        for (let i = 1; i < track.length; i++) {
+          ctx.lineTo(track[i].x, track[i].y);
         }
-        ctx.strokeStyle = '#06b6d4';
-        ctx.lineWidth = 2.5;
+        if (trackShape !== 'scurve') ctx.closePath();
+        ctx.strokeStyle = isLight ? '#0284c7' : '#06b6d4';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        ctx.strokeStyle = isLight ? 'rgba(2, 132, 199, 0.15)' : 'rgba(6, 182, 212, 0.2)';
+        ctx.lineWidth = 14;
         ctx.stroke();
       }
 
-      // Pure Pursuit Lookahead Circle & Target Vector
-      if (controller === 'pure_pursuit') {
+      // Draw Robot Trail
+      if (trail.length > 1) {
         ctx.beginPath();
-        ctx.arc(robot.x, robot.y, lookaheadDist, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
-        ctx.lineWidth = 1.5;
+        ctx.moveTo(trail[0].x, trail[0].y);
+        for (let i = 1; i < trail.length; i++) {
+          ctx.lineTo(trail[i].x, trail[i].y);
+        }
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
         ctx.setLineDash([3, 3]);
         ctx.stroke();
         ctx.setLineDash([]);
-
-        ctx.beginPath();
-        ctx.moveTo(robot.x, robot.y);
-        ctx.lineTo(targetPoint.x, targetPoint.y);
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(targetPoint.x, targetPoint.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#f59e0b';
-        ctx.fill();
       }
 
-      // Robot Vehicle
+      // Draw Robot Vehicle
       ctx.save();
       ctx.translate(robot.x, robot.y);
       ctx.rotate(robot.theta);
 
       // Chassis
-      ctx.fillStyle = '#090d16';
-      ctx.strokeStyle = '#00f2fe';
-      ctx.lineWidth = 2;
+      ctx.fillStyle = isLight ? '#ffffff' : '#0f172a';
+      ctx.strokeStyle = isLight ? '#0284c7' : '#22d3ee';
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.roundRect(-wheelbase / 2, -10, wheelbase + 6, 20, 4);
+      ctx.roundRect(-wheelbase / 2 - 4, -12, wheelbase + 8, 24, 4);
       ctx.fill();
       ctx.stroke();
 
-      // Front steering wheel
+      // Rear Wheels
+      ctx.fillStyle = isLight ? '#475569' : '#64748b';
+      ctx.fillRect(-wheelbase / 2 - 2, -15, 8, 4);
+      ctx.fillRect(-wheelbase / 2 - 2, 11, 8, 4);
+
+      // Front Steered Wheels
+      const steer = (telemetry.steeringAngle * Math.PI) / 180;
       ctx.save();
-      ctx.translate(wheelbase / 2, 0);
-      ctx.rotate(deltaSteer);
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(-6, -3, 12, 6);
+      ctx.translate(wheelbase / 2, -13);
+      ctx.rotate(steer);
+      ctx.fillRect(-4, -2, 8, 4);
       ctx.restore();
 
-      // Rear fixed wheel
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(-wheelbase / 2 - 4, -3, 8, 6);
+      ctx.save();
+      ctx.translate(wheelbase / 2, 13);
+      ctx.rotate(steer);
+      ctx.fillRect(-4, -2, 8, 4);
+      ctx.restore();
+
+      // Heading indicator
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(wheelbase / 2 + 8, 0);
+      ctx.strokeStyle = '#f43f5e';
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
       ctx.restore();
 
@@ -264,51 +278,45 @@ export function ControlSimulator() {
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [isRunning, controller, generateTrack, lookaheadDist, speed, stanleyGain, trackShape]);
+  }, [isRunning, controller, lookaheadDist, stanleyGain, speed, trackShape, generateTrack, telemetry.steeringAngle, theme]);
 
   return (
-    <div className="rounded-2xl glass-panel border border-slate-800/90 overflow-hidden shadow-2xl">
-      {/* Header */}
-      <div className="px-4 py-3 bg-slate-900/80 border-b border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
-        <div className="flex items-center gap-2 text-cyan-400 font-bold">
+    <div className="rounded-2xl glass-panel border border-slate-200 dark:border-slate-800/90 overflow-hidden shadow-2xl space-y-0">
+      {/* Top Header & Telemetry */}
+      <div className="px-4 py-3 bg-slate-100/90 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono text-slate-800 dark:text-slate-200">
+        <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold">
           <Cpu className="w-4 h-4" />
-          <span>Path Tracking Controller Sandbox</span>
+          <span>{isId ? 'Simulator Kemudi Pelacak Jalur (Pure Pursuit vs Stanley)' : 'Steering Path Tracking Simulator (Pure Pursuit vs Stanley)'}</span>
         </div>
 
-        <div className="flex items-center gap-4 text-[11px] text-slate-300">
+        <div className="flex items-center gap-4 text-[11px]">
           <span>
-            Cross-Track e_ct:{' '}
-            <strong className={Math.abs(telemetry.crossTrackError) < 4 ? 'text-emerald-400' : 'text-rose-400'}>
-              {telemetry.crossTrackError} px
-            </strong>
+            {isId ? 'Error Cross-Track:' : 'Cross-Track Err:'} <strong className="text-amber-600 dark:text-amber-400">{telemetry.crossTrackError} px</strong>
           </span>
           <span>
-            Heading Error: <strong className="text-cyan-400">{telemetry.headingError} rad</strong>
-          </span>
-          <span>
-            Steer δ: <strong className="text-amber-400">{telemetry.steeringAngle}°</strong>
+            {isId ? 'Sudut Kemudi δ:' : 'Steer δ:'} <strong className="text-cyan-600 dark:text-cyan-400">{telemetry.steeringAngle}°</strong>
           </span>
         </div>
       </div>
 
-      {/* Canvas */}
-      <div className="relative aspect-[16/9] w-full max-h-[340px] bg-[#050811]">
+      {/* Canvas Viewport */}
+      <div className="relative aspect-[16/9] w-full max-h-[320px] bg-[#f1f5f9] dark:bg-[#050811]">
         <canvas ref={canvasRef} width={520} height={320} className="w-full h-full block" />
       </div>
 
-      {/* Controls */}
-      <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-3 text-xs font-mono">
+      {/* Control Toolbar */}
+      <div className="p-4 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 space-y-3 text-xs font-mono">
         <div className="flex items-center justify-between flex-wrap gap-3">
           {/* Controller Type */}
           <div className="flex items-center gap-2">
-            <span className="text-slate-400">Tracker:</span>
-            <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <span className="text-slate-600 dark:text-slate-400">{isId ? 'Pelacak:' : 'Tracker:'}</span>
+            <div className="flex bg-slate-200 dark:bg-slate-950 p-1 rounded-lg border border-slate-300 dark:border-slate-800">
               <button
                 onClick={() => setController('pure_pursuit')}
                 className={`px-3 py-1 rounded transition-all ${
                   controller === 'pure_pursuit'
-                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 Pure Pursuit (Lookahead)
@@ -317,8 +325,8 @@ export function ControlSimulator() {
                 onClick={() => setController('stanley')}
                 className={`px-3 py-1 rounded transition-all ${
                   controller === 'stanley'
-                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 Stanley Controller
@@ -327,16 +335,16 @@ export function ControlSimulator() {
           </div>
 
           {/* Track Shape */}
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
-            <span className="text-slate-500 px-1">Track:</span>
+          <div className="flex items-center gap-1.5 bg-slate-200 dark:bg-slate-950 p-1 rounded-lg border border-slate-300 dark:border-slate-800 text-[11px]">
+            <span className="text-slate-500 px-1">{isId ? 'Bentuk Trek:' : 'Track:'}</span>
             {(['lemniscate', 'racetrack', 'scurve'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTrackShape(t)}
                 className={`px-2 py-0.5 rounded capitalize transition-all ${
                   trackShape === t
-                    ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold border border-cyan-500/30'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 {t}
@@ -348,10 +356,10 @@ export function ControlSimulator() {
         {/* Sliders */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
           {controller === 'pure_pursuit' ? (
-            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-              <div className="flex justify-between text-slate-300">
-                <span>Lookahead Distance (L_f):</span>
-                <span className="text-amber-400 font-bold">{lookaheadDist} px</span>
+            <div className="bg-white dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300">
+                <span>{isId ? 'Jarak Lookahead (L_f):' : 'Lookahead Distance (L_f):'}</span>
+                <span className="text-amber-600 dark:text-amber-400 font-bold">{lookaheadDist} px</span>
               </div>
               <input
                 type="range"
@@ -360,14 +368,14 @@ export function ControlSimulator() {
                 step={2}
                 value={lookaheadDist}
                 onChange={(e) => setLookaheadDist(parseInt(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+                className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none"
               />
             </div>
           ) : (
-            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-              <div className="flex justify-between text-slate-300">
-                <span>Stanley Cross-Track Gain (k):</span>
-                <span className="text-cyan-400 font-bold">{stanleyGain.toFixed(2)}</span>
+            <div className="bg-white dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300">
+                <span>{isId ? 'Gain Cross-Track Stanley (k):' : 'Stanley Cross-Track Gain (k):'}</span>
+                <span className="text-cyan-600 dark:text-cyan-400 font-bold">{stanleyGain.toFixed(2)}</span>
               </div>
               <input
                 type="range"
@@ -376,15 +384,15 @@ export function ControlSimulator() {
                 step={0.1}
                 value={stanleyGain}
                 onChange={(e) => setStanleyGain(parseFloat(e.target.value))}
-                className="w-full accent-cyan-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+                className="w-full accent-cyan-500 cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none"
               />
             </div>
           )}
 
-          <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-            <div className="flex justify-between text-slate-300">
-              <span>Velocity (v):</span>
-              <span className="text-emerald-400 font-bold">{speed.toFixed(1)} m/s</span>
+          <div className="bg-white dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+            <div className="flex justify-between text-slate-700 dark:text-slate-300">
+              <span>{isId ? 'Kecepatan Maju (v):' : 'Velocity (v):'}</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold">{speed.toFixed(1)} m/s</span>
             </div>
             <input
               type="range"
@@ -393,7 +401,7 @@ export function ControlSimulator() {
               step={0.2}
               value={speed}
               onChange={(e) => setSpeed(parseFloat(e.target.value))}
-              className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+              className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none"
             />
           </div>
         </div>
@@ -405,25 +413,25 @@ export function ControlSimulator() {
               onClick={() => setIsRunning(!isRunning)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-semibold transition-all ${
                 isRunning
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                  : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                  : 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/40'
               }`}
             >
               {isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              {isRunning ? 'Pause' : 'Resume'}
+              {isRunning ? (isId ? 'Jeda' : 'Pause') : (isId ? 'Lanjutkan' : 'Resume')}
             </button>
 
             <button
               onClick={reset}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Reset Vehicle
+              {isId ? 'Reset Kendaraan' : 'Reset Vehicle'}
             </button>
           </div>
 
-          <div className="text-[11px] text-slate-400">
-            Geometric steering continuously minimizes lateral error $e_y$ and heading error $e_\theta$.
+          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+            {isId ? 'Kendali kemudi meminimalkan kesalahan lateral dan heading secara adaptif.' : 'Geometric steering continuously minimizes lateral error and heading error.'}
           </div>
         </div>
       </div>

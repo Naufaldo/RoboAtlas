@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, RotateCcw, StepForward, Activity, Sliders, CheckCircle2 } from 'lucide-react';
 import { wrapToPi } from '@/lib/math/vector2d';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useTheme } from '@/lib/theme/ThemeContext';
 
 interface Point {
   x: number;
@@ -15,6 +17,10 @@ export function SlamSimulator() {
   const [meanError, setMeanError] = useState(0);
   const [noiseLevel, setNoiseLevel] = useState(2);
   const [isConverged, setIsConverged] = useState(false);
+
+  const { theme } = useTheme();
+  const { locale } = useLanguage();
+  const isId = locale === 'id';
 
   // Reference Point Cloud (Reference scan in Cyan)
   const targetCloud = useRef<Point[]>([]);
@@ -60,104 +66,124 @@ export function SlamSimulator() {
     currentCloud.current = transformed;
     setIteration(0);
     setIsConverged(false);
-    calculateError(transformed, pts);
-  }, [noiseLevel]);
 
-  const calculateError = (curr: Point[], target: Point[]) => {
-    let totalDist = 0;
-    for (const p of curr) {
-      let minDist = Infinity;
-      for (const q of target) {
-        const d = Math.hypot(p.x - q.x, p.y - q.y);
-        if (d < minDist) minDist = d;
-      }
-      totalDist += minDist;
+    // Initial mean error
+    let sumErr = 0;
+    for (let i = 0; i < pts.length; i++) {
+      sumErr += Math.hypot(pts[i].x - transformed[i].x, pts[i].y - transformed[i].y);
     }
-    const err = totalDist / curr.length;
-    setMeanError(Number(err.toFixed(2)));
-    if (err < 1.5) setIsConverged(true);
-  };
+    setMeanError(Number((sumErr / pts.length).toFixed(2)));
+  }, [noiseLevel]);
 
   useEffect(() => {
     resetScans();
   }, [resetScans]);
 
-  // Single step of ICP (Iterative Closest Point using SVD Closed Form)
-  const stepICP = () => {
+  // Execute 1 Step of ICP Scan Matching
+  const stepICP = useCallback(() => {
+    if (isConverged) return;
+
     const target = targetCloud.current;
     const curr = currentCloud.current;
-    if (curr.length === 0 || target.length === 0) return;
+    const N = curr.length;
 
-    // 1. Find Closest Point correspondences (nearest neighbors)
+    // 1. Point Correspondences (Nearest Neighbor)
     const correspondences: { p: Point; q: Point }[] = [];
-    for (const p of curr) {
-      let minDist = Infinity;
-      let closestPt = target[0];
-      for (const q of target) {
+    let totalErr = 0;
+
+    for (let i = 0; i < N; i++) {
+      const p = curr[i];
+      let bestDist = Infinity;
+      let closestQ = target[0];
+
+      for (let j = 0; j < target.length; j++) {
+        const q = target[j];
         const d = Math.hypot(p.x - q.x, p.y - q.y);
-        if (d < minDist) {
-          minDist = d;
-          closestPt = q;
+        if (d < bestDist) {
+          bestDist = d;
+          closestQ = q;
         }
       }
-      correspondences.push({ p, q: closestPt });
+
+      correspondences.push({ p, q: closestQ });
+      totalErr += bestDist;
+    }
+
+    const currentMeanErr = totalErr / N;
+    setMeanError(Number(currentMeanErr.toFixed(2)));
+
+    if (currentMeanErr < 2.2 || iteration >= 18) {
+      setIsConverged(true);
+      return;
     }
 
     // 2. Compute Centroids
-    let meanPx = 0, meanPy = 0;
-    let meanQx = 0, meanQy = 0;
-    for (const { p, q } of correspondences) {
-      meanPx += p.x; meanPy += p.y;
-      meanQx += q.x; meanQy += q.y;
+    let pMeanX = 0, pMeanY = 0;
+    let qMeanX = 0, qMeanY = 0;
+    for (const pair of correspondences) {
+      pMeanX += pair.p.x;
+      pMeanY += pair.p.y;
+      qMeanX += pair.q.x;
+      qMeanY += pair.q.y;
     }
-    const N = correspondences.length;
-    meanPx /= N; meanPy /= N;
-    meanQx /= N; meanQy /= N;
+    pMeanX /= N;
+    pMeanY /= N;
+    qMeanX /= N;
+    qMeanY /= N;
 
-    // 3. Compute 2D Cross-Covariance Matrix H
-    let H11 = 0, H12 = 0, H21 = 0, H22 = 0;
-    for (const { p, q } of correspondences) {
-      const px = p.x - meanPx;
-      const py = p.y - meanPy;
-      const qx = q.x - meanQx;
-      const qy = q.y - meanQy;
+    // 3. Compute 2D SVD / Covariance Alignment
+    // H = sum((p - pMean) * (q - qMean)^T)
+    let sxx = 0, sxy = 0, syx = 0, syy = 0;
+    for (const pair of correspondences) {
+      const px = pair.p.x - pMeanX;
+      const py = pair.p.y - pMeanY;
+      const qx = pair.q.x - qMeanX;
+      const qy = pair.q.y - qMeanY;
 
-      H11 += px * qx;
-      H12 += px * qy;
-      H21 += py * qx;
-      H22 += py * qy;
+      sxx += px * qx;
+      sxy += px * qy;
+      syx += py * qx;
+      syy += py * qy;
     }
 
-    // Optimal 2D rotation angle: theta = atan2(H12 - H21, H11 + H22)
-    const dTheta = Math.atan2(H12 - H21, H11 + H22);
+    // Optimal 2D rotation angle: theta = atan2(sxy - syx, sxx + syy)
+    const dTheta = Math.atan2(sxy - syx, sxx + syy);
     const cosT = Math.cos(dTheta);
     const sinT = Math.sin(dTheta);
 
-    // Optimal translation: t = meanQ - R * meanP
-    const tx = meanQx - (meanPx * cosT - meanPy * sinT);
-    const ty = meanQy - (meanPx * sinT + meanPy * cosT);
+    // Optimal translation: t = qMean - R * pMean
+    const tx = qMeanX - (pMeanX * cosT - pMeanY * sinT);
+    const ty = qMeanY - (pMeanX * sinT + pMeanY * cosT);
 
-    // Apply transformation to current cloud
-    const updated = curr.map((p) => ({
-      x: p.x * cosT - p.y * sinT + tx,
-      y: p.x * sinT + p.y * cosT + ty,
-    }));
+    // 4. Update Current Scan Points
+    for (let i = 0; i < N; i++) {
+      const p = curr[i];
+      const newX = (p.x * cosT - p.y * sinT) + tx;
+      const newY = (p.x * sinT + p.y * cosT) + ty;
+      p.x = newX;
+      p.y = newY;
+    }
 
-    currentCloud.current = updated;
     setIteration((prev) => prev + 1);
-    calculateError(updated, target);
-  };
+  }, [isConverged, iteration]);
 
+  // RENDER CANVAS
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const isLight = theme === 'light';
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Background
+    ctx.fillStyle = isLight ? '#f1f5f9' : '#050811';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     // Grid
-    ctx.strokeStyle = 'rgba(51, 65, 85, 0.2)';
+    ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(51, 65, 85, 0.25)';
     ctx.lineWidth = 1;
     for (let x = 0; x < canvas.width; x += 30) {
       ctx.beginPath();
@@ -175,23 +201,24 @@ export function SlamSimulator() {
     const target = targetCloud.current;
     const curr = currentCloud.current;
 
-    // Correspondence lines (faint yellow vectors)
-    if (curr.length > 0 && target.length > 0) {
-      for (const p of curr) {
-        let minDist = Infinity;
-        let closest = target[0];
-        for (const q of target) {
+    // Draw Correspondence Lines
+    if (target.length > 0 && curr.length > 0 && !isConverged) {
+      for (let i = 0; i < curr.length; i++) {
+        const p = curr[i];
+        let bestDist = Infinity;
+        let closestQ = target[0];
+        for (let j = 0; j < target.length; j++) {
+          const q = target[j];
           const d = Math.hypot(p.x - q.x, p.y - q.y);
-          if (d < minDist) {
-            minDist = d;
-            closest = q;
+          if (d < bestDist) {
+            bestDist = d;
+            closestQ = q;
           }
         }
-
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
-        ctx.lineTo(closest.x, closest.y);
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.25)';
+        ctx.lineTo(closestQ.x, closestQ.y);
+        ctx.strokeStyle = isLight ? 'rgba(100, 116, 139, 0.35)' : 'rgba(148, 163, 184, 0.25)';
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -201,89 +228,89 @@ export function SlamSimulator() {
     for (const p of target) {
       ctx.beginPath();
       ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#06b6d4';
+      ctx.fillStyle = isLight ? '#0284c7' : '#06b6d4';
       ctx.fill();
     }
 
-    // Current Source Cloud (Amber)
+    // Current Source Cloud (Amber / Emerald when converged)
     for (const p of curr) {
       ctx.beginPath();
       ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
       ctx.fillStyle = isConverged ? '#10b981' : '#f59e0b';
       ctx.fill();
-      ctx.strokeStyle = '#090d16';
+      ctx.strokeStyle = isLight ? '#ffffff' : '#090d16';
       ctx.lineWidth = 1;
       ctx.stroke();
     }
-  }, [iteration, meanError, isConverged]);
+  }, [iteration, meanError, isConverged, theme]);
 
   return (
-    <div className="rounded-2xl glass-panel border border-slate-800/90 overflow-hidden shadow-2xl">
+    <div className="rounded-2xl glass-panel border border-slate-200 dark:border-slate-800/90 overflow-hidden shadow-2xl">
       {/* Header */}
-      <div className="px-4 py-3 bg-slate-900/80 border-b border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
-        <div className="flex items-center gap-2 text-cyan-400 font-bold">
+      <div className="px-4 py-3 bg-slate-100/90 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono text-slate-800 dark:text-slate-200">
+        <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold">
           <Activity className="w-4 h-4" />
-          <span>Iterative Closest Point (ICP) Scan Matching</span>
+          <span>{isId ? 'Simulator Pencocokan Pindaian ICP (Iterative Closest Point)' : 'Iterative Closest Point (ICP) Scan Matching'}</span>
         </div>
 
-        <div className="flex items-center gap-4 text-[11px] text-slate-300">
+        <div className="flex items-center gap-4 text-[11px]">
           <span>
-            Iteration: <strong className="text-cyan-400">{iteration}</strong>
+            {isId ? 'Iterasi:' : 'Iteration:'} <strong className="text-cyan-600 dark:text-cyan-400">{iteration}</strong>
           </span>
           <span>
-            Mean Error: <strong className={isConverged ? 'text-emerald-400' : 'text-amber-400'}>{meanError} px</strong>
+            {isId ? 'Rata-rata Error:' : 'Mean Error:'} <strong className={isConverged ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}>{meanError} px</strong>
           </span>
           {isConverged && (
-            <span className="flex items-center gap-1 text-emerald-400 font-bold">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Converged!
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+              <CheckCircle2 className="w-3.5 h-3.5" /> {isId ? 'Konvergen!' : 'Converged!'}
             </span>
           )}
         </div>
       </div>
 
       {/* Canvas */}
-      <div className="relative aspect-[16/9] w-full max-h-[340px] bg-[#050811]">
+      <div className="relative aspect-[16/9] w-full max-h-[340px] bg-[#f1f5f9] dark:bg-[#050811]">
         <canvas ref={canvasRef} width={520} height={320} className="w-full h-full block" />
 
-        <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-3 py-2 rounded-lg border border-slate-800 text-[10px] font-mono space-y-1 text-slate-300">
+        <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-950/80 backdrop-blur-md px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-mono space-y-1 text-slate-700 dark:text-slate-300">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#06b6d4]" />
-            <span>Reference Scan (Target)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#0284c7] dark:bg-[#06b6d4]" />
+            <span>{isId ? 'Pindaian Referensi (Target)' : 'Reference Scan (Target)'}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-            <span>Shifted Scan (Source)</span>
+            <span>{isId ? 'Pindaian Bergeser (Source)' : 'Shifted Scan (Source)'}</span>
           </div>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between flex-wrap gap-3 text-xs font-mono">
+      <div className="p-4 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-3 text-xs font-mono">
         <div className="flex items-center gap-2">
           <button
             onClick={stepICP}
             disabled={isConverged}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold transition-all ${
               isConverged
-                ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-700'
                 : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-lg shadow-cyan-500/20'
             }`}
           >
             <StepForward className="w-4 h-4" />
-            Step ICP Iteration
+            {isId ? 'Langkah Iterasi ICP' : 'Step ICP Iteration'}
           </button>
 
           <button
             onClick={resetScans}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            Scramble Offset
+            {isId ? 'Acak Posisi Pindaian' : 'Scramble Offset'}
           </button>
         </div>
 
-        <div className="text-[11px] text-slate-400">
-          Each iteration solves for optimal 2D rotation $R$ and translation $t$ to minimize Point-to-Point Euclidean error.
+        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+          {isId ? 'Setiap iterasi menghitung rotasi R dan translasi t optimal yang meminimalkan error Euclidean.' : 'Each iteration solves for optimal 2D rotation R and translation t to minimize Point-to-Point Euclidean error.'}
         </div>
       </div>
     </div>

@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, RotateCcw, Users, Sliders, Crosshair, Sparkles } from 'lucide-react';
 import { wrapToPi } from '@/lib/math/vector2d';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useTheme } from '@/lib/theme/ThemeContext';
 
 interface Agent {
   id: number;
@@ -20,6 +22,10 @@ export function MultiAgentSimulator() {
   const [formationShape, setFormationShape] = useState<'v_shape' | 'circle' | 'line'>('v_shape');
   const [agentCount, setAgentCount] = useState(14);
   const [showNetwork, setShowNetwork] = useState(true);
+
+  const { theme } = useTheme();
+  const { locale } = useLanguage();
+  const isId = locale === 'id';
 
   const state = useRef({
     agents: [] as Agent[],
@@ -46,17 +52,57 @@ export function MultiAgentSimulator() {
     resetSwarm();
   }, [agentCount, resetSwarm]);
 
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const updateTargetPos = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     state.current.target = {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
     };
   };
+
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    updateTargetPos(e.clientX, e.clientY);
+  };
+
+  const handleTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length > 0) {
+      updateTargetPos(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
+
+  // Formation offsets relative to leader (agent 0)
+  const getFormationOffset = useCallback(
+    (index: number, shape: 'v_shape' | 'circle' | 'line') => {
+      if (index === 0) return { dx: 0, dy: 0 };
+
+      if (shape === 'v_shape') {
+        const side = index % 2 === 0 ? 1 : -1;
+        const rank = Math.ceil(index / 2);
+        return {
+          dx: -rank * 32,
+          dy: side * rank * 24,
+        };
+      } else if (shape === 'circle') {
+        const angle = (index / (agentCount - 1)) * 2 * Math.PI;
+        const R = 60;
+        return {
+          dx: Math.cos(angle) * R,
+          dy: Math.sin(angle) * R,
+        };
+      } else {
+        // Line
+        return {
+          dx: -index * 26,
+          dy: 0,
+        };
+      }
+    },
+    [agentCount]
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -65,140 +111,153 @@ export function MultiAgentSimulator() {
     if (!ctx) return;
 
     let animId: number;
-    let lastFrame = performance.now();
+    let lastTime = performance.now();
+    const isLight = theme === 'light';
 
     const render = (time: number) => {
-      const dt = Math.min((time - lastFrame) / 1000, 0.1);
-      lastFrame = time;
+      const dt = Math.min((time - lastTime) / 1000, 0.05);
+      lastTime = time;
 
       const { agents, target } = state.current;
 
-      if (isRunning) {
-        if (mode === 'consensus') {
-          // Graph Laplacian Rendezvous Consensus: dot(x_i) = -sum_{j in N_i} (x_i - x_j) + k * (target - x_i)
-          const kGain = 1.2;
-          const commRange = 130;
+      if (isRunning && agents.length > 0) {
+        // 1. Leader Agent (ID 0) tracks target
+        const leader = agents[0];
+        const ldx = target.x - leader.x;
+        const ldy = target.y - leader.y;
+        const lDist = Math.hypot(ldx, ldy);
 
-          for (let i = 0; i < agents.length; i++) {
-            const ai = agents[i];
-            let fx = (target.x - ai.x) * 0.4;
-            let fy = (target.y - ai.y) * 0.4;
+        if (lDist > 6) {
+          const lAngle = Math.atan2(ldy, ldx);
+          leader.theta = lAngle;
+          leader.x += Math.cos(lAngle) * Math.min(80, lDist * 2.2) * dt;
+          leader.y += Math.sin(lAngle) * Math.min(80, lDist * 2.2) * dt;
+        }
 
+        // 2. Followers (Formation, Consensus, or Flocking)
+        for (let i = 1; i < agents.length; i++) {
+          const a = agents[i];
+
+          if (mode === 'formation') {
+            // Leader-Follower formation maintenance
+            const off = getFormationOffset(i, formationShape);
+            // Rotate offset by leader's heading
+            const cosL = Math.cos(leader.theta);
+            const sinL = Math.sin(leader.theta);
+            const targetX = leader.x + (off.dx * cosL - off.dy * sinL);
+            const targetY = leader.y + (off.dx * sinL + off.dy * cosL);
+
+            const dx = targetX - a.x;
+            const dy = targetY - a.y;
+            const dist = Math.hypot(dx, dy);
+
+            // Proportional feedback control to target slot
+            const kP = 3.5;
+            a.vx = dx * kP;
+            a.vy = dy * kP;
+
+            // Collision avoidance between neighbors
             for (let j = 0; j < agents.length; j++) {
               if (i === j) continue;
-              const aj = agents[j];
-              const dist = Math.hypot(aj.x - ai.x, aj.y - ai.y);
-
-              if (dist < commRange) {
-                // Laplacian consensus pull
-                fx += (aj.x - ai.x) * 0.6;
-                fy += (aj.y - ai.y) * 0.6;
-
-                // Collision repulsion
-                if (dist < 28) {
-                  fx -= (aj.x - ai.x) * (28 - dist) * 1.5;
-                  fy -= (aj.y - ai.y) * (28 - dist) * 1.5;
-                }
+              const ox = a.x - agents[j].x;
+              const oy = a.y - agents[j].y;
+              const od = Math.hypot(ox, oy);
+              if (od < 26 && od > 0.01) {
+                a.vx += (ox / od) * (26 - od) * 6;
+                a.vy += (oy / od) * (26 - od) * 6;
               }
             }
 
-            ai.vx = ai.vx * 0.85 + fx * dt * 4;
-            ai.vy = ai.vy * 0.85 + fy * dt * 4;
-            ai.x += ai.vx * dt * 30;
-            ai.y += ai.vy * dt * 30;
-            ai.theta = Math.atan2(ai.vy, ai.vx);
-          }
-        } else if (mode === 'formation') {
-          // Leader-Follower Geometric Offsets
-          for (let i = 0; i < agents.length; i++) {
-            const ai = agents[i];
-            let desiredX = target.x;
-            let desiredY = target.y;
-
-            if (formationShape === 'v_shape') {
-              const row = Math.floor((i + 1) / 2);
-              const side = i % 2 === 0 ? 1 : -1;
-              desiredX = target.x - row * 26;
-              desiredY = target.y + side * row * 24;
-            } else if (formationShape === 'circle') {
-              const angle = (i / agents.length) * 2 * Math.PI;
-              const r = 70;
-              desiredX = target.x + Math.cos(angle) * r;
-              desiredY = target.y + Math.sin(angle) * r;
-            } else {
-              // Line
-              const offset = (i - agents.length / 2) * 26;
-              desiredX = target.x;
-              desiredY = target.y + offset;
-            }
-
-            const fx = (desiredX - ai.x) * 3.5;
-            const fy = (desiredY - ai.y) * 3.5;
-
-            ai.vx = ai.vx * 0.85 + fx * dt * 5;
-            ai.vy = ai.vy * 0.85 + fy * dt * 5;
-            ai.x += ai.vx * dt * 25;
-            ai.y += ai.vy * dt * 25;
-            ai.theta = Math.atan2(ai.vy, ai.vx);
-          }
-        } else {
-          // Boids Flocking (Separation, Alignment, Cohesion)
-          const neighborDist = 90;
-          const separationDist = 25;
-
-          for (let i = 0; i < agents.length; i++) {
-            const ai = agents[i];
-            let sepX = 0, sepY = 0;
-            let alignX = 0, alignY = 0;
-            let cohX = 0, cohY = 0;
+            a.x += a.vx * dt;
+            a.y += a.vy * dt;
+            a.theta = Math.atan2(a.vy, a.vx);
+          } else if (mode === 'consensus') {
+            // Graph Laplacian Consensus Rendezvous (Decentralized average)
+            let avgX = 0;
+            let avgY = 0;
             let neighbors = 0;
+            const commR = 140;
 
             for (let j = 0; j < agents.length; j++) {
               if (i === j) continue;
-              const aj = agents[j];
-              const d = Math.hypot(aj.x - ai.x, aj.y - ai.y);
-
-              if (d < neighborDist) {
+              const d = Math.hypot(agents[j].x - a.x, agents[j].y - a.y);
+              if (d < commR) {
+                avgX += agents[j].x - a.x;
+                avgY += agents[j].y - a.y;
                 neighbors++;
-                alignX += aj.vx;
-                alignY += aj.vy;
-                cohX += aj.x;
-                cohY += aj.y;
-
-                if (d < separationDist) {
-                  sepX -= (aj.x - ai.x) / (d + 0.001);
-                  sepY -= (aj.y - ai.y) / (d + 0.001);
-                }
               }
             }
-
-            let fx = (target.x - ai.x) * 0.35 + sepX * 18;
-            let fy = (target.y - ai.y) * 0.35 + sepY * 18;
 
             if (neighbors > 0) {
-              alignX /= neighbors;
-              alignY /= neighbors;
-              cohX /= neighbors;
-              cohY /= neighbors;
+              const gamma = 1.8;
+              a.x += (avgX / neighbors) * gamma * dt;
+              a.y += (avgY / neighbors) * gamma * dt;
+              a.theta = Math.atan2(avgY, avgX);
+            }
+          } else {
+            // Reynolds Boids Flocking (Cohesion, Alignment, Separation)
+            let cohX = 0, cohY = 0;
+            let alignVx = 0, alignVy = 0;
+            let sepX = 0, sepY = 0;
+            let count = 0;
 
-              fx += (alignX - ai.vx) * 0.5 + (cohX - ai.x) * 0.3;
-              fy += (alignY - ai.vy) * 0.5 + (cohY - ai.y) * 0.3;
+            for (let j = 0; j < agents.length; j++) {
+              if (i === j) continue;
+              const d = Math.hypot(agents[j].x - a.x, agents[j].y - a.y);
+              if (d < 100) {
+                cohX += agents[j].x;
+                cohY += agents[j].y;
+                alignVx += agents[j].vx;
+                alignVy += agents[j].vy;
+                count++;
+                if (d < 30 && d > 0.01) {
+                  sepX += (a.x - agents[j].x) / d;
+                  sepY += (a.y - agents[j].y) / d;
+                }
+              }
             }
 
-            ai.vx = ai.vx * 0.9 + fx * dt * 6;
-            ai.vy = ai.vy * 0.9 + fy * dt * 6;
-            ai.x += ai.vx * dt * 30;
-            ai.y += ai.vy * dt * 30;
-            ai.theta = Math.atan2(ai.vy, ai.vx);
+            if (count > 0) {
+              cohX = (cohX / count - a.x) * 0.8;
+              cohY = (cohY / count - a.y) * 0.8;
+              alignVx = (alignVx / count - a.vx) * 0.5;
+              alignVy = (alignVy / count - a.vy) * 0.5;
+              sepX *= 15;
+              sepY *= 15;
+
+              a.vx += (cohX + alignVx + sepX) * dt * 8;
+              a.vy += (cohY + alignVy + sepY) * dt * 8;
+            }
+
+            // Move towards leader
+            const tdx = leader.x - a.x;
+            const tdy = leader.y - a.y;
+            a.vx += tdx * 0.4 * dt;
+            a.vy += tdy * 0.4 * dt;
+
+            // Clamp velocity
+            const spd = Math.hypot(a.vx, a.vy);
+            if (spd > 70) {
+              a.vx = (a.vx / spd) * 70;
+              a.vy = (a.vy / spd) * 70;
+            }
+
+            a.x += a.vx * dt;
+            a.y += a.vy * dt;
+            a.theta = Math.atan2(a.vy, a.vx);
           }
         }
       }
 
-      // Drawing
+      // RENDER
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Background
+      ctx.fillStyle = isLight ? '#f1f5f9' : '#050811';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       // Grid
-      ctx.strokeStyle = 'rgba(51, 65, 85, 0.2)';
+      ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(51, 65, 85, 0.25)';
       ctx.lineWidth = 1;
       for (let x = 0; x < canvas.width; x += 30) {
         ctx.beginPath();
@@ -213,10 +272,10 @@ export function MultiAgentSimulator() {
         ctx.stroke();
       }
 
-      // Communication Network Mesh Graph (Graph Laplacian Edges)
+      // Inter-Agent Mesh Communication Links
       if (showNetwork) {
-        const commRange = 110;
-        ctx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
+        const commRange = 90;
+        ctx.strokeStyle = isLight ? 'rgba(2, 132, 199, 0.25)' : 'rgba(6, 182, 212, 0.25)';
         ctx.lineWidth = 1;
         for (let i = 0; i < agents.length; i++) {
           for (let j = i + 1; j < agents.length; j++) {
@@ -259,9 +318,9 @@ export function MultiAgentSimulator() {
         ctx.lineTo(-7, 6);
         ctx.closePath();
 
-        ctx.fillStyle = a.id === 0 ? '#f59e0b' : '#00f2fe';
+        ctx.fillStyle = a.id === 0 ? '#f59e0b' : (isLight ? '#0284c7' : '#00f2fe');
         ctx.fill();
-        ctx.strokeStyle = '#090d16';
+        ctx.strokeStyle = isLight ? '#ffffff' : '#090d16';
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -273,56 +332,58 @@ export function MultiAgentSimulator() {
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [isRunning, formationShape, mode, showNetwork]);
+  }, [isRunning, formationShape, mode, showNetwork, agentCount, getFormationOffset, theme]);
 
   return (
-    <div className="rounded-2xl glass-panel border border-slate-800/90 overflow-hidden shadow-2xl">
+    <div className="rounded-2xl glass-panel border border-slate-200 dark:border-slate-800/90 overflow-hidden shadow-2xl">
       {/* Header */}
-      <div className="px-4 py-3 bg-slate-900/80 border-b border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
-        <div className="flex items-center gap-2 text-cyan-400 font-bold">
+      <div className="px-4 py-3 bg-slate-100/90 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono text-slate-800 dark:text-slate-200">
+        <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold">
           <Users className="w-4 h-4" />
-          <span>Swarm Coordination & Graph Laplacian Consensus</span>
+          <span>{isId ? 'Koordinasi Kawanan & Konsensus Graph Laplacian' : 'Swarm Coordination & Graph Laplacian Consensus'}</span>
         </div>
 
-        <div className="flex items-center gap-4 text-[11px] text-slate-300">
+        <div className="flex items-center gap-4 text-[11px]">
           <span>
-            Active Agents: <strong className="text-cyan-400">{agentCount}</strong>
+            {isId ? 'Agent Aktif:' : 'Active Agents:'} <strong className="text-cyan-600 dark:text-cyan-400">{agentCount}</strong>
           </span>
           <span>
-            Leader Agent: <strong className="text-amber-400">ID 0 (Gold)</strong>
+            {isId ? 'Leader Robot:' : 'Leader Agent:'} <strong className="text-amber-600 dark:text-amber-400">ID 0 (Gold)</strong>
           </span>
         </div>
       </div>
 
-      {/* Canvas */}
-      <div className="relative aspect-[16/9] w-full max-h-[340px] bg-[#050811] cursor-crosshair">
+      {/* Canvas with Mobile Touch Support */}
+      <div className="relative aspect-[16/9] w-full max-h-[340px] bg-[#f1f5f9] dark:bg-[#050811] cursor-crosshair">
         <canvas
           ref={canvasRef}
           width={520}
           height={320}
           onClick={handleCanvasClick}
+          onTouchStart={handleTouch}
+          onTouchMove={handleTouch}
           className="w-full h-full block"
         />
 
-        <div className="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md text-[11px] font-mono text-slate-300 border border-slate-700/60 pointer-events-none flex items-center gap-1.5 shadow-md">
-          <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
-          <span>Click anywhere to redirect swarm formation</span>
+        <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md text-[11px] font-mono text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700/60 pointer-events-none flex items-center gap-1.5 shadow-md">
+          <Crosshair className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+          <span>{isId ? 'Klik/Sentuh layar untuk mengarahkan formasi' : 'Tap/Click anywhere to redirect swarm formation'}</span>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-3 text-xs font-mono">
+      <div className="p-4 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 space-y-3 text-xs font-mono">
         <div className="flex items-center justify-between flex-wrap gap-3">
           {/* Swarm Mode */}
           <div className="flex items-center gap-2">
-            <span className="text-slate-400">Protocol:</span>
-            <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <span className="text-slate-600 dark:text-slate-400">{isId ? 'Protokol:' : 'Protocol:'}</span>
+            <div className="flex bg-slate-200 dark:bg-slate-950 p-1 rounded-lg border border-slate-300 dark:border-slate-800">
               <button
                 onClick={() => setMode('formation')}
                 className={`px-3 py-1 rounded transition-all ${
                   mode === 'formation'
-                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 Leader Formation
@@ -331,8 +392,8 @@ export function MultiAgentSimulator() {
                 onClick={() => setMode('consensus')}
                 className={`px-3 py-1 rounded transition-all ${
                   mode === 'consensus'
-                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 Laplacian Rendezvous
@@ -341,8 +402,8 @@ export function MultiAgentSimulator() {
                 onClick={() => setMode('flocking')}
                 className={`px-3 py-1 rounded transition-all ${
                   mode === 'flocking'
-                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 Boids Flocking
@@ -352,16 +413,16 @@ export function MultiAgentSimulator() {
 
           {/* Formation Shape (if in formation mode) */}
           {mode === 'formation' && (
-            <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
-              <span className="text-slate-500 px-1">Shape:</span>
+            <div className="flex items-center gap-1.5 bg-slate-200 dark:bg-slate-950 p-1 rounded-lg border border-slate-300 dark:border-slate-800 text-[11px]">
+              <span className="text-slate-500 px-1">{isId ? 'Bentuk:' : 'Shape:'}</span>
               {(['v_shape', 'circle', 'line'] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => setFormationShape(s)}
                   className={`px-2 py-0.5 rounded capitalize transition-all ${
                     formationShape === s
-                      ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold border border-cyan-500/30'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                   }`}
                 >
                   {s.replace('_', ' ')}
@@ -378,36 +439,36 @@ export function MultiAgentSimulator() {
               onClick={() => setIsRunning(!isRunning)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-semibold transition-all ${
                 isRunning
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                  : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                  : 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/40'
               }`}
             >
               {isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              {isRunning ? 'Pause' : 'Resume'}
+              {isRunning ? (isId ? 'Jeda' : 'Pause') : (isId ? 'Lanjutkan' : 'Resume')}
             </button>
 
             <button
               onClick={resetSwarm}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Scramble Swarm
+              {isId ? 'Acak Kawanan' : 'Scramble Swarm'}
             </button>
 
             <button
               onClick={() => setShowNetwork(!showNetwork)}
               className={`px-2.5 py-1.5 rounded-lg border transition-colors ${
                 showNetwork
-                  ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30'
-                  : 'bg-slate-800 text-slate-500 border-slate-700'
+                  ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/30'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
               }`}
             >
-              Toggle Mesh Graph
+              {isId ? 'Tampilkan Garis Mesh' : 'Toggle Mesh Graph'}
             </button>
           </div>
 
-          <div className="text-[11px] text-slate-400">
-            Decentralized communication graph drives consensus without centralized master authority.
+          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+            {isId ? 'Graf komunikasi terdesentralisasi memandu konsensus tanpa master kontrol pusat.' : 'Decentralized communication graph drives consensus without centralized master authority.'}
           </div>
         </div>
       </div>

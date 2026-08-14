@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, RotateCcw, MapPin, Sliders, Radio, Eye } from 'lucide-react';
 import { wrapToPi } from '@/lib/math/vector2d';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useTheme } from '@/lib/theme/ThemeContext';
 
 interface Landmark {
   id: number;
@@ -31,6 +33,10 @@ export function LocalizationSimulator() {
   const [numParticles, setNumParticles] = useState(300);
   const [sensorNoise, setSensorNoise] = useState(5);
   const [motionNoise, setMotionNoise] = useState(0.08);
+
+  const { theme } = useTheme();
+  const { locale } = useLanguage();
+  const isId = locale === 'id';
 
   const landmarks = LANDMARKS;
 
@@ -66,7 +72,7 @@ export function LocalizationSimulator() {
 
   useEffect(() => {
     reset();
-  }, [numParticles, reset]);
+  }, [reset]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -75,127 +81,108 @@ export function LocalizationSimulator() {
     if (!ctx) return;
 
     let animId: number;
-    let lastFrame = performance.now();
+    let lastTime = performance.now();
+    const isLight = theme === 'light';
 
     const render = (time: number) => {
-      const dt = Math.min((time - lastFrame) / 1000, 0.1);
-      lastFrame = time;
+      const dt = Math.min((time - lastTime) / 1000, 0.05);
+      lastTime = time;
 
       const s = state.current;
-      const { trueRobot, deadReckoning, particles } = s;
+      const { trueRobot, deadReckoning } = s;
 
       if (isRunning) {
-        // Robot moves in an elliptical path
-        const v = 50;
-        const omega = 0.45;
+        // True robot moves on an oval path
+        const v = 55; // pixels/s
+        const omega = 0.5; // rad/s
 
-        // 1. True robot kinematics
+        // True motion update
         trueRobot.theta = wrapToPi(trueRobot.theta + omega * dt);
-        trueRobot.x += Math.cos(trueRobot.theta) * v * dt;
-        trueRobot.y += Math.sin(trueRobot.theta) * v * dt;
+        trueRobot.x += v * Math.cos(trueRobot.theta) * dt;
+        trueRobot.y += v * Math.sin(trueRobot.theta) * dt;
+
+        // Dead reckoning has systematic and random drift
+        const drOmega = omega * 1.06 + (Math.random() - 0.5) * motionNoise;
+        const drV = v * 0.96 + (Math.random() - 0.5) * (motionNoise * 20);
+        deadReckoning.theta = wrapToPi(deadReckoning.theta + drOmega * dt);
+        deadReckoning.x += drV * Math.cos(deadReckoning.theta) * dt;
+        deadReckoning.y += drV * Math.sin(deadReckoning.theta) * dt;
 
         s.trueTrail.push({ x: trueRobot.x, y: trueRobot.y });
-        if (s.trueTrail.length > 180) s.trueTrail.shift();
-
-        // 2. Dead reckoning odometry (accumulates wheel drift error)
-        const drV = v * (1 + (Math.random() - 0.5) * motionNoise * 2);
-        const drOmega = omega * (1 + (Math.random() - 0.5) * motionNoise * 3);
-        deadReckoning.theta = wrapToPi(deadReckoning.theta + drOmega * dt);
-        deadReckoning.x += Math.cos(deadReckoning.theta) * drV * dt;
-        deadReckoning.y += Math.sin(deadReckoning.theta) * drV * dt;
+        if (s.trueTrail.length > 150) s.trueTrail.shift();
 
         s.drTrail.push({ x: deadReckoning.x, y: deadReckoning.y });
-        if (s.drTrail.length > 180) s.drTrail.shift();
+        if (s.drTrail.length > 150) s.drTrail.shift();
 
-        // 3. Motion Update on Particles (predict step)
-        for (const p of particles) {
-          const pV = v * (1 + (Math.random() - 0.5) * motionNoise * 4);
-          const pOmega = omega * (1 + (Math.random() - 0.5) * motionNoise * 4);
-          p.theta = wrapToPi(p.theta + pOmega * dt);
-          p.x += Math.cos(p.theta) * pV * dt;
-          p.y += Math.sin(p.theta) * pV * dt;
-        }
-
-        // 4. Sensor Measurement & Particle Weighting (update step)
-        // Measure range to each visible landmark
-        const maxRange = 220;
-        const measurements: { id: number; r: number }[] = [];
-
-        for (const lm of landmarks) {
-          const d = Math.hypot(lm.x - trueRobot.x, lm.y - trueRobot.y);
-          if (d < maxRange) {
-            // Add sensor noise
-            measurements.push({
-              id: lm.id,
-              r: d + (Math.random() - 0.5) * sensorNoise,
-            });
-          }
-        }
-
-        if (measurements.length > 0) {
-          let totalWeight = 0;
-          for (const p of particles) {
-            let weight = 1.0;
-            for (const m of measurements) {
-              const lm = landmarks.find((l) => l.id === m.id)!;
-              const expectedDist = Math.hypot(lm.x - p.x, lm.y - p.y);
-              const error = Math.abs(m.r - expectedDist);
-              // Gaussian likelihood
-              const likelihood = Math.exp(-(error * error) / (2 * sensorNoise * sensorNoise));
-              weight *= Math.max(0.0001, likelihood);
-            }
-            p.w = weight;
-            totalWeight += weight;
-          }
-
-          // Normalize
-          if (totalWeight > 0) {
-            for (const p of particles) p.w /= totalWeight;
-          }
-
-          // Low-variance systematic resampling
-          const newParticles: Particle[] = [];
-          const N = particles.length;
-          const r0 = (Math.random() / N);
-          let c = particles[0].w;
-          let i = 0;
-
-          for (let m = 0; m < N; m++) {
-            const u = r0 + m / N;
-            while (u > c && i < N - 1) {
-              i++;
-              c += particles[i].w;
-            }
-            // Add slight jitter
-            newParticles.push({
-              x: particles[i].x + (Math.random() - 0.5) * 4,
-              y: particles[i].y + (Math.random() - 0.5) * 4,
-              theta: wrapToPi(particles[i].theta + (Math.random() - 0.5) * 0.1),
-              w: 1 / N,
-            });
-          }
-          s.particles = newParticles;
-        }
-
-        // Weighted Average Estimated Pose
-        let avgX = 0;
-        let avgY = 0;
+        // 1. Motion Predict for Particles
         for (const p of s.particles) {
-          avgX += p.x;
-          avgY += p.y;
+          const pV = v + (Math.random() - 0.5) * (motionNoise * 40);
+          const pW = omega + (Math.random() - 0.5) * (motionNoise * 1.5);
+          p.theta = wrapToPi(p.theta + pW * dt);
+          p.x += pV * Math.cos(p.theta) * dt;
+          p.y += pV * Math.sin(p.theta) * dt;
         }
-        s.estimatedPose = {
-          x: avgX / s.particles.length,
-          y: avgY / s.particles.length,
-          theta: trueRobot.theta,
-        };
+
+        // 2. Sensor Measurement Update (Range to landmarks)
+        const trueMeasurements: number[] = [];
+        for (const lm of landmarks) {
+          const dist = Math.hypot(lm.x - trueRobot.x, lm.y - trueRobot.y);
+          trueMeasurements.push(dist + (Math.random() - 0.5) * sensorNoise);
+        }
+
+        // Weight particles by Gaussian likelihood of range
+        let totalW = 0;
+        for (const p of s.particles) {
+          let likelihood = 1.0;
+          for (let i = 0; i < landmarks.length; i++) {
+            const lm = landmarks[i];
+            const pDist = Math.hypot(lm.x - p.x, lm.y - p.y);
+            const error = pDist - trueMeasurements[i];
+            // Gaussian probability
+            likelihood *= Math.exp(-(error * error) / (2 * sensorNoise * sensorNoise));
+          }
+          p.w = likelihood + 1e-10;
+          totalW += p.w;
+        }
+
+        // Normalize weights
+        for (const p of s.particles) {
+          p.w /= totalW;
+        }
+
+        // 3. Low-variance Resampling
+        const newParticles: Particle[] = [];
+        const r = Math.random() / s.particles.length;
+        let c = s.particles[0].w;
+        let idx = 0;
+
+        for (let m = 0; m < s.particles.length; m++) {
+          const u = r + m / s.particles.length;
+          while (u > c && idx < s.particles.length - 1) {
+            idx++;
+            c += s.particles[idx].w;
+          }
+          const base = s.particles[idx];
+          // Add small jitter
+          newParticles.push({
+            x: base.x + (Math.random() - 0.5) * 3,
+            y: base.y + (Math.random() - 0.5) * 3,
+            theta: wrapToPi(base.theta + (Math.random() - 0.5) * 0.1),
+            w: 1 / s.particles.length,
+          });
+        }
+        s.particles = newParticles;
       }
 
-      // Drawing
+      // RENDER
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Background
+      ctx.fillStyle = isLight ? '#f1f5f9' : '#050811';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       // Grid
-      ctx.strokeStyle = 'rgba(51, 65, 85, 0.25)';
+      ctx.strokeStyle = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(51, 65, 85, 0.25)';
       ctx.lineWidth = 1;
       for (let x = 0; x < canvas.width; x += 30) {
         ctx.beginPath();
@@ -210,7 +197,7 @@ export function LocalizationSimulator() {
         ctx.stroke();
       }
 
-      // Landmarks
+      // Landmarks (Beacons)
       for (const lm of landmarks) {
         ctx.beginPath();
         ctx.arc(lm.x, lm.y, 8, 0, Math.PI * 2);
@@ -220,7 +207,7 @@ export function LocalizationSimulator() {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        ctx.fillStyle = '#fef3c7';
+        ctx.fillStyle = isLight ? '#78350f' : '#fef3c7';
         ctx.font = 'bold 9px monospace';
         ctx.fillText(`L${lm.id}`, lm.x - 5, lm.y + 18);
       }
@@ -229,7 +216,7 @@ export function LocalizationSimulator() {
       for (const p of s.particles) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(251, 191, 36, 0.65)';
+        ctx.fillStyle = isLight ? 'rgba(217, 119, 6, 0.65)' : 'rgba(251, 191, 36, 0.65)';
         ctx.fill();
       }
 
@@ -254,7 +241,7 @@ export function LocalizationSimulator() {
         for (let i = 1; i < s.trueTrail.length; i++) {
           ctx.lineTo(s.trueTrail[i].x, s.trueTrail[i].y);
         }
-        ctx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
+        ctx.strokeStyle = isLight ? 'rgba(2, 132, 199, 0.7)' : 'rgba(6, 182, 212, 0.7)';
         ctx.lineWidth = 2.5;
         ctx.stroke();
       }
@@ -266,7 +253,7 @@ export function LocalizationSimulator() {
           ctx.beginPath();
           ctx.moveTo(trueRobot.x, trueRobot.y);
           ctx.lineTo(lm.x, lm.y);
-          ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+          ctx.strokeStyle = isLight ? 'rgba(217, 119, 6, 0.35)' : 'rgba(245, 158, 11, 0.35)';
           ctx.lineWidth = 1.5;
           ctx.stroke();
         }
@@ -284,9 +271,9 @@ export function LocalizationSimulator() {
       // True Robot (Cyan)
       ctx.beginPath();
       ctx.arc(trueRobot.x, trueRobot.y, 14, 0, Math.PI * 2);
-      ctx.fillStyle = '#090d16';
+      ctx.fillStyle = isLight ? '#ffffff' : '#090d16';
       ctx.fill();
-      ctx.strokeStyle = '#06b6d4';
+      ctx.strokeStyle = isLight ? '#0284c7' : '#06b6d4';
       ctx.lineWidth = 2.5;
       ctx.stroke();
 
@@ -297,7 +284,7 @@ export function LocalizationSimulator() {
         trueRobot.x + Math.cos(trueRobot.theta) * 20,
         trueRobot.y + Math.sin(trueRobot.theta) * 20
       );
-      ctx.strokeStyle = '#00f2fe';
+      ctx.strokeStyle = isLight ? '#0284c7' : '#00f2fe';
       ctx.lineWidth = 2.5;
       ctx.stroke();
 
@@ -306,36 +293,36 @@ export function LocalizationSimulator() {
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [isRunning, landmarks, motionNoise, sensorNoise]);
+  }, [isRunning, landmarks, motionNoise, sensorNoise, theme]);
 
   return (
-    <div className="rounded-2xl glass-panel border border-slate-800/90 overflow-hidden shadow-2xl">
+    <div className="rounded-2xl glass-panel border border-slate-200 dark:border-slate-800/90 overflow-hidden shadow-2xl">
       {/* Header */}
-      <div className="px-4 py-3 bg-slate-900/80 border-b border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
-        <div className="flex items-center gap-2 text-cyan-400 font-bold">
+      <div className="px-4 py-3 bg-slate-100/90 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono text-slate-800 dark:text-slate-200">
+        <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold">
           <MapPin className="w-4 h-4" />
-          <span>Monte Carlo Particle Filter (MCL) State Estimator</span>
+          <span>{isId ? 'Estimator Status Filter Partikel Monte Carlo (MCL)' : 'Monte Carlo Particle Filter (MCL) State Estimator'}</span>
         </div>
 
-        <div className="flex items-center gap-4 text-[11px]">
-          <span className="text-cyan-400">● True Robot Pose</span>
-          <span className="text-rose-400">◌ Odometry Drift</span>
-          <span className="text-amber-400">✦ {numParticles} Particle Cloud</span>
+        <div className="flex items-center gap-3 text-[11px]">
+          <span className="text-cyan-600 dark:text-cyan-400 font-semibold">{isId ? '● Pose Sejati' : '● True Pose'}</span>
+          <span className="text-rose-600 dark:text-rose-400 font-semibold">{isId ? '◌ Drift Odometri' : '◌ Odometry Drift'}</span>
+          <span className="text-amber-600 dark:text-amber-400 font-semibold">✦ {numParticles} {isId ? 'Partikel' : 'Particles'}</span>
         </div>
       </div>
 
       {/* Canvas */}
-      <div className="relative aspect-[16/9] w-full max-h-[340px] bg-[#050811]">
+      <div className="relative aspect-[16/9] w-full max-h-[340px] bg-[#f1f5f9] dark:bg-[#050811]">
         <canvas ref={canvasRef} width={520} height={320} className="w-full h-full block" />
       </div>
 
       {/* Controls */}
-      <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-3 text-xs font-mono">
+      <div className="p-4 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 space-y-3 text-xs font-mono">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-            <div className="flex justify-between text-slate-300">
-              <span>Particle Count (M):</span>
-              <span className="text-amber-400 font-bold">{numParticles}</span>
+          <div className="bg-white dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+            <div className="flex justify-between text-slate-700 dark:text-slate-300">
+              <span>{isId ? 'Jumlah Partikel (M):' : 'Particle Count (M):'}</span>
+              <span className="text-amber-600 dark:text-amber-400 font-bold">{numParticles}</span>
             </div>
             <input
               type="range"
@@ -344,14 +331,14 @@ export function LocalizationSimulator() {
               step={50}
               value={numParticles}
               onChange={(e) => setNumParticles(parseInt(e.target.value))}
-              className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+              className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none"
             />
           </div>
 
-          <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-            <div className="flex justify-between text-slate-300">
-              <span>Sensor Range Noise (σ):</span>
-              <span className="text-cyan-400 font-bold">{sensorNoise} px</span>
+          <div className="bg-white dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+            <div className="flex justify-between text-slate-700 dark:text-slate-300">
+              <span>{isId ? 'Noise Jarak Sensor (σ):' : 'Sensor Range Noise (σ):'}</span>
+              <span className="text-cyan-600 dark:text-cyan-400 font-bold">{sensorNoise} px</span>
             </div>
             <input
               type="range"
@@ -360,7 +347,7 @@ export function LocalizationSimulator() {
               step={1}
               value={sensorNoise}
               onChange={(e) => setSensorNoise(parseInt(e.target.value))}
-              className="w-full accent-cyan-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+              className="w-full accent-cyan-500 cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none"
             />
           </div>
         </div>
@@ -371,25 +358,25 @@ export function LocalizationSimulator() {
               onClick={() => setIsRunning(!isRunning)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-semibold transition-all ${
                 isRunning
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                  : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                  : 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/40'
               }`}
             >
               {isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              {isRunning ? 'Pause' : 'Resume'}
+              {isRunning ? (isId ? 'Jeda' : 'Pause') : (isId ? 'Lanjutkan' : 'Resume')}
             </button>
 
             <button
               onClick={reset}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Scramble Particles
+              {isId ? 'Acak Ulang Partikel' : 'Scramble Particles'}
             </button>
           </div>
 
-          <div className="text-[11px] text-slate-400">
-            Beacon triangulation collapses particle uncertainty into the true belief state.
+          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+            {isId ? 'Triangulasi suar memperbarui bobot partikel hingga mengerucut pada pose sejati.' : 'Beacon triangulation collapses particle uncertainty into the true belief state.'}
           </div>
         </div>
       </div>
