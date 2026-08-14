@@ -11,6 +11,7 @@ export interface LessonOrientationProps {
   estimatedMinutes?: number;
   learningObjectives: string[];
   whyItMatters: string;
+  progressionSteps?: { step: number; name: string }[];
 }
 
 export function LessonOrientation({
@@ -20,34 +21,33 @@ export function LessonOrientation({
   estimatedMinutes = 35,
   learningObjectives,
   whyItMatters,
+  progressionSteps,
 }: LessonOrientationProps) {
   const { locale } = useLanguage();
   const isId = locale === 'id';
 
   const [activeStep, setActiveStep] = useState<number>(2); // Default to interactive lab step
 
-  const progressSteps = [
+  const defaultSteps = [
     {
       step: 1,
-      nameEn: 'Concept & Intuition',
-      nameId: 'Konsep & Intuisi',
+      name: isId ? 'Konsep & Intuisi' : 'Concept & Intuition',
     },
     {
       step: 2,
-      nameEn: 'Math Model & Formulations',
-      nameId: 'Model Matematika & Formulasi',
+      name: isId ? 'Model Matematika & Formulasi' : 'Math Model & Formulations',
     },
     {
       step: 3,
-      nameEn: 'Interactive Lab Simulation',
-      nameId: 'Simulasi Lab Interaktif',
+      name: isId ? 'Simulasi Lab Interaktif' : 'Interactive Lab Simulation',
     },
     {
       step: 4,
-      nameEn: 'TypeScript & Robot Applications',
-      nameId: 'Implementasi & Aplikasi Robot',
+      name: isId ? 'Implementasi & Aplikasi Robot' : 'TypeScript & Robot Applications',
     },
   ];
+
+  const stepsToRender = progressionSteps && progressionSteps.length > 0 ? progressionSteps : defaultSteps;
 
   return (
     <div className="rounded-3xl glass-panel p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-md space-y-6 my-6">
@@ -86,7 +86,7 @@ export function LessonOrientation({
           {isId ? 'Alur Belajar Pelajaran (Learning Progression):' : 'Lesson Learning Progression:'}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {progressSteps.map((s, idx) => (
+          {stepsToRender.map((s, idx) => (
             <div
               key={s.step}
               onClick={() => setActiveStep(idx)}
@@ -99,7 +99,7 @@ export function LessonOrientation({
               <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex-shrink-0">
                 0{s.step}
               </span>
-              <span className="truncate text-[11px]">{isId ? s.nameId : s.nameEn}</span>
+              <span className="truncate text-[11px]">{s.name}</span>
             </div>
           ))}
         </div>

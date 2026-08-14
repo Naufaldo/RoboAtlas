@@ -274,12 +274,18 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
         continue;
       }
       if (line.startsWith('## ')) {
+        const headingText = line.slice(3).trim();
+        const headingId = headingText
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '-');
         nodes.push(
           <h2
             key={`h2-${i}`}
-            className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 font-mono tracking-tight mt-8 mb-3"
+            id={headingId}
+            className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 font-mono tracking-tight mt-8 mb-3 scroll-mt-24"
           >
-            {parseInlineFormatting(line.slice(3))}
+            {parseInlineFormatting(headingText)}
           </h2>
         );
         i++;
