@@ -1,30 +1,108 @@
 ---
 id: pure-pursuit-and-stanley
-title: Path Tracking Control with Pure Pursuit & Stanley
+title: Pure Pursuit & Stanley Trajectory Tracking Control
 slug: pure-pursuit-and-stanley
 category: control
 difficulty: intermediate
 language: en
 interactive: true
-estimatedMinutes: 20
+estimatedMinutes: 45
 prerequisites:
   - velocity-kinematics-2d
+  - a-star
 references:
-  - coudriet-pure-pursuit
-  - thrun-stanley-darpa
+  - R. Craig Coulter (1992). Implementation of the Pure Pursuit Path Tracking Algorithm. Carnegie Mellon University.
+  - Sebastian Thrun et al. (2006). Stanley: The Robot that Won the DARPA Grand Challenge. Journal of Field Robotics.
 components:
   - ControlSimulator
   - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
 ---
 
-# Path Tracking Feedback Control
+# Pure Pursuit & Stanley Trajectory Tracking Control
 
-Path tracking controllers compute the steering angle $\delta(t)$ required to guide a vehicle along a reference geometric path.
+> "Once a path planning algorithm gives the robot a list of waypoint coordinates, how do the steering servos continuously guide the chassis without oscillating off course?"
 
-## Pure Pursuit Geometric Steering
+Trajectory tracking controllers bridge the gap between global discrete geometry and real-time continuous steering actuators.
 
-$$\delta = \arctan\left( \frac{2 L \sin\alpha}{L_f} \right)$$
+---
 
-## Stanley Front Axle Non-Linear Control
+## 1. The Pure Pursuit Algorithm
 
-$$\delta(t) = \theta_e(t) + \arctan\left( \frac{k \cdot e(t)}{v(t)} \right)$$
+Pure Pursuit is a geometric path tracking method that calculates the steering angle required to chase a **lookahead target point** on the reference path located at a distance $L_f$ ahead of the rear axle.
+
+### Geometric Arc Derivation:
+By constructing a circular arc of radius $R$ connecting the rear axle $(x_r, y_r)$ to the lookahead point $(g_x, g_y)$:
+
+$$
+\frac{L_f}{\sin(2\alpha)} = \frac{R}{\sin(\frac{\pi}{2} - \alpha)} \implies R = \frac{L_f}{2\sin\alpha}
+$$
+
+Using the kinematic bicycle model with wheelbase $L$ where $\kappa = \frac{1}{R} = \frac{\tan\delta}{L}$:
+
+$$
+\delta = \arctan\left( \frac{2 L \sin\alpha}{L_f} \right)
+$$
+
+### Tuning the Lookahead Distance $L_f$:
+- **Velocity-Scaled Lookahead**: $L_f = k_v \cdot v + L_{f,0}$
+- **Small $L_f$**: Fast response, aggressive turning, but causes high-frequency oscillations.
+- **Large $L_f$**: Extremely smooth steering, but cuts corners at sharp turns.
+
+---
+
+## 2. The Stanley Controller
+
+Developed by Stanford University for *Stanley* (the autonomous vehicle that won the DARPA Grand Challenge), the Stanley controller measures tracking errors at the **front axle** rather than the rear:
+
+$$
+\delta(t) = \theta_e(t) + \arctan\left( \frac{k \cdot e(t)}{v(t)} \right)
+$$
+
+### Components:
+1. **Heading Error $\theta_e(t) = \theta_{\text{path}} - \theta_{\text{robot}}$**: Steers the wheels parallel to the reference path tangent.
+2. **Cross-Track Error $e(t)$**: The shortest perpendicular distance from the front axle to the path.
+3. **Gain $k > 0$**: Convergence gain scaling responsiveness.
+4. **Softening Factor $v(t) \to v(t) + k_{\text{soft}}$**: Prevents division by zero at low speeds or stops.
+
+### Why Stanley is Asymptotically Stable:
+When heading error is zero ($\theta_e = 0$), the time derivative of cross-track error $\dot{e}(t) = -v\sin\delta = -v \sin\left(\arctan\frac{ke}{v}\right) = \frac{-k e}{\sqrt{1 + (ke/v)^2}}$. For small errors, $\dot{e}(t) \approx -k e(t)$, yielding exponential decay $e(t) = e_0 e^{-kt}$.
+
+---
+
+## 3. Interactive Trajectory Tracking Laboratory
+
+Switch between Pure Pursuit and Stanley control modes on the Oval and Figure-8 tracks below. Adjust gains and observe live cross-track error:
+
+<ControlSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-control"
+  question="Why does the Pure Pursuit controller scale its lookahead distance L_f with vehicle velocity (L_f = k_v * v + L_0)?"
+  options={[
+    {
+      id: "A",
+      text: "Because higher speeds require looking further ahead to prevent violent steering oscillations and lateral instability.",
+      isCorrect: true,
+      explanation: "Correct! Just like human driving, higher speed demands looking further ahead down the road to ensure smooth, stable curvature."
+    },
+    {
+      id: "B",
+      text: "Because LiDAR sensors stop working at high speeds.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "To make the wheelbase L expand physically.",
+      isCorrect: false,
+      explanation: "Incorrect. The wheelbase L is a fixed mechanical dimension."
+    }
+  ]}
+  hint="Consider how a driver's focus distance changes when driving on a highway vs parking."
+/>

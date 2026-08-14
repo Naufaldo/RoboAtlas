@@ -1,0 +1,102 @@
+---
+id: laplacian-consensus
+title: Konsensus Graf Laplacian & Koordinasi Kawanan Multi-Agent
+slug: laplacian-consensus
+category: multi-agent
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+references:
+  - Reza Olfati-Saber & Richard M. Murray (2004). Consensus Problems in Networks of Agents with Switching Topology and Time-Delays. IEEE TAC.
+  - Craig W. Reynolds (1987). Flocks, Herds and Schools: A Distributed Behavioral Model. ACM SIGGRAPH.
+components:
+  - MultiAgentSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Konsensus Graf Laplacian & Kecerdasan Kawanan Multi-Agent
+
+> "Bagaimana ratusan robot otonom dapat menyepakati arah hadap, formasi, dan kecepatan bersama tanpa adanya satu pemimpin terpusat ataupun supervisor global?"
+
+Sistem multi-agent terdesentralisasi berkoordinasi melalui graf komunikasi lokal $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ di mana setiap robot $i$ hanya bertukar informasi status dengan robot tetangga terdekatnya $\mathcal{N}_i$.
+
+---
+
+## 1. Matriks Graf Laplacian $\mathcal{L}$
+
+Jika matriks ketetanggaan komunikasi adalah $A = [a_{ij}]$ dan matriks derajat adalah $D = \operatorname{diag}(d_i)$, maka **Matriks Graf Laplacian** didefinisikan sebagai:
+
+$$
+\mathcal{L} = D - A
+$$
+
+Untuk graf terhubung tak berarah (*undirected connected graph*):
+- $\mathcal{L}$ bersifat semidefinit positif ($\mathcal{L} \ge 0$).
+- Vektor $\mathbf{1} = [1, 1, \dots, 1]^T$ adalah vektor eigen untuk nilai eigen $\lambda_1 = 0$ ($\mathcal{L}\mathbf{1} = \mathbf{0}$).
+- Nilai eigen terkecil kedua $\lambda_2(\mathcal{L}) > 0$ disebut **Konektivitas Aljabar** (*Algebraic Connectivity / Fiedler value*), yang mengatur laju eksponensial tercapainya konsensus kawanan.
+
+---
+
+## 2. Protokol Konsensus Waktu Kontinu
+
+Untuk model dinamika robot integrator tunggal $\dot{\mathbf{x}}_i = \mathbf{u}_i$, hukum kendali konsensus terdistribusi dinyatakan sebagai:
+
+$$
+\mathbf{u}_i = -\sum_{j \in \mathcal{N}_i} a_{ij} (\mathbf{x}_i - \mathbf{x}_j)
+$$
+
+Dalam bentuk matriks kolektif:
+
+$$
+\mathbf{\dot{x}} = -\mathcal{L} \mathbf{x}
+$$
+
+Status setiap agen robot secara eksponensial konvergen menuju posisi titik berat rata-rata kawanan:
+
+$$
+\lim_{t \to \infty} \mathbf{x}_i(t) = \frac{1}{N} \sum_{k=1}^N \mathbf{x}_k(0)
+$$
+
+---
+
+## 3. Laboratorium Kawanan Multi-Agent Interaktif
+
+Beralih antara mode Konsensus (*Consensus*), Kawanan (*Flocking*), dan Formasi Geometris di bawah ini. Tambah agen, geser posisi menggunakan kursor, dan amati dinamika konvergensi secara *real-time*:
+
+<MultiAgentSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-laplacian"
+  question="Apa arti fisis dari nilai eigen kedua lambda_2(L) (Fiedler value) pada jaringan graf kawanan multi-agent?"
+  options={[
+    {
+      id: "A",
+      text: "Mengukur konektivitas aljabar dari graf komunikasi dan menentukan seberapa cepat agen-agen mencapai kesepakatan konsensus.",
+      isCorrect: true,
+      explanation: "Tepat! Nilai eigen Fiedler lambda_2 mencerminkan kekokohan komunikasi jaringan; semakin besar nilai lambda_2, semakin cepat konvergensi desentralisasi tercapai."
+    },
+    {
+      id: "B",
+      text: "Persentase baterai yang tersisa pada seluruh kawanan robot.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Kecepatan rambat suara maksimum di udara.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Ingat kembali hubungan antara konektivitas graf dan laju konvergensi."
+/>

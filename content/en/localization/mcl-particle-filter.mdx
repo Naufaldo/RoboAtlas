@@ -1,0 +1,102 @@
+---
+id: mcl-particle-filter
+title: Monte Carlo Localization (MCL) Particle Filters
+slug: mcl-particle-filter
+category: localization
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+references:
+  - Sebastian Thrun, Wolfram Burgard, & Dieter Fox (2005). Probabilistic Robotics (Chapter 8). MIT Press.
+  - Dieter Fox et al. (1999). Monte Carlo Localization: Efficient Position Estimation for Mobile Robots. AAAI.
+components:
+  - LocalizationSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Monte Carlo Localization (MCL) Particle Filters
+
+> "When wheel slippage and sensor noise corrupt measurements, how can a robot determine its true location with pinpoint certainty?"
+
+In real-world robotics, determinism is an illusion. Odometry drifts, and sensor readings contain Gaussian noise. **Monte Carlo Localization (MCL)** solves the global localization problem by representing probability distributions over robot poses $\mathbf{x} = [x, y, \theta]^T$ using a cloud of weighted particles.
+
+---
+
+## 1. The Recursive Bayesian Filtering Cycle
+
+MCL implements a recursive Bayes filter over continuous state space:
+
+$$
+p(\mathbf{x}_t \mid z_{1:t}, u_{1:t}) = \eta \cdot p(z_t \mid \mathbf{x}_t) \int p(\mathbf{x}_t \mid \mathbf{x}_{t-1}, u_t) p(\mathbf{x}_{t-1} \mid z_{1:t-1}, u_{1:t-1}) \, d\mathbf{x}_{t-1}
+$$
+
+In a Particle Filter, the posterior belief is approximated by a set of $M$ particles:
+
+$$
+\mathcal{X}_t = \{ \langle \mathbf{x}_t^{[m]}, w_t^{[m]} \rangle \}_{m=1}^M
+$$
+
+---
+
+## 2. The 3 Core Algorithmic Steps
+
+### Step 1: Motion Prediction (Propagate Particles)
+Sample each particle forward using the kinematic motion model corrupted by noise $\epsilon$:
+
+$$
+\mathbf{x}_t^{[m]} \sim p(\mathbf{x}_t \mid \mathbf{x}_{t-1}^{[m]}, u_t)
+$$
+
+### Step 2: Measurement Correction (Weight Calculation)
+Compute importance weights by evaluating how likely the observed sensor beacon distances $z_t$ match expected distances $\hat{z}$:
+
+$$
+w_t^{[m]} = \prod_{k=1}^K \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(z_t^k - \hat{z}_t^{k,[m]})^2}{2\sigma^2} \right)
+$$
+
+### Step 3: Low-Variance Resampling
+Draw $M$ new particles with probability proportional to weights $w_t^{[m]}$. Particles with high likelihood survive and duplicate; particles with poor likelihood perish.
+
+---
+
+## 3. Interactive Localization Laboratory
+
+Drive the robot using the arrow keys or joystick below. Watch the random particle cloud collapse and tightly cluster around the true robot pose as beacon measurements arrive:
+
+<LocalizationSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-mcl"
+  question="Why is Low-Variance Resampling preferred over simple random roulette sampling in Particle Filters?"
+  options={[
+    {
+      id: "A",
+      text: "It samples across all particles using a single random offset pointer (step size 1/M), avoiding particle deprivation and running in O(M) time.",
+      isCorrect: true,
+      explanation: "Correct! Low-variance systematic resampling guarantees full coverage of the probability space with minimal variance and linear O(M) runtime."
+    },
+    {
+      id: "B",
+      text: "Because it eliminates all need for sensor measurements.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because it makes the particles travel faster than the speed of light.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about computational complexity and avoiding the loss of promising hypotheses."
+/>

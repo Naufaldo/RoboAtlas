@@ -1,36 +1,159 @@
 ---
 id: a-star
-title: A* Path Planning & Heuristic Search
+title: A* Grid Search & Admissible Heuristics
 slug: a-star
 category: planning
 difficulty: intermediate
 language: en
 interactive: true
-estimatedMinutes: 20
+estimatedMinutes: 45
 prerequisites:
-  - intro-to-robotics
-  - 2d-geometry
+  - velocity-kinematics-2d
 references:
-  - lavalle-planning
-  - hart-nilsson-raphael-1968
+  - Steven M. LaValle (2006). Planning Algorithms (Chapter 2). Cambridge University Press.
+  - Peter E. Hart, Nils J. Nilsson, & Bertram Raphael (1968). A Formal Basis for the Heuristic Determination of Minimum Cost Paths. IEEE Transactions on Systems Science and Cybernetics.
 components:
   - PathPlanningSimulator
   - FormulaExplainer
   - MathCodeBridge
-  - AcademicReferences
+  - ConceptCheck
 ---
 
-# A* Path Planning on 2D Grids
+# A* Path Planning on 2D Grids & Heuristic Graph Search
 
-The A* search algorithm finds the strictly optimal shortest path across graph spaces by prioritizing nodes with minimum estimated total cost.
+> "How can a robot find the shortest collision-free path across millions of grid cells without searching every single possibility blindly?"
 
-## Evaluation Function
+In autonomous robotics, path planning is the process of computing a continuous collision-free trajectory from a start position $\mathbf{x}_{\text{start}}$ to a goal destination $\mathbf{x}_{\text{goal}}$ through an obstacle-cluttered configuration space $\mathcal{C}_{\text{free}}$.
 
-$$f(n) = g(n) + h(n)$$
+---
 
-- $g(n)$: Exact accumulated cost paid from start node to node $n$.
-- $h(n)$: Estimated remaining heuristic distance from node $n$ to the goal.
+## 1. Graph Search Formulation
 
-## Admissible Octile Heuristic
+The robot's workspace is discretized into a 2D occupancy grid graph $G = (V, E)$, where:
+- $V$: Vertices representing navigable grid cells $(x, y)$.
+- $E$: Edges representing traversable transitions between neighboring cells (4-connected orthogonal or 8-connected diagonal movements).
 
-$$h_{octile}(n) = (\Delta x + \Delta y) + (\sqrt{2} - 2)\min(\Delta x, \Delta y)$$
+---
+
+## 2. The A* Evaluation Function
+
+Dijkstra's algorithm searches outward uniformly in all directions. A* dramatically accelerates the search toward the goal by evaluating each candidate node $n$ with an **Evaluation Function** $f(n)$:
+
+$$
+f(n) = g(n) + h(n)
+$$
+
+### Components:
+- **$g(n)$**: The **exact known cost** incurred to travel from the start node $\mathbf{x}_{\text{start}}$ to node $n$.
+- **$h(n)$**: The **heuristic estimate** of the remaining cost from node $n$ to the goal $\mathbf{x}_{\text{goal}}$.
+- **$f(n)$**: The estimated total cost of the cheapest path constrained to pass through node $n$.
+
+---
+
+## 3. Admissibility & Consistency Conditions
+
+For A* to guarantee finding the **strictly optimal shortest path**:
+
+### 1. Admissibility ($h(n) \le h^*(n)$)
+The heuristic $h(n)$ must **never overestimate** the true remaining cost $h^*(n)$ to reach the goal.
+
+### 2. Consistency (Triangle Inequality)
+For every node $n$ and neighbor $n'$ with step cost $c(n, n')$:
+
+$$
+h(n) \le c(n, n') + h(n')
+$$
+
+---
+
+## 4. Standard Distance Heuristics
+
+Depending on the allowed motion connections on the grid:
+
+### Euclidean Distance ($L_2$ norm):
+Used when the robot can rotate and translate in any arbitrary angle:
+
+$$
+h_{\text{euclidean}}(n) = \sqrt{(x_n - x_g)^2 + (y_n - y_g)^2}
+$$
+
+### Manhattan Distance ($L_1$ norm):
+Used for 4-connected grid movements (Up, Down, Left, Right only):
+
+$$
+h_{\text{manhattan}}(n) = |x_n - x_g| + |y_n - y_g|
+$$
+
+### Octile Distance (8-connected grid with diagonal cost $\sqrt{2}$):
+$$
+h_{\text{octile}}(n) = (\Delta x + \Delta y) + (\sqrt{2} - 2)\min(\Delta x, \Delta y)
+$$
+
+where $\Delta x = |x_n - x_g|$ and $\Delta y = |y_n - y_g|$.
+
+---
+
+## 5. Interactive Path Planning Laboratory
+
+Click and drag on the grid below to draw obstacle walls. Adjust the heuristic metric and observe how the Open Set frontier explores the map and extracts the optimal green path:
+
+<PathPlanningSimulator />
+
+---
+
+## 6. Mathematical Algorithm to Code Bridge
+
+```typescript
+function aStar(start: Node, goal: Node, grid: Grid): Node[] {
+  const openSet = new PriorityQueue<Node>((a, b) => a.f - b.f);
+  start.g = 0;
+  start.f = start.g + heuristic(start, goal);
+  openSet.insert(start);
+
+  while (!openSet.isEmpty()) {
+    const current = openSet.popMin();
+    if (current.equals(goal)) return reconstructPath(current);
+
+    for (const neighbor of grid.getNeighbors(current)) {
+      const tentativeG = current.g + distance(current, neighbor);
+      if (tentativeG < neighbor.g) {
+        neighbor.parent = current;
+        neighbor.g = tentativeG;
+        neighbor.f = neighbor.g + heuristic(neighbor, goal);
+        if (!openSet.contains(neighbor)) openSet.insert(neighbor);
+      }
+    }
+  }
+  return []; // No path found
+}
+```
+
+---
+
+## 7. Concept Check
+
+<ConceptCheck
+  id="quiz-a-star"
+  question="What happens if a heuristic function h(n) is set to 0 for all nodes (h(n) = 0)?"
+  options={[
+    {
+      id: "A",
+      text: "A* degenerates into Dijkstra's Algorithm, which still finds the optimal path but explores nodes uniformly in all directions.",
+      isCorrect: true,
+      explanation: "Exact! When h(n) = 0, f(n) = g(n), which is exactly Dijkstra's shortest path algorithm."
+    },
+    {
+      id: "B",
+      text: "The algorithm immediately crashes because dividing by zero occurs.",
+      isCorrect: false,
+      explanation: "Incorrect. Heuristic values are added (f = g + h), never divided."
+    },
+    {
+      id: "C",
+      text: "The path is no longer optimal.",
+      isCorrect: false,
+      explanation: "Incorrect. Setting h(n) = 0 is always admissible (0 <= true cost), so optimality is preserved."
+    }
+  ]}
+  hint="Consider the equation f(n) = g(n) + h(n) when h(n) is eliminated."
+/>

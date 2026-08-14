@@ -1,0 +1,103 @@
+---
+id: occupancy-grid-mapping
+title: Log-Odds Bayesian Occupancy Grid Mapping
+slug: occupancy-grid-mapping
+category: mapping
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+references:
+  - Sebastian Thrun, Wolfram Burgard, & Dieter Fox (2005). Probabilistic Robotics (Chapter 9). MIT Press.
+  - Alberto Elfes (1989). Using Occupancy Grids for Mobile Robot Perception and Navigation. IEEE Computer.
+components:
+  - MappingSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Log-Odds Bayesian Occupancy Grid Mapping
+
+> "How does a robot convert noisy 2D laser range scans into a crisp, permanent binary map of free and occupied space?"
+
+Occupancy grid mapping represents the environment as a 2D tessellation of independent binary random variables $m_i \in \{0, 1\}$ (0 = Free space, 1 = Occupied obstacle).
+
+---
+
+## 1. The Log-Odds Representation
+
+Standard probability multiplication $p(m_i \mid z_{1:t})$ suffers from numerical floating-point underflow. By converting probabilities into **Log-Odds** form:
+
+$$
+l_t(m_i) = \ln\left( \frac{p(m_i \mid z_{1:t})}{1 - p(m_i \mid z_{1:t})} \right)
+$$
+
+### Additive Update Rule:
+The recursive Bayesian update becomes a fast, numerically stable simple addition:
+
+$$
+l_t(m_i) = l_{t-1}(m_i) + \text{inverse\_sensor\_model}(m_i, x_t, z_t) - l_0
+$$
+
+where $l_0 = \ln\frac{p_0}{1 - p_0}$ is the prior occupancy belief (typically $p_0 = 0.5 \implies l_0 = 0$).
+
+---
+
+## 2. The Inverse Sensor Model for LiDAR Raycasting
+
+When a laser beam travels distance $z_t$ along angle $\theta$:
+
+1. **Free Space Cells ($r < z_t - \frac{\text{thickness}}{2}$)**:
+   - Decrease log-odds by $l_{\text{free}} = \ln\frac{0.3}{0.7} \approx -0.847$.
+2. **Occupied Obstacle Cells ($|r - z_t| \le \frac{\text{thickness}}{2}$)**:
+   - Increase log-odds by $l_{\text{occ}} = \ln\frac{0.85}{0.15} \approx +1.734$.
+3. **Unobserved Cells ($r > z_t + \frac{\text{thickness}}{2}$)**:
+   - Unchanged ($\Delta l = 0$).
+
+To recover true probability from log-odds:
+
+$$
+p(m_i) = 1 - \frac{1}{1 + \exp(l(m_i))}
+$$
+
+---
+
+## 3. Interactive LiDAR Mapping Laboratory
+
+Drive the robot around the arena below. Watch the 360° laser rays carve out white free space and paint solid dark boundaries on the grid:
+
+<MappingSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-mapping"
+  question="What is the primary computational benefit of using the log-odds representation in Occupancy Grid Mapping?"
+  options={[
+    {
+      id: "A",
+      text: "It transforms recursive Bayesian probability multiplication into simple, fast, and numerically stable additions.",
+      isCorrect: true,
+      explanation: "Correct! Log-odds turn probability products into additions (l_t = l_{t-1} + delta), preventing floating-point underflow near 0 and 1."
+    },
+    {
+      id: "B",
+      text: "It makes the robot's battery last twice as long.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "It allows the robot to see through solid concrete walls.",
+      isCorrect: false,
+      explanation: "Incorrect. LiDAR rays stop at the first solid obstacle."
+    }
+  ]}
+  hint="Think about mathematical properties of logarithms when multiplying probabilities."
+/>

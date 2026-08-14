@@ -1,0 +1,102 @@
+---
+id: laplacian-consensus
+title: Graph Laplacian Consensus & Swarm Coordination
+slug: laplacian-consensus
+category: multi-agent
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+references:
+  - Reza Olfati-Saber & Richard M. Murray (2004). Consensus Problems in Networks of Agents with Switching Topology and Time-Delays. IEEE TAC.
+  - Craig W. Reynolds (1987). Flocks, Herds and Schools: A Distributed Behavioral Model. ACM SIGGRAPH.
+components:
+  - MultiAgentSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Graph Laplacian Consensus & Multi-Agent Swarm Intelligence
+
+> "How can hundreds of autonomous robots agree on a common direction and velocity without any centralized leader or global supervisor?"
+
+Decentralized multi-agent systems coordinate through local communication graphs $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ where each robot $i$ only exchanges state information with immediate spatial neighbors $\mathcal{N}_i$.
+
+---
+
+## 1. The Graph Laplacian Matrix $\mathcal{L}$
+
+Let communication adjacency matrix $A = [a_{ij}]$ and degree matrix $D = \operatorname{diag}(d_i)$. The **Graph Laplacian** matrix is defined as:
+
+$$
+\mathcal{L} = D - A
+$$
+
+For an undirected connected graph:
+- $\mathcal{L}$ is positive semi-definite ($\mathcal{L} \ge 0$).
+- $\mathbf{1} = [1, 1, \dots, 1]^T$ is the eigenvector corresponding to eigenvalue $\lambda_1 = 0$ ($\mathcal{L}\mathbf{1} = \mathbf{0}$).
+- The second smallest eigenvalue $\lambda_2(\mathcal{L}) > 0$ is the **Algebraic Connectivity** (Fiedler value), governing the exponential rate of swarm consensus convergence.
+
+---
+
+## 2. Continuous Consensus Protocol
+
+For single-integrator agent dynamics $\dot{\mathbf{x}}_i = \mathbf{u}_i$, the distributed linear consensus control law is:
+
+$$
+\mathbf{u}_i = -\sum_{j \in \mathcal{N}_i} a_{ij} (\mathbf{x}_i - \mathbf{x}_j)
+$$
+
+In collective matrix form:
+
+$$
+\mathbf{\dot{x}} = -\mathcal{L} \mathbf{x}
+$$
+
+The state of every agent exponentially converges to the average centroid:
+
+$$
+\lim_{t \to \infty} \mathbf{x}_i(t) = \frac{1}{N} \sum_{k=1}^N \mathbf{x}_k(0)
+$$
+
+---
+
+## 3. Interactive Multi-Agent Swarm Laboratory
+
+Switch between Consensus, Flocking, and Formation modes below. Add or remove agents, drag them with the cursor, and observe the decentralized consensus dynamics in real time:
+
+<MultiAgentSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-laplacian"
+  question="What physical meaning does the second eigenvalue lambda_2(L) (Fiedler value) have in multi-agent swarm networks?"
+  options={[
+    {
+      id: "A",
+      text: "It measures the algebraic connectivity of the communication graph and dictates how quickly agents reach consensus.",
+      isCorrect: true,
+      explanation: "Correct! The Fiedler eigenvalue lambda_2 characterizes network connectivity; larger lambda_2 means faster decentralized convergence."
+    },
+    {
+      id: "B",
+      text: "It is the battery level of the swarm.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "It represents the maximum speed of sound.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Recall the relationship between graph connectivity and convergence rate."
+/>

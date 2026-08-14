@@ -1,0 +1,103 @@
+---
+id: occupancy-grid-mapping
+title: Pemetaan Grid Okupansi Log-Odds Bayesian
+slug: occupancy-grid-mapping
+category: mapping
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+references:
+  - Sebastian Thrun, Wolfram Burgard, & Dieter Fox (2005). Probabilistic Robotics (Chapter 9). MIT Press.
+  - Alberto Elfes (1989). Using Occupancy Grids for Mobile Robot Perception and Navigation. IEEE Computer.
+components:
+  - MappingSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Pemetaan Grid Okupansi Log-Odds Bayesian
+
+> "Bagaimana robot mengonversi pindaian sinar laser LiDAR yang penuh derau menjadi peta biner permanen yang membedakan ruang kosong dan rintangan secara presisi?"
+
+Pemetaan grid okupansi merepresentasikan lingkungan kerja sebagai kumpulan sel grid 2D yang saling independen, dengan variabel acak biner $m_i \in \{0, 1\}$ (0 = Ruang bebas navigasi, 1 = Rintangan terisi).
+
+---
+
+## 1. Representasi Log-Odds
+
+Perkalian probabilitas rekursif standar $p(m_i \mid z_{1:t})$ rentan mengalami *underflow* komputasi numerik. Dengan mengonversi probabilitas ke dalam bentuk **Log-Odds**:
+
+$$
+l_t(m_i) = \ln\left( \frac{p(m_i \mid z_{1:t})}{1 - p(m_i \mid z_{1:t})} \right)
+$$
+
+### Aturan Pembaruan Penjumlahan:
+Pembaruan Bayesian rekursif tereduksi menjadi operasi penjumlahan skalar sederhana yang sangat cepat:
+
+$$
+l_t(m_i) = l_{t-1}(m_i) + \text{inverse\_sensor\_model}(m_i, x_t, z_t) - l_0
+$$
+
+di mana $l_0 = \ln\frac{p_0}{1 - p_0}$ adalah keyakinan awal sebelum observasi (biasanya $p_0 = 0.5 \implies l_0 = 0$).
+
+---
+
+## 2. Model Sensor Invers untuk Raycasting LiDAR
+
+Ketika sinar laser bergerak sejauh $z_t$ sepanjang sudut hadap $\theta$:
+
+1. **Sel Ruang Bebas ($r < z_t - \frac{\text{tebal}}{2}$)**:
+   - Kurangi nilai log-odds sebesar $l_{\text{free}} = \ln\frac{0.3}{0.7} \approx -0.847$.
+2. **Sel Titik Tabrakan Rintangan ($|r - z_t| \le \frac{\text{tebal}}{2}$)**:
+   - Tambah nilai log-odds sebesar $l_{\text{occ}} = \ln\frac{0.85}{0.15} \approx +1.734$.
+3. **Sel Di Belakang Rintangan ($r > z_t + \frac{\text{tebal}}{2}$)**:
+   - Tidak ada perubahan ($\Delta l = 0$).
+
+Untuk mengembalikan nilai probabilitas nyata dari log-odds:
+
+$$
+p(m_i) = 1 - \frac{1}{1 + \exp(l(m_i))}
+$$
+
+---
+
+## 3. Laboratorium Pemetaan LiDAR Interaktif
+
+Kendalikan pergerakan robot pada arena di bawah ini. Amati bagaimana sinar laser 360° melukis area bebas navigasi berwarna putih dan membentuk dinding batas rintangan yang tegas:
+
+<MappingSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-mapping"
+  question="Apa keuntungan komputasi utama dari penggunaan representasi log-odds pada Pemetaan Grid Okupansi?"
+  options={[
+    {
+      id: "A",
+      text: "Mengubah perkalian probabilitas rekursif Bayesian yang lambat dan rentan underflow menjadi operasi penjumlahan skalar yang cepat dan stabil.",
+      isCorrect: true,
+      explanation: "Tepat! Log-odds mengubah perkalian probabilitas menjadi operasi penjumlahan sederhana (l_t = l_{t-1} + delta), menghindari galat presisi pecahan dekat 0 dan 1."
+    },
+    {
+      id: "B",
+      text: "Membuat baterai robot bertahan dua kali lebih lama.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Memungkinkan robot melihat tembus pandang menembus dinding beton padat.",
+      isCorrect: false,
+      explanation: "Salah. Sinar laser LiDAR berhenti di rintangan pertama."
+    }
+  ]}
+  hint="Pikirkan tentang sifat logaritma ketika mengalikan probabilitas."
+/>

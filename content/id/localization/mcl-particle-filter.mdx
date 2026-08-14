@@ -1,0 +1,102 @@
+---
+id: mcl-particle-filter
+title: Filter Partikel Monte Carlo Localization (MCL)
+slug: mcl-particle-filter
+category: localization
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+references:
+  - Sebastian Thrun, Wolfram Burgard, & Dieter Fox (2005). Probabilistic Robotics (Chapter 8). MIT Press.
+  - Dieter Fox et al. (1999). Monte Carlo Localization: Efficient Position Estimation for Mobile Robots. AAAI.
+components:
+  - LocalizationSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Filter Partikel Monte Carlo Localization (MCL)
+
+> "Ketika slip pada roda dan derau sensor mengaburkan pengukuran, bagaimana robot dapat menentukan posisinya di peta dengan kepastian yang sangat tinggi?"
+
+Di dunia nyata, determinisme murni adalah ilusi. Odomteri mengalami pergeseran (*drift* kumulatif), dan sensor jarak memiliki derau Gaussian. **Monte Carlo Localization (MCL)** memecahkan masalah lokalisasi global dengan merepresentasikan distribusi probabilitas status robot $\mathbf{x} = [x, y, \theta]^T$ menggunakan sekumpulan partikel berbobot (*weighted particle cloud*).
+
+---
+
+## 1. Siklus Filter Bayesian Rekursif
+
+MCL mengimplementasikan filter Bayes rekursif pada ruang status kontinu:
+
+$$
+p(\mathbf{x}_t \mid z_{1:t}, u_{1:t}) = \eta \cdot p(z_t \mid \mathbf{x}_t) \int p(\mathbf{x}_t \mid \mathbf{x}_{t-1}, u_t) p(\mathbf{x}_{t-1} \mid z_{1:t-1}, u_{1:t-1}) \, d\mathbf{x}_{t-1}
+$$
+
+Pada Filter Partikel, distribusi probabilitas diaproksimasi oleh $M$ partikel:
+
+$$
+\mathcal{X}_t = \{ \langle \mathbf{x}_t^{[m]}, w_t^{[m]} \rangle \}_{m=1}^M
+$$
+
+---
+
+## 2. Tiga Langkah Utama Algoritma MCL
+
+### Langkah 1: Prediksi Gerak (Motion Update)
+Masing-masing partikel digerakkan maju menggunakan model kinematika yang ditambahkan derau Gaussian $\epsilon$:
+
+$$
+\mathbf{x}_t^{[m]} \sim p(\mathbf{x}_t \mid \mathbf{x}_{t-1}^{[m]}, u_t)
+$$
+
+### Langkah 2: Koreksi Pengukuran (Sensor Update)
+Hitung bobot kepentingan (*importance weights*) dengan mengevaluasi seberapa cocok jarak suar sensor nyata $z_t$ dengan prediksi jarak suar $\hat{z}$:
+
+$$
+w_t^{[m]} = \prod_{k=1}^K \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(z_t^k - \hat{z}_t^{k,[m]})^2}{2\sigma^2} \right)
+$$
+
+### Langkah 3: Resampling Varian-Rendah (Resampling)
+Ambil $M$ partikel baru dengan peluang sebanding dengan bobot $w_t^{[m]}$. Partikel dengan kecocokan tinggi akan bertahan dan menduplikasi diri; partikel dengan bobot buruk akan dieliminasi.
+
+---
+
+## 3. Laboratorium Lokalisasi Interaktif
+
+Kendalikan robot menggunakan joystick atau tombol panah di bawah ini. Amati bagaimana awan partikel acak mengerucut dan mengelilingi posisi robot nyata secara akurat saat sensor mendeteksi suar:
+
+<LocalizationSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-mcl"
+  question="Mengapa metode Resampling Varian-Rendah (Low-Variance Resampling) lebih dipilih dibanding metode roulette acak standar pada Filter Partikel?"
+  options={[
+    {
+      id: "A",
+      text: "Metode ini menelusuri seluruh partikel dengan satu pointer acak bertahap (step size 1/M), mencegah hilangnya hipotesis yang menjanjikan dan berjalan dalam kompleksitas linier O(M).",
+      isCorrect: true,
+      explanation: "Tepat! Resampling varian-rendah memberikan cakupan probabilitas yang merata, variansi minimal, dan efisiensi komputasi linier O(M)."
+    },
+    {
+      id: "B",
+      text: "Karena metode ini menghilangkan kebutuhan sensor sama sekali.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Agar partikel bergerak melebihi kecepatan cahaya.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang kompleksitas komputasi dan cara mempertahankan partikel dengan peluang baik."
+/>

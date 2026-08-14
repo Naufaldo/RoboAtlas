@@ -1,36 +1,159 @@
 ---
 id: a-star
-title: Perencanaan Jalur A* & Pencarian Heuristik
+title: Perencanaan Jalur Grid A* & Heuristik Admisibel
 slug: a-star
 category: planning
 difficulty: intermediate
 language: id
 interactive: true
-estimatedMinutes: 20
+estimatedMinutes: 45
 prerequisites:
-  - intro-to-robotics
-  - 2d-geometry
+  - velocity-kinematics-2d
 references:
-  - lavalle-planning
-  - hart-nilsson-raphael-1968
+  - Steven M. LaValle (2006). Planning Algorithms (Chapter 2). Cambridge University Press.
+  - Peter E. Hart, Nils J. Nilsson, & Bertram Raphael (1968). A Formal Basis for the Heuristic Determination of Minimum Cost Paths. IEEE Transactions on Systems Science and Cybernetics.
 components:
   - PathPlanningSimulator
   - FormulaExplainer
   - MathCodeBridge
-  - AcademicReferences
+  - ConceptCheck
 ---
 
-# Perencanaan Jalur A* pada Grid 2D
+# Perencanaan Jalur Grid A* & Pencarian Graf Heuristik
 
-Algoritma pencarian A* menemukan jalur terpendek optimal pada ruang graf dengan memprioritaskan simpul yang memiliki estimasi total biaya terendah.
+> "Bagaimana robot dapat menemukan jalur terpendek bebas tabrakan di antara jutaan sel grid tanpa harus memeriksa setiap kemungkinan secara membabi buta?"
 
-## Fungsi Evaluasi Biaya
+Dalam robotika otonom, perencanaan jalur (*path planning*) adalah proses komputasi trajektori bebas tabrakan dari posisi awal $\mathbf{x}_{\text{start}}$ menuju tujuan target $\mathbf{x}_{\text{goal}}$ melalui ruang konfigurasi bebas rintangan $\mathcal{C}_{\text{free}}$.
 
-$$f(n) = g(n) + h(n)$$
+---
 
-- $g(n)$: Biaya aktual yang sudah ditempuh dari titik awal ke simpul $n$.
-- $h(n)$: Estimasi jarak heuristik sisa dari simpul $n$ ke titik tujuan goal.
+## 1. Formulasi Pencarian Graf
 
-## Heuristik Octile Admisibel
+Ruang kerja robot didiskretisasi menjadi graf grid okupansi 2D $G = (V, E)$, di mana:
+- $V$: Simpul (*vertices*) yang mewakili koordinat sel grid $(x, y)$ yang dapat dilewati.
+- $E$: Sisi (*edges*) yang mewakili transisi lintasan antar sel tetangga (pergerakan 4-arah ortogonal atau 8-arah diagonal).
 
-$$h_{octile}(n) = (\Delta x + \Delta y) + (\sqrt{2} - 2)\min(\Delta x, \Delta y)$$
+---
+
+## 2. Fungsi Evaluasi A*
+
+Algoritma Dijkstra mencari jalur dengan menyebar secara seragam ke segala arah. Algoritma A* mempercepat pencarian secara dramatis ke arah target menggunakan **Fungsi Evaluasi** $f(n)$:
+
+$$
+f(n) = g(n) + h(n)
+$$
+
+### Komponen Persamaan:
+- **$g(n)$**: **Biaya akumulasi nyata** yang sudah ditempuh dari simpul awal $\mathbf{x}_{\text{start}}$ ke simpul $n$.
+- **$h(n)$**: **Estimasi heuristik** jarak tersisa dari simpul $n$ menuju target tujuan $\mathbf{x}_{\text{goal}}$.
+- **$f(n)$**: Estimasi total biaya termurah jika jalur melewati simpul $n$.
+
+---
+
+## 3. Syarat Admisibilitas & Konsistensi Heuristik
+
+Agar A* menjamin penemuan **jalur terpendek yang strictly optimal**:
+
+### 1. Syarat Admisibel ($h(n) \le h^*(n)$)
+Nilai estimasi heuristik $h(n)$ **tidak boleh melebihi** biaya nyata sebenarnya $h^*(n)$ untuk mencapai target.
+
+### 2. Syarat Konsistensi (Ketaksamaan Segitiga)
+Untuk setiap simpul $n$ dan simpul tetangga $n'$ dengan biaya langkah $c(n, n')$:
+
+$$
+h(n) \le c(n, n') + h(n')
+$$
+
+---
+
+## 4. Standar Metrik Jarak Heuristik
+
+Berdasarkan aturan pergerakan pada grid:
+
+### Jarak Euclidean (Norma $L_2$):
+Digunakan saat robot dapat berotasi dan bergerak ke sudut bebas:
+
+$$
+h_{\text{euclidean}}(n) = \sqrt{(x_n - x_g)^2 + (y_n - y_g)^2}
+$$
+
+### Jarak Manhattan (Norma $L_1$):
+Digunakan untuk pergerakan 4-arah grid (Atas, Bawah, Kiri, Kanan saja):
+
+$$
+h_{\text{manhattan}}(n) = |x_n - x_g| + |y_n - y_g|
+$$
+
+### Jarak Octile (Grid 8-arah dengan bobot diagonal $\sqrt{2}$):
+$$
+h_{\text{octile}}(n) = (\Delta x + \Delta y) + (\sqrt{2} - 2)\min(\Delta x, \Delta y)
+$$
+
+dengan $\Delta x = |x_n - x_g|$ dan $\Delta y = |y_n - y_g|$.
+
+---
+
+## 5. Laboratorium Perencanaan Jalur Interaktif
+
+Klik dan seret pada kanvas grid di bawah ini untuk menggambar dinding rintangan. Sesuaikan metrik heuristik dan amati bagaimana antrean *Open Set* mencari jalur optimal berwarna hijau:
+
+<PathPlanningSimulator />
+
+---
+
+## 6. Jembatan Kode Algoritma TypeScript
+
+```typescript
+function aStar(start: Node, goal: Node, grid: Grid): Node[] {
+  const openSet = new PriorityQueue<Node>((a, b) => a.f - b.f);
+  start.g = 0;
+  start.f = start.g + heuristic(start, goal);
+  openSet.insert(start);
+
+  while (!openSet.isEmpty()) {
+    const current = openSet.popMin();
+    if (current.equals(goal)) return reconstructPath(current);
+
+    for (const neighbor of grid.getNeighbors(current)) {
+      const tentativeG = current.g + distance(current, neighbor);
+      if (tentativeG < neighbor.g) {
+        neighbor.parent = current;
+        neighbor.g = tentativeG;
+        neighbor.f = neighbor.g + heuristic(neighbor, goal);
+        if (!openSet.contains(neighbor)) openSet.insert(neighbor);
+      }
+    }
+  }
+  return []; // Tidak ada jalur yang ditemukan
+}
+```
+
+---
+
+## 7. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-a-star"
+  question="Apa yang terjadi jika fungsi heuristik h(n) diatur bernilai 0 untuk seluruh simpul (h(n) = 0)?"
+  options={[
+    {
+      id: "A",
+      text: "A* terdegenerasi menjadi Algoritma Dijkstra, yang tetap menemukan jalur optimal tetapi menyebar secara seragam ke segala arah.",
+      isCorrect: true,
+      explanation: "Tepat! Ketika h(n) = 0, f(n) = g(n), yang merupakan formulasi murni dari algoritma Dijkstra."
+    },
+    {
+      id: "B",
+      text: "Algoritma mengalami crash seketika karena terjadi pembagian dengan nol.",
+      isCorrect: false,
+      explanation: "Salah. Nilai heuristik dijumlahkan (f = g + h), bukan dibagi."
+    },
+    {
+      id: "C",
+      text: "Jalur yang ditemukan tidak lagi optimal.",
+      isCorrect: false,
+      explanation: "Salah. Menetapkan h(n) = 0 selalu bersifat admisibel (0 <= biaya nyata), sehingga jaminan optimalitas tetap berlaku."
+    }
+  ]}
+  hint="Perhatikan persamaan f(n) = g(n) + h(n) ketika h(n) dihilangkan."
+/>

@@ -1,0 +1,113 @@
+---
+id: icp-scan-matching
+title: Pencocokan Pindaian ICP (Iterative Closest Point) dalam SLAM
+slug: icp-scan-matching
+category: slam
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - mathematical-foundations
+references:
+  - Paul J. Besl & Neil D. McKay (1992). A Method for Registration of 3-D Shapes. IEEE TPAMI.
+  - Yang Chen & Gérard Medioni (1992). Object Modelling by Registration of Multiple Range Images. Image and Vision Computing.
+components:
+  - SlamSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Pencocokan Pindaian Iterative Closest Point (ICP) dalam SLAM
+
+> "Bagaimana robot menyelaraskan dua pindaian awan titik laser yang berurutan untuk memperkirakan perpindahan posisinya secara presisi tanpa bergantung pada enkoder roda ataupun GPS?"
+
+Dalam *Simultaneous Localization and Mapping* (SLAM), **Iterative Closest Point (ICP)** adalah algoritma fondasional untuk menghitung matriks transformasi kaku $T = (R, \mathbf{t}) \in SE(2)$ yang menyelaraskan himpunan titik pindaian sensor $P = \{\mathbf{p}_i\}$ ke himpunan titik peta referensi $Q = \{\mathbf{q}_j\}$.
+
+---
+
+## 1. Fungsi Objektif Kuadrat Terkecil ICP
+
+ICP mencari matriks rotasi $R \in SO(2)$ dan vektor translasi $\mathbf{t}$ yang meminimalkan jumlah kuadrat galat jarak Euclidean korespondensi:
+
+$$
+E(R, \mathbf{t}) = \sum_{i=1}^N \| \mathbf{q}_i - (R \mathbf{p}_i + \mathbf{t}) \|^2
+$$
+
+---
+
+## 2. Solusi Tertutup SVD (Singular Value Decomposition)
+
+### Langkah 1: Hitung Titik Pusat Massa (Centroids)
+Hitung titik tengah rata-rata kedua himpunan titik:
+
+$$
+\boldsymbol{\mu}_p = \frac{1}{N} \sum_{i=1}^N \mathbf{p}_i, \quad \boldsymbol{\mu}_q = \frac{1}{N} \sum_{i=1}^N \mathbf{q}_i
+$$
+
+### Langkah 2: Matriks Kovarians Silang $H$
+Kurangi titik dengan pusat massanya $\mathbf{p}'_i = \mathbf{p}_i - \boldsymbol{\mu}_p$ dan $\mathbf{q}'_i = \mathbf{q}_i - \boldsymbol{\mu}_q$:
+
+$$
+H = \sum_{i=1}^N \mathbf{p}'_i (\mathbf{q}'_i)^T
+$$
+
+### Langkah 3: Dekomposisi Nilai Singular (SVD)
+Dekomposisi matriks kovarians silang $H$:
+
+$$
+H = U \Sigma V^T
+$$
+
+Matriks rotasi ortogonal optimal $R$ diperoleh secara analitik melalui:
+
+$$
+R = V U^T
+$$
+
+*(Jika $\det(R) = -1$, koreksi pembalikan cermin: $R = V \operatorname{diag}(1, \dots, \det(VU^T)) U^T$)*.
+
+### Langkah 4: Vektor Translasi Optimal $\mathbf{t}$
+$$
+\mathbf{t} = \boldsymbol{\mu}_q - R \boldsymbol{\mu}_p
+$$
+
+---
+
+## 3. Laboratorium SLAM & Pencocokan Pindaian Interaktif
+
+Langkahi iterasi algoritma ICP pada kanvas di bawah ini. Amati bagaimana pindaian merah berotasi dan bergeser hingga berhimpit sempurna dengan peta biru referensi:
+
+<SlamSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-icp"
+  question="Mengapa algoritma ICP titik-ke-titik membutuhkan estimasi awal (initial guess) yang cukup dekat dari odometri atau IMU?"
+  options={[
+    {
+      id: "A",
+      text: "Karena ICP adalah optimasi lokal yang rentan terjebak pada minimum lokal jika deviasi posisi awal terlalu jauh.",
+      isCorrect: true,
+      explanation: "Tepat! ICP mengasumsikan korespondensi tetangga terdekat. Jika simpangan awal terlalu jauh, titik laser akan berpasangan dengan permukaan rintangan yang salah."
+    },
+    {
+      id: "B",
+      text: "Karena komputasi matriks SVD tidak dapat dihitung jika jarak tidak nol.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena titik laser menghilang saat robot berputar.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang cara kerja pencarian tetangga terdekat saat dua awan titik terpaut sangat jauh."
+/>

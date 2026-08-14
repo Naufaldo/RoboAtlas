@@ -1,30 +1,105 @@
 ---
 id: pure-pursuit-and-stanley
-title: Kendali Pelacakan Jalur dengan Pure Pursuit & Stanley
+title: Kendali Pelacakan Trajektori Pure Pursuit & Stanley
 slug: pure-pursuit-and-stanley
 category: control
 difficulty: intermediate
 language: id
 interactive: true
-estimatedMinutes: 20
+estimatedMinutes: 45
 prerequisites:
   - velocity-kinematics-2d
+  - a-star
 references:
-  - coudriet-pure-pursuit
-  - thrun-stanley-darpa
+  - R. Craig Coulter (1992). Implementation of the Pure Pursuit Path Tracking Algorithm. Carnegie Mellon University.
+  - Sebastian Thrun et al. (2006). Stanley: The Robot that Won the DARPA Grand Challenge. Journal of Field Robotics.
 components:
   - ControlSimulator
   - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
 ---
 
-# Kendali Umpan Balik Pelacakan Jalur
+# Kendali Pelacakan Trajektori Pure Pursuit & Stanley
 
-Kontroler pelacak jalur menghitung sudut kemudi $\delta(t)$ yang diperlukan untuk mengarahkan kendaraan mengikuti jalur geometris referensi secara presisi.
+> "Setelah algoritma perencanaan jalur menghasilkan serangkaian titik koordinat lintasan, bagaimana motor servo kemudi mengarahkan sasis secara mulus tanpa berosilasi keluar jalur?"
 
-## Kemudi Geometris Pure Pursuit
+Kontroler pelacakan jalur (*path tracking controllers*) menjembatani geometri diskrit global dengan aktuator kemudi fisik waktu-nyata (*real-time*).
 
-$$\delta = \arctan\left( \frac{2 L \sin\alpha}{L_f} \right)$$
+---
 
-## Kendali Sumbu Depan Non-Linear Stanley
+## 1. Algoritma Pure Pursuit
 
-$$\delta(t) = \theta_e(t) + \arctan\left( \frac{k \cdot e(t)}{v(t)} \right)$$
+Pure Pursuit adalah metode pelacakan jalur geometris yang menghitung sudut kemudi yang dibutuhkan untuk mengejar sebuah **titik target lookahead** pada jalur referensi yang berada pada jarak $L_f$ di depan poros roda belakang.
+
+### Penurunan Geometris Lengkung Busur Lingkaran:
+Dengan membentuk busur lingkaran berjari-jari $R$ yang menghubungkan titik tengah poros belakang $(x_r, y_r)$ ke titik lookahead $(g_x, g_y)$:
+
+$$
+\frac{L_f}{\sin(2\alpha)} = \frac{R}{\sin(\frac{\pi}{2} - \alpha)} \implies R = \frac{L_f}{2\sin\alpha}
+$$
+
+Menggunakan model kinematika sepeda roda dengan jarak poros $L$ di mana $\kappa = \frac{1}{R} = \frac{\tan\delta}{L}$:
+
+$$
+\delta = \arctan\left( \frac{2 L \sin\alpha}{L_f} \right)
+$$
+
+### Pengaturan Jarak Lookahead $L_f$:
+- **Lookahead Dinamis Berbasis Kecepatan**: $L_f = k_v \cdot v + L_{f,0}$
+- **$L_f$ Kecil**: Respon cepat dan tajam, namun memicu osilasi kemudi frekuensi tinggi.
+- **$L_f$ Besar**: Kemudi sangat mulus dan stabil, namun cenderung memotong tikungan tajam.
+
+---
+
+## 2. Kontroler Stanley (Stanford University)
+
+Dikembangkan oleh Stanford University untuk robot mobil otonom *Stanley* (pemenang kompetisi bergengsi DARPA Grand Challenge), kontroler Stanley mengukur galat pelacakan pada **poros roda depan** (*front axle*):
+
+$$
+\delta(t) = \theta_e(t) + \arctan\left( \frac{k \cdot e(t)}{v(t)} \right)
+$$
+
+### Komponen Persamaan:
+1. **Galat Sudut Hadap $\theta_e(t) = \theta_{\text{path}} - \theta_{\text{robot}}$**: Menyelaraskan roda agar sejajar dengan garis singgung jalur.
+2. **Galat Jarak Melintang (*Cross-Track Error*) $e(t)$**: Jarak tegak lurus terpendek dari poros depan ke garis lintasan.
+3. **Gain $k > 0$**: Parameter penguatan respon koreksi.
+4. **Faktor Pelembut (*Softening Term*) $v(t) \to v(t) + k_{\text{soft}}$**: Mencegah pembagian dengan nol saat kecepatan rendah atau berhenti.
+
+---
+
+## 3. Laboratorium Kendali Pelacakan Interaktif
+
+Beralih antara mode kendali Pure Pursuit dan Stanley pada sirkuit Oval dan Angka-8 di bawah ini. Atur nilai gain dan amati grafik galat lateral melintang secara *real-time*:
+
+<ControlSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-control"
+  question="Mengapa kontroler Pure Pursuit menskalakan jarak lookahead L_f sebanding dengan kecepatan kendaraan (L_f = k_v * v + L_0)?"
+  options={[
+    {
+      id: "A",
+      text: "Karena pada kecepatan yang lebih tinggi, robot perlu memandang lebih jauh ke depan untuk mencegah osilasi kemudi liar dan ketidakstabilan lateral.",
+      isCorrect: true,
+      explanation: "Tepat! Sama seperti pengemudi manusia, semakin cepat kendaraan melaju, pandangan mata harus difokuskan lebih jauh ke depan agar pergerakan kemudi tetap stabil dan teratur."
+    },
+    {
+      id: "B",
+      text: "Karena sensor LiDAR berhenti bekerja pada kecepatan tinggi.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Agar jarak poros roda L memanjang secara fisik.",
+      isCorrect: false,
+      explanation: "Salah. Jarak poros roda L adalah dimensi mekanik tetap."
+    }
+  ]}
+  hint="Pikirkan tentang perbedaan fokus pandangan pengemudi saat berkendara di jalan tol berkecepatan tinggi dibanding saat parkir."
+/>

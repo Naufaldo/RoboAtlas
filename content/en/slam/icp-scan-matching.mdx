@@ -1,0 +1,113 @@
+---
+id: icp-scan-matching
+title: Iterative Closest Point (ICP) Scan Matching in SLAM
+slug: icp-scan-matching
+category: slam
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - mathematical-foundations
+references:
+  - Paul J. Besl & Neil D. McKay (1992). A Method for Registration of 3-D Shapes. IEEE TPAMI.
+  - Yang Chen & Gérard Medioni (1992). Object Modelling by Registration of Multiple Range Images. Image and Vision Computing.
+components:
+  - SlamSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Iterative Closest Point (ICP) Scan Registration in SLAM
+
+> "How can a robot align two successive laser point clouds to accurately estimate its motion without relying on wheel encoders or GPS?"
+
+In Simultaneous Localization and Mapping (SLAM), **Iterative Closest Point (ICP)** is the foundational algorithm for calculating the rigid transformation matrix $T = (R, \mathbf{t}) \in SE(2)$ that aligns a current sensor scan point set $P = \{\mathbf{p}_i\}$ onto a reference map point set $Q = \{\mathbf{q}_j\}$.
+
+---
+
+## 1. The ICP Least-Squares Objective
+
+ICP seeks the rotation matrix $R \in SO(2)$ and translation vector $\mathbf{t}$ that minimize the sum of squared Euclidean correspondence errors:
+
+$$
+E(R, \mathbf{t}) = \sum_{i=1}^N \| \mathbf{q}_i - (R \mathbf{p}_i + \mathbf{t}) \|^2
+$$
+
+---
+
+## 2. Closed-Form SVD Solution (Per Iteration)
+
+### Step 1: Compute Centroids
+Compute center-of-mass centroids for both point sets:
+
+$$
+\boldsymbol{\mu}_p = \frac{1}{N} \sum_{i=1}^N \mathbf{p}_i, \quad \boldsymbol{\mu}_q = \frac{1}{N} \sum_{i=1}^N \mathbf{q}_i
+$$
+
+### Step 2: Demeaned Points & Cross-Covariance Matrix $H$
+Subtract centroids $\mathbf{p}'_i = \mathbf{p}_i - \boldsymbol{\mu}_p$ and $\mathbf{q}'_i = \mathbf{q}_i - \boldsymbol{\mu}_q$:
+
+$$
+H = \sum_{i=1}^N \mathbf{p}'_i (\mathbf{q}'_i)^T
+$$
+
+### Step 3: Singular Value Decomposition (SVD)
+Decompose cross-covariance matrix $H$:
+
+$$
+H = U \Sigma V^T
+$$
+
+The optimal orthogonal rotation matrix $R$ is given by:
+
+$$
+R = V U^T
+$$
+
+*(If $\det(R) = -1$, correct the reflection: $R = V \operatorname{diag}(1, \dots, \det(VU^T)) U^T$)*.
+
+### Step 4: Optimal Translation Vector $\mathbf{t}$
+$$
+\mathbf{t} = \boldsymbol{\mu}_q - R \boldsymbol{\mu}_p
+$$
+
+---
+
+## 3. Interactive SLAM & ICP Scan Matching Laboratory
+
+Step through ICP iterations on the point cloud canvas below. Watch the current red scan rotate and translate into perfect alignment with the blue reference map:
+
+<SlamSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-icp"
+  question="Why does standard point-to-point ICP require a good initial pose guess from odometry or IMU?"
+  options={[
+    {
+      id: "A",
+      text: "Because ICP is a local gradient-based optimization that can converge to local minima if initial misalignment is too large.",
+      isCorrect: true,
+      explanation: "Correct! ICP assumes correct nearest-neighbor associations. If the initial error is too large, points associate with the wrong surfaces."
+    },
+    {
+      id: "B",
+      text: "Because SVD matrices cannot be computed if distance is non-zero.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because laser points disappear when the robot rotates.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about how nearest-neighbor correspondence behaves when point clouds are far apart."
+/>
