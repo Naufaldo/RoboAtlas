@@ -1,0 +1,133 @@
+---
+id: mathematical-foundations
+title: Mathematical Foundations for Robotics
+slug: mathematical-foundations
+category: fundamentals
+difficulty: Beginner
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - intro-to-robotics
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics. Springer Open.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics. Springer.
+  - Steven M. LaValle (2006). Planning Algorithms. Cambridge University Press.
+components:
+  - LessonOrientation
+  - CoordinateFrameExplorer
+  - VectorVisualizer
+  - DotProductExplorer
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+  - AcademicReferences
+---
+
+# Mathematical Foundations for Robotics
+
+> "Why does a robot need mathematics, and how do mathematical objects become physical motion?"
+
+To build truly autonomous robots, we must bridge the gap between abstract mathematical equations and physical reality in the real world.
+
+---
+
+## 1. Why Mathematics in Robotics?
+
+A human can easily say:
+> *"The robot is about two meters to the right of the charging dock."*
+
+However, a digital microprocessor and flight controller require an exact numeric vector to compute motor PWM voltages:
+
+$$
+\mathbf{p} = \begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} 2.0 \\ 1.5 \end{bmatrix} \text{ meters}
+$$
+
+Mathematics gives the robot a precise, unambiguous language for describing:
+- **Spatial Position & Pose**: Where is the robot and its end-effector located?
+- **Orientation & Heading**: Which direction is the robot facing in 2D and 3D?
+- **Kinematics & Velocity**: How fast are the wheels rotating and how does the body move?
+- **Sensor Uncertainty**: How confident are we in noisy LiDAR distance measurements?
+
+---
+
+## 2. 2D Coordinate Frames & Cartesian Representation
+
+Before defining vectors, we establish a **reference coordinate frame** $\{W\}$ (World Frame). Any point $P$ in 2D space is represented by its orthogonal projections along the $X$ and $Y$ axes:
+
+$$
+P = \begin{bmatrix} x \\ y \end{bmatrix}, \quad r = \sqrt{x^2 + y^2}, \quad \theta = \text{atan2}(y, x)
+$$
+
+<CoordinateFrameExplorer initialX={3} initialY={2} />
+
+---
+
+## 3. Vectors & Pythagorean Decomposition
+
+A **vector** represents both magnitude (length) and spatial direction. Unlike a scalar which only has magnitude ($v = 2\text{ m/s}$, $m = 10\text{ kg}$), a velocity vector tells the robot *where* it is headed:
+
+$$
+\mathbf{v} = \begin{bmatrix} v_x \\ v_y \end{bmatrix}
+$$
+
+By the **Pythagorean Theorem**, the vector magnitude $\|\mathbf{v}\|$ is the hypotenuse of the right-angle triangle formed by $v_x$ and $v_y$:
+
+$$
+\|\mathbf{v}\| = \sqrt{v_x^2 + v_y^2}
+$$
+
+The normalized unit direction vector $\hat{\mathbf{v}}$ is given by:
+
+$$
+\hat{\mathbf{v}} = \frac{\mathbf{v}}{\|\mathbf{v}\|} = \begin{bmatrix} \cos\theta \\ \sin\theta \end{bmatrix}
+$$
+
+<VectorVisualizer initialVx={3.0} initialVy={2.0} />
+
+---
+
+## 4. Dot Product & Directional Alignment
+
+The **dot product** (scalar product) between two vectors $\mathbf{a}$ and $\mathbf{b}$ measures their directional alignment:
+
+$$
+\mathbf{a} \cdot \mathbf{b} = a_x b_x + a_y b_y = \|\mathbf{a}\| \|\mathbf{b}\| \cos\theta
+$$
+
+In robotics, the sign of the dot product is critical:
+1. **$\mathbf{a} \cdot \mathbf{b} > 0$ (Acute angle)**: The robot is moving towards the target goal.
+2. **$\mathbf{a} \cdot \mathbf{b} = 0$ (Orthogonal / $90^\circ$)**: Pure lateral displacement (perpendicular to goal).
+3. **$\mathbf{a} \cdot \mathbf{b} < 0$ (Obtuse angle)**: The robot is moving away from the goal.
+
+<DotProductExplorer />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-math-foundations"
+  question="If the dot product between the robot heading vector and the goal vector is negative (a · b < 0), what does this indicate?"
+  options={[
+    {
+      id: "A",
+      text: "The robot is moving in the opposing direction away from the goal.",
+      isCorrect: true,
+      explanation: "Correct! When cos(theta) < 0, the angle theta is greater than 90 degrees, indicating backwards or diverging motion."
+    },
+    {
+      id: "B",
+      text: "The robot has reached the goal exactly.",
+      isCorrect: false,
+      explanation: "Incorrect. Reaching the goal means the distance norm ||p_goal - p_robot|| is zero."
+    },
+    {
+      id: "C",
+      text: "The robot's battery is depleted.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the sign of cos(theta) for angles greater than 90 degrees."
+/>
