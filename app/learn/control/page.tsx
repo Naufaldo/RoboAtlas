@@ -3,6 +3,8 @@
 import React from 'react';
 import { ControlSimulator } from '@/components/simulation/ControlSimulator';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
+import { LessonOrientation } from '@/components/layout/LessonOrientation';
+import { LessonNavigation } from '@/components/layout/LessonNavigation';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Cpu, Sparkles, BookOpen } from 'lucide-react';
 
@@ -27,6 +29,23 @@ export default function ControlPage() {
             : 'Execute geometric and kinematic trajectory tracking control laws. Compare the lookahead geometry of Pure Pursuit against Stanley steering cross-track error feedback.'}
         </p>
       </div>
+
+      {/* Lesson Orientation Card */}
+      <LessonOrientation
+        domain={isId ? 'Kendali Robot' : 'Robot Control'}
+        lessonTitle={isId ? 'Pelacakan Jalur: Pure Pursuit vs Stanley' : 'Path Tracking: Pure Pursuit vs Stanley'}
+        estimatedMinutes={20}
+        learningObjectives={[
+          isId ? 'Memahami konsep titik pandang depan (lookahead distance) pada Pure Pursuit' : 'Understand geometric lookahead point pursuit mechanics',
+          isId ? 'Menganalisis kesalahan lateral (cross-track error) dan kesalahan sudut hadap' : 'Analyze lateral cross-track and heading error dynamics',
+          isId ? 'Menghitung sudut kemudi optimal dengan pembagian kecepatan non-linear pada Stanley' : 'Calculate Stanley velocity-scaled nonlinear steering commands',
+        ]}
+        whyItMatters={
+          isId
+            ? 'Rencana jalur yang sempurna tidak ada gunanya jika aktuator kemudi robot tidak mampu menempel pada garis lintasan secara stabil pada kecepatan tinggi.'
+            : 'A planned path is useless if the vehicle steering actuators cannot track reference trajectories stably at speed.'
+        }
+      />
 
       {/* 1. Interactive Simulator Module */}
       <div className="space-y-3">
@@ -136,6 +155,25 @@ export default function ControlPage() {
             ? 'Juara kompetisi DARPA Grand Challenge (Stanford Racing Team - Robot "Stanley"). Standar emas kendali kemudi mobil otonom di jalan raya.'
             : 'Winner of the DARPA Grand Challenge (Stanford "Stanley" vehicle); industry standard for road autonomous vehicle lane tracking.'
         }
+      />
+
+      {/* Next Steps Navigation */}
+      <LessonNavigation
+        prevLesson={{
+          domain: isId ? 'Lokalisasi Robot' : 'Robot Localization',
+          title: isId ? 'Filter Partikel Monte Carlo' : 'Monte Carlo Particle Filter',
+          href: '/learn/localization',
+        }}
+        nextLesson={{
+          domain: isId ? 'Pemetaan Robot' : 'Occupancy Mapping',
+          title: isId ? 'Pemetaan Grid Okupansi Log-Odds' : 'Log-Odds Occupancy Grid Mapping',
+          href: '/learn/mapping',
+        }}
+        suggestedExperiments={[
+          isId ? 'Tingkatkan kecepatan kendaraan di simulator kendali dan amati fenomena overshoot pada tikungan tajam' : 'Increase vehicle target speed to observe tracking overshoot on sharp track curves',
+          isId ? 'Bandingkan kestabilan kemudi antara Pure Pursuit dan Stanley pada lintasan angka 8' : 'Compare steering oscillation between Pure Pursuit and Stanley on figure-8 tracks',
+          isId ? 'Ubah parameter lookahead distance L_f di kalkulator Pure Pursuit untuk melihat efek pemotongan tikungan' : 'Adjust lookahead parameter L_f in the calculator to evaluate corner-cutting vs stability',
+        ]}
       />
     </div>
   );

@@ -6,6 +6,10 @@ import { TransformSandbox } from '@/components/simulation/TransformSandbox';
 import { SpatialRotation3D } from '@/components/simulation/SpatialRotation3D';
 import { MathBlock } from '@/components/mathematics/MathBlock';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
+import { LessonOrientation } from '@/components/layout/LessonOrientation';
+import { LessonNavigation } from '@/components/layout/LessonNavigation';
+import { MathCodeBridge } from '@/components/educational/MathCodeBridge';
+import { AcademicReferences } from '@/components/educational/AcademicReferences';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   Compass,
@@ -81,6 +85,61 @@ export default function FundamentalsPage() {
         </div>
       </div>
 
+      {/* Learner-First Lesson Orientation Card */}
+      <LessonOrientation
+        domain={isId ? 'Fondasi Robotika' : 'Robotics Foundations'}
+        lessonTitle={chapters[activeChapter - 1].title}
+        estimatedMinutes={15}
+        learningObjectives={
+          activeChapter === 1
+            ? [
+                isId ? 'Memahami paradigma Sense-Plan-Act pada robot otonom' : 'Understand Sense-Plan-Act autonomous loops',
+                isId ? 'Membedakan sensor proprioseptif vs eksteroseptif' : 'Distinguish proprioceptive vs exteroceptive sensors',
+                isId ? 'Mengenal taksonomi robot industri, bergerak, dan drone' : 'Classify fixed arms, mobile robots, and aerial drones',
+              ]
+            : activeChapter === 2
+            ? [
+                isId ? 'Mengubah koordinat kartesian ke polar dan sebaliknya' : 'Convert Cartesian to Polar coordinate representations',
+                isId ? 'Mengoperasikan rotasi matriks SO(2) dan translasi' : 'Apply SO(2) planar rotations and translations',
+                isId ? 'Menyusun matriks transformasi homogen 3x3 SE(2)' : 'Assemble 3x3 SE(2) homogeneous transformation matrices',
+              ]
+            : activeChapter === 3
+            ? [
+                isId ? 'Memahami aturan tangan kanan dalam ruang 3 dimensi' : 'Understand right-hand rule spatial coordinate systems',
+                isId ? 'Menghitung matriks rotasi ZYX Euler (Roll, Pitch, Yaw)' : 'Calculate 3D ZYX Euler angle rotation matrices',
+                isId ? 'Mengenal keunggulan representasi kuaternion unit' : 'Recognize unit quaternion representation benefits',
+              ]
+            : activeChapter === 5
+            ? [
+                isId ? 'Menurunkan rumus kecepatan linier v dan kecepatan sudut omega' : 'Derive forward unicycle linear and angular velocities',
+                isId ? 'Mencari pusat putar seketika (Instantaneous Center of Curvature)' : 'Determine Instantaneous Center of Curvature (ICC)',
+                isId ? 'Memahami kendala non-holonomik roda tidak selip' : 'Explain no-slip non-holonomic kinematic constraints',
+              ]
+            : [
+                isId ? 'Memahami formulasi matematis dan arti fisik setiap variabel' : 'Understand mathematical formulation and physical variable meaning',
+                isId ? 'Mengeksplorasi kalkulator interaktif parameter langsung' : 'Explore live parameter calculation and intermediate steps',
+                isId ? 'Mengetahui aplikasi praktis pada robot nyata di industri' : 'Learn practical robotics industry engineering applications',
+              ]
+        }
+        whyItMatters={
+          activeChapter === 1
+            ? isId
+              ? 'Fondasi memahami bagaimana robot berinteraksi dengan dunia fisik secara cerdas dan aman.'
+              : 'The core conceptual foundation of how autonomous agents sense and react to the physical world.'
+            : activeChapter === 2 || activeChapter === 3
+            ? isId
+              ? 'Tanpa transformasi koordinat, robot tidak bisa mengetahui posisi rintangan yang dilihat sensornya di dunia nyata.'
+              : 'Without spatial coordinate transformations, a robot cannot map sensor readings to real-world positions.'
+            : activeChapter === 5
+            ? isId
+              ? 'Kinematika roda diferensial adalah algoritma dasar yang menggerakkan hampir seluruh mobile robot beroda.'
+              : 'Differential-drive kinematics is the foundational model powering TurtleBots, AGVs, and vacuum rovers.'
+            : isId
+            ? 'Menjembatani teori matematika dengan algoritma komputasi nyata pada robot otonom.'
+            : 'Bridges theoretical mathematics with robust physical robot software implementations.'
+        }
+      />
+
       {/* CHAPTER 1: INTRODUCTION TO ROBOTICS */}
       {activeChapter === 1 && (
         <div className="space-y-6 animate-fadeIn">
@@ -144,7 +203,6 @@ export default function FundamentalsPage() {
             <TransformSandbox />
           </div>
 
-          {/* Detailed Formula Explainer for 2D Transformation */}
           <FormulaExplainer
             id="formula-se2-transform"
             title={isId ? 'Transformasi Matriks Homogen 2D SE(2)' : '2D SE(2) Homogeneous Transformation Matrix'}
@@ -410,6 +468,33 @@ export default function FundamentalsPage() {
               },
             }}
           />
+          {/* Section 38 Math <-> Code Bridge for Differential Drive */}
+          <MathCodeBridge
+            title={isId ? 'Jembatan Kinematika Roda Diferensial ke Kode TypeScript' : 'Differential-Drive Kinematics Math-to-Code Bridge'}
+            mathLatex="v = \frac{v_R + v_L}{2}, \quad \omega = \frac{v_R - v_L}{L}"
+            codeSnippet={`// Pure TypeScript Differential Drive Kinematics
+export function diffDriveForwardKinematics(
+  vR: number,
+  vL: number,
+  wheelbase: number
+): { v: number; omega: number } {
+  const v = (vR + vL) / 2.0;
+  const omega = (vR - vL) / wheelbase;
+  return { v, omega };
+}`}
+            explanation={
+              isId
+                ? 'Fungsi TypeScript di atas mengeksekusi integrasi kecepatan linier v dan rotasi sudut omega secara deterministik tanpa distorsi frame-rate.'
+                : 'The TypeScript function executes the continuous differential velocity mapping with exact 1-to-1 fidelity for 60 FPS physics engines.'
+            }
+            mappings={[
+              { mathSymbol: 'v', codeIdentifier: 'v', explanation: isId ? 'Kecepatan linier pusat robot (m/s)' : 'Robot center forward linear velocity' },
+              { mathSymbol: 'omega (ω)', codeIdentifier: 'omega', explanation: isId ? 'Laju rotasi sudut bodi robot (rad/s)' : 'Robot chassis angular yaw velocity' },
+              { mathSymbol: 'v_R', codeIdentifier: 'vR', explanation: isId ? 'Kecepatan kontak putar roda kanan (m/s)' : 'Right wheel linear velocity' },
+              { mathSymbol: 'v_L', codeIdentifier: 'vL', explanation: isId ? 'Kecepatan kontak putar roda kiri (m/s)' : 'Left wheel linear velocity' },
+              { mathSymbol: 'L', codeIdentifier: 'wheelbase', explanation: isId ? 'Jarak pemisah antar roda (m)' : 'Wheelbase axle separation distance' },
+            ]}
+          />
         </div>
       )}
 
@@ -566,6 +651,23 @@ export default function FundamentalsPage() {
           </div>
         </div>
       )}
+
+      {/* Section 39 Academic References */}
+      <AcademicReferences />
+
+      {/* Suggested Experiments & Next Steps Navigation */}
+      <LessonNavigation
+        nextLesson={{
+          domain: isId ? 'Perencanaan Jalur' : 'Path Planning',
+          title: isId ? 'Pencarian Grid Optimal: Dijkstra & A*' : 'Optimal Grid Search: Dijkstra & A*',
+          href: '/learn/planning',
+        }}
+        suggestedExperiments={[
+          isId ? 'Coba ubah kecepatan roda kanan (v_R) lebih besar dari roda kiri (v_L) di simulator Bab 5' : 'Set v_R > v_L in Chapter 5 simulator to observe circular counter-clockwise turning',
+          isId ? 'Uji sudut Yaw, Pitch, dan Roll di simulator 3D Bab 3 dan amati ortogonalitas matriks SO(3)' : 'Adjust Yaw, Pitch, and Roll in Chapter 3 3D visualizer to verify SO(3) matrix properties',
+          isId ? 'Gunakan kalkulator interaktif transformasi SE(2) di Bab 2 untuk menghitung proyeksi koordinat' : 'Use the interactive SE(2) transform calculator in Chapter 2 to project local points',
+        ]}
+      />
     </div>
   );
 }

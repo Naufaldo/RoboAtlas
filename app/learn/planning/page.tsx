@@ -3,6 +3,10 @@
 import React from 'react';
 import { PathPlanningSimulator } from '@/components/simulation/PathPlanningSimulator';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
+import { LessonOrientation } from '@/components/layout/LessonOrientation';
+import { LessonNavigation } from '@/components/layout/LessonNavigation';
+import { MathCodeBridge } from '@/components/educational/MathCodeBridge';
+import { AcademicReferences } from '@/components/educational/AcademicReferences';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Navigation, Sparkles, BookOpen, Code2 } from 'lucide-react';
 
@@ -27,6 +31,24 @@ export default function PlanningPage() {
             : 'Explore optimal graph traversal, admissible heuristic estimation, and continuous trajectory generation algorithms including Dijkstra and A* Search.'}
         </p>
       </div>
+
+      {/* Lesson Orientation Card */}
+      <LessonOrientation
+        domain={isId ? 'Perencanaan Jalur' : 'Path Planning'}
+        lessonTitle={isId ? 'Pencarian Grid Optimal: Dijkstra & A*' : 'Optimal Grid Search: Dijkstra & A*'}
+        estimatedMinutes={20}
+        learningObjectives={[
+          isId ? 'Memahami konsep graf grid 2D dengan tetangga 4-arah vs 8-arah' : 'Understand 2D grid graphs with 4-connectivity vs 8-connectivity',
+          isId ? 'Membedakan ekspansi buta Dijkstra dengan pencarian terarah A*' : 'Differentiate blind Dijkstra expansion from goal-directed A*',
+          isId ? 'Menghitung fungsi evaluasi biaya f(n) = g(n) + h(n)' : 'Compute node cost evaluation functions f(n) = g(n) + h(n)',
+          isId ? 'Membuktikan syarat admisibilitas heuristik untuk jaminan rute terpendek' : 'Verify heuristic admissibility conditions for shortest-path optimality',
+        ]}
+        whyItMatters={
+          isId
+            ? 'Tanpa perencana jalur global, robot akan menabrak rintangan atau tersesat dalam labirin tanpa mengetahui jalur tercepat menuju tujuan.'
+            : 'Without a global path planner, autonomous robots would collide with obstacles or wander aimlessly without finding optimal paths.'
+        }
+      />
 
       {/* 1. Interactive Simulator Module */}
       <div className="space-y-3">
@@ -93,31 +115,75 @@ export default function PlanningPage() {
         }}
       />
 
-      {/* 3. Heuristic Formula Explainer */}
-      <FormulaExplainer
-        id="formula-octile-heuristic"
-        title={isId ? 'Heuristik Jarak Octile (Grid 8-Arah)' : 'Octile Distance Heuristic (8-Connected Grid)'}
-        latex="h_{octile}(n) = (\Delta x + \Delta y) + (\sqrt{2} - 2)\min(\Delta x, \Delta y)"
-        meaning={
+      {/* 3. Section 38 Math <-> Code Bridge Component */}
+      <MathCodeBridge
+        title={isId ? 'Jembatan Evaluasi Biaya Node A* ke Kode TypeScript' : 'A* Node Evaluation Math-to-Code Bridge'}
+        mathLatex="f(n) = g(n) + h(n)"
+        codeSnippet={`// TypeScript implementation of A* node expansion
+const tentativeG = current.g + moveCost;
+const hCost = heuristic(neighbor, goal);
+const fCost = tentativeG + hCost;
+
+openSet.push({
+  node: neighbor,
+  g: tentativeG,
+  h: hCost,
+  f: fCost,
+  parent: current
+});`}
+        explanation={
           isId
-            ? 'Heuristik admisibel dan konsisten yang menghitung jarak terpendek pada grid 2D dengan pergerakan 8-arah (horizontal, vertikal, diagonal).'
-            : 'Admissible and consistent heuristic measuring shortest distance on an 8-connected grid with diagonal traversal.'
+            ? 'Baris kode "const fCost = tentativeG + hCost;" mengimplementasikan fungsi evaluasi matematis secara langsung satu-ke-satu. Nilai fCost kemudian digunakan sebagai kunci prioritas pada Min-Heap antrean terbuka (openSet).'
+            : 'The code statement "const fCost = tentativeG + hCost;" implements the mathematical formula in exact 1-to-1 parity. The calculated fCost key orders the min-heap priority queue.'
         }
-        whyExplanation={
-          isId
-            ? 'Jarak Manhattan mengabaikan langkah diagonal sehingga melebih-lebihkan biaya (overestimate/tidak admisibel). Jarak Euclidean memotong lurus dan meremehkan kisi. Jarak Octile mengombinasikan langkah diagonal (bobot sqrt(2)) dan langkah ortogonal (bobot 1) secara presisi.'
-            : 'Manhattan distance ignores diagonal cuts, causing overestimation. Euclidean distance assumes continuous motion, underestimating grid steps. Octile precisely counts diagonal steps (cost √2) and straight steps (cost 1).'
-        }
-        variables={[
-          { symbol: 'Δx', name: 'Horizontal Separation', unit: 'grid cells', meaning: isId ? '|x_goal - x_n|' : 'Absolute horizontal grid distance' },
-          { symbol: 'Δy', name: 'Vertical Separation', unit: 'grid cells', meaning: isId ? '|y_goal - y_n|' : 'Absolute vertical grid distance' },
-          { symbol: 'h_octile', name: 'Octile Heuristic', unit: 'cost units', meaning: isId ? 'Estimasi jarak optimal admisibel' : 'Admissible distance estimate' },
+        mappings={[
+          { mathSymbol: 'f(n)', codeIdentifier: 'fCost', explanation: isId ? 'Total skor prioritas node dalam antrean terbuka' : 'Total priority score in the open queue' },
+          { mathSymbol: 'g(n)', codeIdentifier: 'tentativeG', explanation: isId ? 'Biaya jalur terakumulasi dari titik awal start' : 'Cumulative cost from start' },
+          { mathSymbol: 'h(n)', codeIdentifier: 'hCost', explanation: isId ? 'Estimasi jarak heuristik (Octile/Euclidean) ke goal' : 'Heuristic estimate distance to goal' },
         ]}
-        roboticsApplication={
-          isId
-            ? 'Dipakai pada perencana jalur ROS Nav2 Costmap 2D untuk menjamin pencarian jalur tercepat tanpa distorsi grid.'
-            : 'Used in 2D costmap planners to ensure diagonal-aware path optimality without metric distortion.'
-        }
+      />
+
+      {/* 4. Section 39 Academic References */}
+      <AcademicReferences
+        references={[
+          {
+            id: 1,
+            authors: 'Steven M. LaValle',
+            title: 'Planning Algorithms',
+            publisher: 'Cambridge University Press',
+            year: 2006,
+            chapterCoverage: 'Chapter 2.2: Discrete Planning, Graph Search, and Shortest Paths.',
+            doiOrUrl: 'https://planning.cs.uiuc.edu/',
+          },
+          {
+            id: 2,
+            authors: 'Peter E. Hart, Nils J. Nilsson, & Bertram Raphael',
+            title: 'A Formal Basis for the Heuristic Determination of Minimum Cost Paths',
+            publisher: 'IEEE Transactions on Systems Science and Cybernetics',
+            year: 1968,
+            chapterCoverage: 'Original proof of A* optimality and admissibility theorem.',
+            doiOrUrl: 'https://doi.org/10.1109/TSSC.1968.300136',
+          },
+        ]}
+      />
+
+      {/* Next Steps Navigation */}
+      <LessonNavigation
+        prevLesson={{
+          domain: isId ? 'Fondasi Robotika' : 'Robotics Foundations',
+          title: isId ? 'Dasar-Dasar Matematika & Kinematika' : 'Fundamentals & Kinematics',
+          href: '/learn/fundamentals',
+        }}
+        nextLesson={{
+          domain: isId ? 'Lokalisasi Robot' : 'Robot Localization',
+          title: isId ? 'Filter Partikel Monte Carlo (MCL)' : 'Monte Carlo Particle Filter (MCL)',
+          href: '/learn/localization',
+        }}
+        suggestedExperiments={[
+          isId ? 'Gambar dinding rintangan berbentuk huruf U dan amati bagaimana A* menghindari jebakan lokal' : 'Draw a U-shaped obstacle barrier to observe how A* avoids local minima traps',
+          isId ? 'Bandingkan jumlah node yang dieksplorasi antara Dijkstra dan A* pada rintangan yang sama' : 'Compare total explored node count between Dijkstra and A* on identical obstacle layouts',
+          isId ? 'Coba ubah tipe heuristik dari Octile ke Manhattan pada simulator' : 'Switch heuristic mode between Octile, Euclidean, and Manhattan in the simulator',
+        ]}
       />
     </div>
   );
