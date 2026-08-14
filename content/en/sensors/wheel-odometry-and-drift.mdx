@@ -1,0 +1,104 @@
+---
+id: wheel-odometry-and-drift
+title: Wheel Odometry, Encoder Dead Reckoning & Systematic Drift
+slug: wheel-odometry-and-drift
+category: sensors
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - velocity-kinematics-2d
+  - sensor-fundamentals
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 5). Springer Open.
+  - Johann Borenstein & Liqiang Feng (1996). Measurement and Correction of Systematic Odometry Errors in Mobile Robots. IEEE Trans. Robotics and Automation.
+components:
+  - OdometryDriftSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Wheel Odometry, Encoder Dead Reckoning & Systematic Drift
+
+> "Why does an autonomous rover navigating solely by counting wheel rotations inevitably drift away from its true path?"
+
+**Odometry** (from Greek *hodos* meaning "journey" and *metron* meaning "measure") is the process of estimating a robot's incremental change in pose (position and orientation) by integrating optical wheel encoder tick counts over time. This technique is known as **dead reckoning**.
+
+---
+
+## 1. Mathematical Integration of Wheel Rotations
+
+For a differential drive robot with left and right wheel radii $r_L, r_R$ and wheel separation baseline $L$:
+
+When optical encoders measure discrete angular ticks $\Delta N_L, \Delta N_R$ over sampling timestep $\Delta t$:
+
+$$
+\Delta s_L = \frac{2\pi r_L}{N_{\text{cpr}}} \Delta N_L, \qquad \Delta s_R = \frac{2\pi r_R}{N_{\text{cpr}}} \Delta N_R
+$$
+
+The forward displacement $\Delta s$ and heading rotation $\Delta \theta$ are:
+
+$$
+\Delta s = \frac{\Delta s_R + \Delta s_L}{2}, \qquad \Delta \theta = \frac{\Delta s_R - \Delta s_L}{L}
+$$
+
+Pose is updated via 2nd-order Runge-Kutta integration:
+
+$$
+\begin{aligned}
+x_{k+1} &= x_k + \Delta s \cos\left(\theta_k + \frac{\Delta \theta}{2}\right) \\
+y_{k+1} &= y_k + \Delta s \sin\left(\theta_k + \frac{\Delta \theta}{2}\right) \\
+\theta_{k+1} &= \theta_k + \Delta \theta
+\end{aligned}
+$$
+
+---
+
+## 2. Systematic vs. Stochastic Error Accumulation
+
+Odometry errors fall into two distinct physical classes:
+
+1. **Systematic Errors**: Constant physical imperfections (e.g., left wheel manufactured 1% larger than right wheel, or inaccurate wheelbase $L$). **Systematic errors accumulate quadratically $\mathcal{O}(t^2)$ over travel distance!**
+2. **Stochastic (Non-Systematic) Errors**: Random events (wheel slippage on slick floors, carpet irregularities, and encoder quantization noise).
+
+Because orientation errors $\Delta \theta$ rotate the entire subsequent coordinate frame, even a tiny $1^\circ$ heading error causes lateral position error to grow unboundedly over time.
+
+---
+
+## 3. Interactive Odometry Drift Simulator
+
+Select a drive trajectory (Square, Circle, or Straight). Observe how a 2% wheel diameter mismatch causes the estimated dead-reckoning trajectory (Cyan) to diverge severely from ground truth (Green):
+
+<OdometryDriftSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-odometry"
+  question="Why does heading error (delta theta) cause far worse long-term position drift than pure linear distance error?"
+  options={[
+    {
+      id: "A",
+      text: "Because heading error rotates all future forward displacements: a 1-degree angular error multiplies across every future meter traveled.",
+      isCorrect: true,
+      explanation: "Exact! Rotational errors compound multiplicatively across distance, which is why external sensors like LiDAR and IMUs are critical for drift correction."
+    },
+    {
+      id: "B",
+      text: "Because wheels stop rotating during turns.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because encoders only measure reverse motion.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the trigonometric terms cos(theta) and sin(theta) multiplying subsequent distance increments."
+/>

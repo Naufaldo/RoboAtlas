@@ -1,0 +1,114 @@
+---
+id: bayes-filter-and-kalman
+title: Recursive Bayesian Filtering & 1D Kalman Filter State Estimation
+slug: bayes-filter-and-kalman
+category: estimation
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - sensor-fundamentals
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 2 & 3). MIT Press.
+  - Rudolf E. Kalman (1960). A New Approach to Linear Filtering and Prediction Problems. ASME Journal of Basic Engineering.
+components:
+  - BayesianFilterSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Recursive Bayesian Filtering & 1D Kalman Filter State Estimation
+
+> "When both robot actuation and sensor observations contain inherent physical noise, how do we recursively estimate the robot's true state?"
+
+The fundamental paradigm of probabilistic robotics is the **Recursive Bayesian Filter**. It maintains a probability distribution $\text{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})$ representing the robot's belief over its true continuous state $x_t$.
+
+---
+
+## 1. The Universal Two-Step Predict-Correct Cycle
+
+At every discrete control cycle $t$, the Bayesian filter executes two fundamental probabilistic updates:
+
+```text
+Belief bel(x_{t-1})  ──[1. Motion Prediction]──>  Prior bel_bar(x_t)  ──[2. Sensor Measurement]──>  Posterior bel(x_t)
+```
+
+### Step 1: Motion Prediction (Chapman-Kolmogorov Equation)
+When a control action $u_t$ is applied, the belief distribution propagates forward via the robot's motion model $p(x_t \mid u_t, x_{t-1})$:
+
+$$
+\bar{\text{bel}}(x_t) = \int p(x_t \mid u_t, x_{t-1}) \, \text{bel}(x_{t-1}) \, dx_{t-1}
+$$
+
+*(Because motor motion adds mechanical uncertainty $Q$, the belief curve flattens and widens).*
+
+### Step 2: Measurement Correction (Bayes' Rule)
+When a sensor measurement $z_t$ is observed with likelihood $p(z_t \mid x_t)$:
+
+$$
+\text{bel}(x_t) = \eta \cdot p(z_t \mid x_t) \cdot \bar{\text{bel}}(x_t)
+$$
+
+*(Multiplying the predicted prior by sensor likelihood sharpens the distribution, driving variance down).*
+
+---
+
+## 2. Closed-Form 1D Kalman Filter Equations
+
+Under linear dynamics and Gaussian noise distributions $\mathcal{N}(\mu, \sigma^2)$, the continuous integral simplifies into analytical closed-form linear algebra:
+
+1. **Prediction**:
+   $$
+   \bar{\mu}_t = \mu_{t-1} + u_t, \qquad \bar{\sigma}^2_t = \sigma^2_{t-1} + Q
+   $$
+2. **Kalman Gain $K_t$**:
+   $$
+   K_t = \frac{\bar{\sigma}^2_t}{\bar{\sigma}^2_t + R}
+   $$
+3. **Measurement Correction**:
+   $$
+   \mu_t = \bar{\mu}_t + K_t (z_t - \bar{\mu}_t), \qquad \sigma^2_t = (1 - K_t) \bar{\sigma}^2_t
+   $$
+
+Where $Q$ is motion noise variance and $R$ is sensor noise variance.
+
+---
+
+## 3. Interactive 1D Bayesian & Kalman Filter Simulator
+
+Step through the **Motion Predict** and **Sensor Update** actions below. Watch the Gaussian probability curve shift, broaden during motion, and snap sharply into focus when sensor observations are fused:
+
+<BayesianFilterSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-kalman"
+  question="What happens to the Kalman Gain (K) when sensor noise variance (R) is extremely small (i.e. sensor is nearly perfect)?"
+  options={[
+    {
+      id: "A",
+      text: "K approaches 1, meaning the filter trusts the sensor measurement almost completely and largely ignores the motion prediction.",
+      isCorrect: true,
+      explanation: "Exact! When R -> 0, K = sigma^2 / (sigma^2 + 0) = 1, so the new mean becomes mu = z_t."
+    },
+    {
+      id: "B",
+      text: "K approaches 0, meaning the robot ignores the sensor completely.",
+      isCorrect: false,
+      explanation: "Incorrect. K approaches 0 when the sensor is extremely noisy (R -> infinity)."
+    },
+    {
+      id: "C",
+      text: "The robot powers down.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Examine the formula K = sigma^2 / (sigma^2 + R) as R -> 0."
+/>

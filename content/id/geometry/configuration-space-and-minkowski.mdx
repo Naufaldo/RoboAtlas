@@ -1,0 +1,90 @@
+---
+id: configuration-space-and-minkowski
+title: Ruang Konfigurasi (C-Space) & Inflasi Rintangan Minkowski Sum
+slug: configuration-space-and-minkowski
+category: geometry
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - mathematical-foundations
+references:
+  - Steven M. LaValle (2006). Planning Algorithms (Chapter 4). Cambridge University Press.
+  - Tomas Lozano-Perez (1983). Spatial Planning: A Configuration Space Approach. IEEE Trans. Computers.
+components:
+  - CspaceInflationSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Ruang Konfigurasi (C-Space) & Inflasi Rintangan Minkowski Sum
+
+> "Bagaimana cara merencanakan jalur gerak bagi robot dengan bentuk fisik yang kompleks tanpa harus menguji tabrakan geometri poligon di setiap langkah pencarian?"
+
+Merencanakan gerak robot yang memiliki dimensi panjang dan lebar fisik secara langsung di **Ruang Kerja ($\mathcal{W}$)** membutuhkan komputasi geometri poligon yang sangat berat. Terobosan fundamental oleh Lozano-Pérez (1983) mentransformasikan masalah ini ke dalam **Ruang Konfigurasi ($\mathcal{C}$-Space)**, di mana robot disederhanakan menjadi **satu titik tunggal**.
+
+---
+
+## 1. Operasi Minkowski Sum $\oplus$
+
+Agar geometri fisik robot $\mathcal{A}$ dapat disusutkan menjadi sebuah titik koordinat $(0, 0)$, seluruh rintangan fisik $\mathcal{W}_{\text{obs}} \subset \mathcal{W}$ harus diperluas (*inflated*) secara matematis sebesar refleksi bentuk robot $-\mathcal{A}$:
+
+Wilayah rintangan terlarang di Ruang Konfigurasi $\mathcal{C}_{\text{obs}}$ didefinisikan melalui operasi **Minkowski Sum**:
+
+$$
+\mathcal{C}_{\text{obs}} = \mathcal{W}_{\text{obs}} \oplus (-\mathcal{A}) = \left\{ w - a \mid w \in \mathcal{W}_{\text{obs}}, \, a \in \mathcal{A} \right\}
+$$
+
+Di mana:
+- $\mathcal{W}_{\text{obs}}$: Rintangan fisik di ruang kerja nyata 2D/3D.
+- $\mathcal{A}$: Geometri dimensi fisik robot.
+- $\mathcal{C}_{\text{free}} = \mathcal{C} \setminus \mathcal{C}_{\text{obs}}$: Ruang konfigurasi bebas tabrakan yang aman dilalui.
+
+Untuk robot berbentuk lingkaran dengan radius $r$, operasi Minkowski Sum memperluas batas luar rintangan sejauh jarak Euclidean $r$, menghasilkan sudut-sudut yang melengkung melingkar.
+
+---
+
+## 2. Keuntungan Perencanaan Titik-Robot (*Point-Robot*)
+
+Setelah $\mathcal{C}_{\text{obs}}$ terbentuk, algoritma pencarian jalur (seperti A*, Dijkstra, atau RRT*) hanya perlu memeriksa apakah titik pusat robot $(x, y) \in \mathcal{C}_{\text{free}}$. Satu pengecekan koordinat titik menggantikan ratusan uji perpotongan segmen poligon!
+
+---
+
+## 3. Simulator Interaktif Inflasi C-Space
+
+Geser titik pusat robot pada kanvas ruang kerja. Atur slider **Radius Robot ($r$)** dan amati bagaimana batas rintangan $\mathcal{C}_{\text{obs}}$ mengembang secara otomatis via operasi Minkowski Sum:
+
+<CspaceInflationSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-cspace"
+  question="Mengapa transformasi masalah navigasi ke dalam Ruang Konfigurasi (C-Space) menjadi sangat penting dalam robotika otonom?"
+  options={[
+    {
+      id: "A",
+      text: "Karena memungkinkan robot diperlakukan sebagai titik matematika tunggal tanpa dimensi, mengubah uji tabrakan poligon yang rumit menjadi sekadar pemeriksaan apakah sebuah titik berada di dalam ruang bebas C_free.",
+      isCorrect: true,
+      explanation: "Tepat! Menyusutkan robot menjadi titik dan menggelembungkan rintangan secara drastis memangkas kompleksitas algoritma pencarian graf dan sampling."
+    },
+    {
+      id: "B",
+      text: "Karena dapat menghilangkan efek gravitasi bumi.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena robot tidak menempati ruang fisik.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang efisiensi komputasi antara memeriksa 1 titik koordinat vs menghitung perpotongan poligon."
+/>

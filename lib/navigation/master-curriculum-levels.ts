@@ -93,6 +93,14 @@ export const MASTER_CURRICULUM_LEVELS: CurriculumLevel[] = [
         href: '/learn/geometry/3d-geometry',
         isInteractive: true,
       },
+      {
+        id: 'configuration-space-and-minkowski',
+        titleEn: 'Configuration Space & Minkowski Obstacle Inflation',
+        titleId: 'Ruang Konfigurasi & Inflasi Rintangan Minkowski',
+        topicsCount: 6,
+        href: '/learn/geometry/configuration-space-and-minkowski',
+        isInteractive: true,
+      },
     ],
   },
   {
@@ -159,6 +167,14 @@ export const MASTER_CURRICULUM_LEVELS: CurriculumLevel[] = [
         titleId: 'Fundamental Sensor & Model Derau Gaussian',
         topicsCount: 6,
         href: '/learn/sensors/sensor-fundamentals',
+        isInteractive: true,
+      },
+      {
+        id: 'wheel-odometry-and-drift',
+        titleEn: 'Wheel Odometry & Systematic Dead Reckoning Drift',
+        titleId: 'Odometri Roda & Akumulasi Galat Drift',
+        topicsCount: 6,
+        href: '/learn/sensors/wheel-odometry-and-drift',
         isInteractive: true,
       },
     ],
@@ -235,6 +251,14 @@ export const MASTER_CURRICULUM_LEVELS: CurriculumLevel[] = [
     estimatedHours: 6,
     prerequisites: ['Level 5', 'Level 7'],
     modules: [
+      {
+        id: 'bayes-filter-and-kalman',
+        titleEn: '1D Bayesian Filtering & Kalman Prediction-Correction',
+        titleId: 'Filter Bayesian 1D & Prediksi-Koreksi Kalman',
+        topicsCount: 6,
+        href: '/learn/estimation/bayes-filter-and-kalman',
+        isInteractive: true,
+      },
       {
         id: 'mcl-particle-filter',
         titleEn: 'Monte Carlo Localization Particle Filters',

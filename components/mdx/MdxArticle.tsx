@@ -19,6 +19,9 @@ import { ArmKinematicsSimulator } from '@/components/simulation/ArmKinematicsSim
 import { RrtSimulator } from '@/components/simulation/RrtSimulator';
 import { SensorNoiseSimulator } from '@/components/simulation/SensorNoiseSimulator';
 import { PidTuningSimulator } from '@/components/simulation/PidTuningSimulator';
+import { OdometryDriftSimulator } from '@/components/simulation/OdometryDriftSimulator';
+import { CspaceInflationSimulator } from '@/components/simulation/CspaceInflationSimulator';
+import { BayesianFilterSimulator } from '@/components/simulation/BayesianFilterSimulator';
 import { ConceptCheck } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
@@ -199,6 +202,21 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<PidTuningSimulator')) {
         nodes.push(<PidTuningSimulator key={`comp-pid-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<OdometryDriftSimulator')) {
+        nodes.push(<OdometryDriftSimulator key={`comp-ods-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<CspaceInflationSimulator')) {
+        nodes.push(<CspaceInflationSimulator key={`comp-csis-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<BayesianFilterSimulator')) {
+        nodes.push(<BayesianFilterSimulator key={`comp-bfs-${i}`} />);
         i++;
         continue;
       }

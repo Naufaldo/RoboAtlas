@@ -1,0 +1,114 @@
+---
+id: bayes-filter-and-kalman
+title: Filter Bayesian Rekursif & Estimasi Status Filter Kalman 1D
+slug: bayes-filter-and-kalman
+category: estimation
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - sensor-fundamentals
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 2 & 3). MIT Press.
+  - Rudolf E. Kalman (1960). A New Approach to Linear Filtering and Prediction Problems. ASME Journal of Basic Engineering.
+components:
+  - BayesianFilterSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Filter Bayesian Rekursif & Estimasi Status Filter Kalman 1D
+
+> "Ketika pergerakan motor robotik dan pembacaan sensor fisik sama-sama mengandung ketidakpastian derau, bagaimana cara mengestimasi status posisi robot sebenarnya secara akurat?"
+
+Paradigma fundamental dalam robotika probabilistik adalah **Filter Bayesian Rekursif**. Filter ini memelihara distribusi keyakinan probabilitas $\text{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})$ yang merepresentasikan perkiraan status posisi kontinu robot $x_t$.
+
+---
+
+## 1. Siklus Dua Langkah Universal: Prediksi & Koreksi
+
+Pada setiap siklus kendali waktu diskrit $t$, filter Bayesian menjalankan dua tahapan pembaruan probabilistik:
+
+```text
+Keyakinan bel(x_{t-1})  ──[1. Prediksi Gerak]──>  Prior bel_bar(x_t)  ──[2. Pengukuran Sensor]──>  Posterior bel(x_t)
+```
+
+### Langkah 1: Prediksi Gerak (Persamaan Chapman-Kolmogorov)
+Ketika aksi kemudi $u_t$ dijalankan, fungsi keyakinan dipropagasikan ke depan melalui model gerak $p(x_t \mid u_t, x_{t-1})$:
+
+$$
+\bar{\text{bel}}(x_t) = \int p(x_t \mid u_t, x_{t-1}) \, \text{bel}(x_{t-1}) \, dx_{t-1}
+$$
+
+*(Karena gerakan fisik motor menambah ketidakpastian derau $Q$, kurva distribusi melebar dan variansi membesar).*
+
+### Langkah 2: Koreksi Pengukuran (Aturan Teorema Bayes)
+Ketika pengukuran sensor $z_t$ diperoleh dengan fungsi kemungkinan $p(z_t \mid x_t)$:
+
+$$
+\text{bel}(x_t) = \eta \cdot p(z_t \mid x_t) \cdot \bar{\text{bel}}(x_t)
+$$
+
+*(Mengalikan prior hasil prediksi dengan data sensor membuat kurva kembali runcing dan menekan variansi galat ke bawah).*
+
+---
+
+## 2. Persamaan Analitik Filter Kalman 1D
+
+Dalam kondisi dinamika linier dan derau berdistribusi Gaussian $\mathcal{N}(\mu, \sigma^2)$, persamaan integral kontinu di atas disederhanakan menjadi perhitungan aljabar linier analitik tertutup:
+
+1. **Prediksi (Prediction)**:
+   $$
+   \bar{\mu}_t = \mu_{t-1} + u_t, \qquad \bar{\sigma}^2_t = \sigma^2_{t-1} + Q
+   $$
+2. **Penguatan Kalman (Kalman Gain $K_t$)**:
+   $$
+   K_t = \frac{\bar{\sigma}^2_t}{\bar{\sigma}^2_t + R}
+   $$
+3. **Koreksi Pengukuran (Measurement Update)**:
+   $$
+   \mu_t = \bar{\mu}_t + K_t (z_t - \bar{\mu}_t), \qquad \sigma^2_t = (1 - K_t) \bar{\sigma}^2_t
+   $$
+
+Di mana $Q$ adalah variansi derau gerak (*motion noise*) dan $R$ adalah variansi derau sensor (*sensor noise*).
+
+---
+
+## 3. Simulator Interaktif Filter Bayesian & Kalman 1D
+
+Jalankan langkah **Prediksi Gerak** dan **Koreksi Sensor** di bawah ini. Amati kurva Gaussian bergeser ke kanan, melebar saat robot bergerak, lalu mengasah runcing secara presisi saat fusi data sensor dieksekusi:
+
+<BayesianFilterSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-kalman"
+  question="Apa yang terjadi pada nilai Penguatan Kalman (K) apabila variansi derau sensor (R) bernilai sangat kecil mendekati nol (artinya sensor luar biasa presisi)?"
+  options={[
+    {
+      id: "A",
+      text: "Nilai K mendekati 1, yang berarti filter hampir sepenuhnya mempercayai pembacaan sensor dan mengabaikan prediksi gerak sebelumnya.",
+      isCorrect: true,
+      explanation: "Tepat! Ketika R -> 0, maka K = sigma^2 / (sigma^2 + 0) = 1, sehingga rata-rata baru menjadi mu_t = z_t (persis nilai sensor)."
+    },
+    {
+      id: "B",
+      text: "Nilai K mendekati 0, sehingga robot mengabaikan sensor sama sekali.",
+      isCorrect: false,
+      explanation: "Salah. K mendekati 0 terjadi jika sensor sangat rusak/berderau tinggi (R -> tak hingga)."
+    },
+    {
+      id: "C",
+      text: "Robot akan langsung mematikan daya.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Perhatikan rumus K = sigma^2 / (sigma^2 + R) ketika suku R -> 0."
+/>

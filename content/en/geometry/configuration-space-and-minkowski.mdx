@@ -1,0 +1,90 @@
+---
+id: configuration-space-and-minkowski
+title: Configuration Space (C-Space) & Minkowski Sum Obstacle Inflation
+slug: configuration-space-and-minkowski
+category: geometry
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - mathematical-foundations
+references:
+  - Steven M. LaValle (2006). Planning Algorithms (Chapter 4). Cambridge University Press.
+  - Tomas Lozano-Perez (1983). Spatial Planning: A Configuration Space Approach. IEEE Trans. Computers.
+components:
+  - CspaceInflationSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Configuration Space (C-Space) & Minkowski Sum Obstacle Inflation
+
+> "How do we plan motion for a robot with complex geometric shape without checking thousands of geometric vertex collisions at every single step?"
+
+Planning motion directly for an object with physical width and length in the physical **Workspace $\mathcal{W}$** is computationally expensive. The seminal breakthrough by Lozano-Pérez (1983) transforms the problem into **Configuration Space ($\mathcal{C}$-Space)**, where the robot is represented as an infinitesimal **point**.
+
+---
+
+## 1. The Minkowski Sum $\oplus$
+
+To shrink the robot geometry $\mathcal{A}$ to a single point at origin $(0, 0)$, all physical obstacles $\mathcal{W}_{\text{obs}} \subset \mathcal{W}$ must be mathematically **inflated** by the reflected robot shape $-\mathcal{A}$:
+
+The forbidden Configuration Space obstacle region $\mathcal{C}_{\text{obs}}$ is defined by the **Minkowski Sum**:
+
+$$
+\mathcal{C}_{\text{obs}} = \mathcal{W}_{\text{obs}} \oplus (-\mathcal{A}) = \left\{ w - a \mid w \in \mathcal{W}_{\text{obs}}, \, a \in \mathcal{A} \right\}
+$$
+
+Where:
+- $\mathcal{W}_{\text{obs}}$: Physical obstacles in the 2D/3D workspace.
+- $\mathcal{A}$: Robot footprint geometry.
+- $\mathcal{C}_{\text{free}} = \mathcal{C} \setminus \mathcal{C}_{\text{obs}}$: Safe collision-free configuration space.
+
+For a circular mobile robot of radius $r$, the Minkowski sum simply expands every obstacle boundary outward by Euclidean distance $r$, rounding all sharp corners into circular arcs.
+
+---
+
+## 2. The Point-Robot Planning Advantage
+
+Once $\mathcal{C}_{\text{obs}}$ is computed, path planning algorithms (such as A*, Dijkstra, or RRT*) only need to verify if the robot center $(x, y) \in \mathcal{C}_{\text{free}}$. A single coordinate check replaces hundreds of polygon intersection tests!
+
+---
+
+## 3. Interactive C-Space Inflation Simulator
+
+Drag the robot center point across the workspace. Adjust the **Robot Radius ($r$)** slider and observe how the obstacle boundary $\mathcal{C}_{\text{obs}}$ expands dynamically via the Minkowski Sum:
+
+<CspaceInflationSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-cspace"
+  question="Why is transforming a planning problem into Configuration Space (C-Space) so powerful in autonomous robotics?"
+  options={[
+    {
+      id: "A",
+      text: "Because it allows the robot to be treated as a dimensionless mathematical single point, converting complex polygon-polygon collision checking into simple point-in-region tests.",
+      isCorrect: true,
+      explanation: "Exact! Shrinking the robot to a point while inflating obstacles drastically simplifies search and sampling algorithms."
+    },
+    {
+      id: "B",
+      text: "Because it eliminates gravity.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because robots do not exist in physical space.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the computational complexity of checking a single coordinate point vs polygon intersections."
+/>

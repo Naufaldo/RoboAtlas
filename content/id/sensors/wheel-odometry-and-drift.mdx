@@ -1,0 +1,104 @@
+---
+id: wheel-odometry-and-drift
+title: Odometri Roda, Dead Reckoning Enkoder & Akumulasi Galat Drift
+slug: wheel-odometry-and-drift
+category: sensors
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - velocity-kinematics-2d
+  - sensor-fundamentals
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 5). Springer Open.
+  - Johann Borenstein & Liqiang Feng (1996). Measurement and Correction of Systematic Odometry Errors in Mobile Robots. IEEE Trans. Robotics and Automation.
+components:
+  - OdometryDriftSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Odometri Roda, Dead Reckoning Enkoder & Akumulasi Drift
+
+> "Mengapa robot beroda yang bernavigasi hanya dengan menghitung putaran roda secara matematis pasti mengalami pergeseran posisi (drift) dari jalur aslinya?"
+
+**Odometri** (dari bahasa Yunani *hodos* yang berarti "perjalanan" dan *metron* yang berarti "pengukuran") adalah teknik memperkirakan perubahan posisi dan orientasi (*pose*) robot melalui integrasi pembacaan enkoder putaran roda sepanjang waktu. Metode ini dikenal sebagai **dead reckoning**.
+
+---
+
+## 1. Integrasi Matematika Putaran Roda
+
+Untuk robot bergerak roda diferensial dengan radius roda kiri dan kanan $r_L, r_R$ serta jarak antar roda (*baseline*) $L$:
+
+Ketika enkoder optik mencatat putaran pulsa $\Delta N_L, \Delta N_R$ dalam selang waktu $\Delta t$:
+
+$$
+\Delta s_L = \frac{2\pi r_L}{N_{\text{cpr}}} \Delta N_L, \qquad \Delta s_R = \frac{2\pi r_R}{N_{\text{cpr}}} \Delta N_R
+$$
+
+Perpindahan linier maju $\Delta s$ dan perubahan sudut rotasi $\Delta \theta$ dirumuskan:
+
+$$
+\Delta s = \frac{\Delta s_R + \Delta s_L}{2}, \qquad \Delta \theta = \frac{\Delta s_R - \Delta s_L}{L}
+$$
+
+Pembaruan koordinat posisi dihitung menggunakan integrasi Runge-Kutta orde 2:
+
+$$
+\begin{aligned}
+x_{k+1} &= x_k + \Delta s \cos\left(\theta_k + \frac{\Delta \theta}{2}\right) \\
+y_{k+1} &= y_k + \Delta s \sin\left(\theta_k + \frac{\Delta \theta}{2}\right) \\
+\theta_{k+1} &= \theta_k + \Delta \theta
+\end{aligned}
+$$
+
+---
+
+## 2. Galat Sistematik vs. Galat Stokastik
+
+Galat odometri robotika dibagi menjadi dua kategori fisik utama:
+
+1. **Galat Sistematik**: Ketidaksempurnaan mekanis konstan (misal: radius roda kiri 1% lebih besar daripada roda kanan akibat tekanan ban, atau ketidaktepatan kalibrasi jarak $L$). **Galat sistematik berakumulasi secara kuadratik $\mathcal{O}(t^2)$ terhadap jarak tempuh!**
+2. **Galat Stokastik (Non-Sistematik)**: Kejadian acak tak terduga (roda selip di lantai licin, gundukan karpet, dan derau kuantisasi pulsa enkoder).
+
+Karena galat sudut $\Delta \theta$ memutar seluruh kerangka koordinat gerak di masa depan, deviasi orientasi sekecil $1^\circ$ akan mengakibatkan galat posisi lateral melonjak tanpa batas seiring berjalannya waktu.
+
+---
+
+## 3. Simulator Interaktif Akumulasi Drift Odometri
+
+Pilih pola lintasan gerak (Kotak, Lingkaran, atau Lurus). Amati bagaimana perbedaan diameter roda sebesar 2% menyebabkan estimasi odometri internal (Garis Sian) menyimpang jauh dari lintasan fisik aktual (Garis Hijau):
+
+<OdometryDriftSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-odometry"
+  question="Mengapa galat orientasi sudut (delta theta) menyebabkan penyimpangan posisi jangka panjang yang jauh lebih parah dibandingkan galat jarak linier murni?"
+  options={[
+    {
+      id: "A",
+      text: "Karena galat sudut memutar arah seluruh vektor perpindahan di masa depan: deviasi sudut 1 derajat terus berlipat ganda pada setiap meter perjalanan berikutnya.",
+      isCorrect: true,
+      explanation: "Tepat! Galat rotasi mengalikan seluruh pergerakan maju berikutnya secara trigonometris, sehingga sensor eksternal seperti LiDAR dan IMU mutlak diperlukan untuk koreksi drift."
+    },
+    {
+      id: "B",
+      text: "Karena roda berhenti berputar saat berbelok.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena enkoder hanya membaca gerakan mundur.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang fungsi trigonometri cos(theta) dan sin(theta) yang mengalikan setiap langkah perpindahan maju berikutnya."
+/>

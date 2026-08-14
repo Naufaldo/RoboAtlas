@@ -19,6 +19,9 @@ import { ArmKinematicsSimulator } from '@/components/simulation/ArmKinematicsSim
 import { RrtSimulator } from '@/components/simulation/RrtSimulator';
 import { SensorNoiseSimulator } from '@/components/simulation/SensorNoiseSimulator';
 import { PidTuningSimulator } from '@/components/simulation/PidTuningSimulator';
+import { OdometryDriftSimulator } from '@/components/simulation/OdometryDriftSimulator';
+import { CspaceInflationSimulator } from '@/components/simulation/CspaceInflationSimulator';
+import { BayesianFilterSimulator } from '@/components/simulation/BayesianFilterSimulator';
 import {
   Compass,
   Cpu,
@@ -222,6 +225,42 @@ export default function LabsPage() {
       icon: '🧩',
       lessonHref: '/learn/advanced/icp-scan-matching',
       component: <SlamSimulator />,
+    },
+    {
+      id: 'cspace-inflation',
+      category: 'math',
+      titleEn: 'Configuration Space & Minkowski Obstacle Inflation',
+      titleId: 'Ruang Konfigurasi & Inflasi Rintangan Minkowski',
+      descEn: 'Observe obstacle expansion by robot radius r for point-robot planning simplification.',
+      descId: 'Amati perluasan rintangan sebesar radius robot r untuk simplifikasi perencanaan titik.',
+      levelBadge: 'Level 2',
+      icon: '🛡️',
+      lessonHref: '/learn/geometry/configuration-space-and-minkowski',
+      component: <CspaceInflationSimulator />,
+    },
+    {
+      id: 'wheel-odometry',
+      category: 'sensors',
+      titleEn: 'Wheel Odometry Drift & Dead Reckoning',
+      titleId: 'Akumulasi Galat Drift Odometri Roda',
+      descEn: 'Simulate systematic wheel radius errors and observe lateral and heading drift divergence.',
+      descId: 'Simulasikan galat radius roda sistematik dan amati divergensi drift posisi dan orientasi.',
+      levelBadge: 'Level 5',
+      icon: '🔄',
+      lessonHref: '/learn/sensors/wheel-odometry-and-drift',
+      component: <OdometryDriftSimulator />,
+    },
+    {
+      id: 'bayesian-filter',
+      category: 'estimation',
+      titleEn: '1D Recursive Bayesian & Kalman Predict-Correct',
+      titleId: 'Prediksi-Koreksi Filter Bayesian & Kalman 1D',
+      descEn: 'Execute motion prediction and sensor update steps with live Gaussian belief curves.',
+      descId: 'Jalankan langkah prediksi gerak dan pembaruan sensor dengan kurva keyakinan Gaussian.',
+      levelBadge: 'Level 8',
+      icon: '📈',
+      lessonHref: '/learn/estimation/bayes-filter-and-kalman',
+      component: <BayesianFilterSimulator />,
     },
     {
       id: 'multi-agent-swarm',
