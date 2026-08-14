@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PathPlanningSimulator } from '@/components/simulation/PathPlanningSimulator';
-import { MathBlock } from '@/components/mathematics/MathBlock';
+import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Navigation, Sparkles, BookOpen, Code2 } from 'lucide-react';
 
@@ -42,80 +42,83 @@ export default function PlanningPage() {
         <PathPlanningSimulator />
       </div>
 
-      {/* 2. Mathematical Rigor & KaTeX Formulations */}
-      <div className="p-6 rounded-2xl glass-panel space-y-6">
-        <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-mono text-sm font-bold border-b border-slate-200 dark:border-slate-800/80 pb-3">
-          <BookOpen className="w-4 h-4" />
-          <span>{isId ? 'Fungsi Evaluasi & Kriteria Admisibilitas' : 'Evaluation Function & Admissibility Criteria'}</span>
-        </div>
+      {/* 2. Formula Explainer for A* Evaluation Function */}
+      <FormulaExplainer
+        id="formula-astar"
+        title={isId ? 'Fungsi Evaluasi Biaya Node A*' : 'A* Node Cost Evaluation Function'}
+        latex="f(n) = g(n) + h(n)"
+        meaning={
+          isId
+            ? 'Total estimasi biaya rute f(n) yang melewati simpul n tersusun atas biaya aktual yang sudah ditempuh g(n) ditambah estimasi biaya sisa ke tujuan h(n).'
+            : 'Total estimated path cost f(n) through node n equals known accumulated cost from start g(n) plus estimated remaining cost to goal h(n).'
+        }
+        whyExplanation={
+          isId
+            ? 'Dijkstra hanya melihat g(n) sehingga mencari ke segala arah secara membabi buta. Greedy Best-First hanya melihat h(n) sehingga bisa terjebak jalur sub-optimal. Menggabungkan g(n) dan h(n) mengarahkan pencarian langsung ke arah tujuan secara terfokus sekaligus MENJAMIN jalur terpendek optimal (asalkan h(n) admisibel).'
+            : 'Dijkstra only minimizes past cost g(n), blindly expanding in circles. Greedy Best-First only minimizes h(n), prone to sub-optimal traps. Combining g(n) + h(n) directs search toward the goal while strictly guaranteeing shortest path optimality (when h is admissible).'
+        }
+        variables={[
+          { symbol: 'f(n)', name: 'Total Priority Cost', unit: 'cost units / m', meaning: isId ? 'Kunci prioritas antrean untuk ekspansi node berikutnya' : 'Priority key in min-heap open queue' },
+          { symbol: 'g(n)', name: 'Known Path Cost', unit: 'cost units / m', meaning: isId ? 'Biaya riil dari titik start ke node n' : 'Exact cumulative cost paid from start to node n' },
+          { symbol: 'h(n)', name: 'Heuristic Estimate', unit: 'cost units / m', meaning: isId ? 'Estimasi jarak sisa dari node n ke titik tujuan goal' : 'Underestimated distance from node n to goal' },
+        ]}
+        numericalExample={{
+          inputs: { 'g(current)': 14.5, 'h(current)': 8.2 },
+          calculationSteps: [
+            'f(current) = g(current) + h(current)',
+            'f(current) = 14.5 + 8.2 = 22.7',
+          ],
+          result: 'f(n) = 22.7',
+        }}
+        roboticsApplication={
+          isId
+            ? 'Algoritma standar industri navigasi perutean grid 2D pada robot vacuum, AGV gudang, dan game AI.'
+            : 'Standard global planner in mobile robotics (ROS Nav2 Grid Planner, automated warehouse fleets).'
+        }
+        calculator={{
+          params: [
+            { key: 'g', label: 'Accumulated Cost g(n)', unit: 'm', default: 12.0, min: 0.0, max: 50.0, step: 0.5 },
+            { key: 'h', label: 'Heuristic Estimate h(n)', unit: 'm', default: 9.5, min: 0.0, max: 50.0, step: 0.5 },
+          ],
+          calculate: (inputs) => {
+            const { g, h } = inputs;
+            const f = g + h;
+            return {
+              steps: [
+                `f(n) = ${g} + ${h} = ${f.toFixed(2)}`,
+              ],
+              result: `f(n) = ${f.toFixed(2)}`,
+            };
+          },
+        }}
+      />
 
-        <div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            1. {isId ? 'Fungsi Prioritas Node A*' : 'A* Node Evaluation Function'}
-          </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-            {isId
-              ? 'Algoritma A* memperluas simpul graf yang meminimalkan total estimasi biaya f(n) dari start ke goal melalui node n:'
-              : 'A* expands graph nodes minimizing the total estimated cost f(n) from start to goal through node n:'}
-          </p>
-          <div className="mt-3">
-            <MathBlock
-              latex="f(n) = g(n) + h(n)"
-              title={isId ? 'Fungsi Prioritas Evaluasi A*' : 'A* Node Priority Function'}
-            />
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            2. {isId ? 'Heuristik Admisibel & Konsisten' : 'Admissible & Consistent Heuristics'}
-          </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-            {isId
-              ? 'Untuk menjamin optimalitas pada grid 8-arah dengan pergerakan diagonal, digunakan jarak Octile:'
-              : 'For optimality guarantee in 8-connected planar grid graphs with diagonal movements, Octile distance is applied:'}
-          </p>
-          <div className="mt-3">
-            <MathBlock
-              latex="h_{octile}(n) = (\Delta x + \Delta y) + (\sqrt{2} - 2)\min(\Delta x, \Delta y)"
-              title={isId ? 'Heuristik Jarak Octile (Admisibel pada Grid 8-Arah)' : 'Octile Distance Heuristic'}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Pure TypeScript Engine */}
-      <div className="p-6 rounded-2xl glass-panel space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-3">
-          <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-mono text-sm font-bold">
-            <Code2 className="w-4 h-4" />
-            <span>{isId ? 'Pseudocode Algoritma A*' : 'Algorithm Pseudocode'}</span>
-          </div>
-          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">Time Complexity: O((V + E) log V)</span>
-        </div>
-
-        <pre className="p-4 rounded-xl bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200 overflow-x-auto leading-relaxed">
-{`function A_Star(start, goal, heuristic):
-    openSet = PriorityQueue()
-    openSet.insert(start, priority=h(start, goal))
-    gScore[start] = 0
-    
-    while openSet is not empty:
-        current = openSet.pop_min()
-        if current == goal:
-            return reconstruct_path(cameFrom, current)
-            
-        for neighbor in neighbors(current):
-            tentative_g = gScore[current] + cost(current, neighbor)
-            if tentative_g < gScore.get(neighbor, infinity):
-                cameFrom[neighbor] = current
-                gScore[neighbor] = tentative_g
-                fScore = tentative_g + heuristic(neighbor, goal)
-                openSet.insert_or_update(neighbor, priority=fScore)
-                
-    return failure  // No path exists`}
-        </pre>
-      </div>
+      {/* 3. Heuristic Formula Explainer */}
+      <FormulaExplainer
+        id="formula-octile-heuristic"
+        title={isId ? 'Heuristik Jarak Octile (Grid 8-Arah)' : 'Octile Distance Heuristic (8-Connected Grid)'}
+        latex="h_{octile}(n) = (\Delta x + \Delta y) + (\sqrt{2} - 2)\min(\Delta x, \Delta y)"
+        meaning={
+          isId
+            ? 'Heuristik admisibel dan konsisten yang menghitung jarak terpendek pada grid 2D dengan pergerakan 8-arah (horizontal, vertikal, diagonal).'
+            : 'Admissible and consistent heuristic measuring shortest distance on an 8-connected grid with diagonal traversal.'
+        }
+        whyExplanation={
+          isId
+            ? 'Jarak Manhattan mengabaikan langkah diagonal sehingga melebih-lebihkan biaya (overestimate/tidak admisibel). Jarak Euclidean memotong lurus dan meremehkan kisi. Jarak Octile mengombinasikan langkah diagonal (bobot sqrt(2)) dan langkah ortogonal (bobot 1) secara presisi.'
+            : 'Manhattan distance ignores diagonal cuts, causing overestimation. Euclidean distance assumes continuous motion, underestimating grid steps. Octile precisely counts diagonal steps (cost √2) and straight steps (cost 1).'
+        }
+        variables={[
+          { symbol: 'Δx', name: 'Horizontal Separation', unit: 'grid cells', meaning: isId ? '|x_goal - x_n|' : 'Absolute horizontal grid distance' },
+          { symbol: 'Δy', name: 'Vertical Separation', unit: 'grid cells', meaning: isId ? '|y_goal - y_n|' : 'Absolute vertical grid distance' },
+          { symbol: 'h_octile', name: 'Octile Heuristic', unit: 'cost units', meaning: isId ? 'Estimasi jarak optimal admisibel' : 'Admissible distance estimate' },
+        ]}
+        roboticsApplication={
+          isId
+            ? 'Dipakai pada perencana jalur ROS Nav2 Costmap 2D untuk menjamin pencarian jalur tercepat tanpa distorsi grid.'
+            : 'Used in 2D costmap planners to ensure diagonal-aware path optimality without metric distortion.'
+        }
+      />
     </div>
   );
 }

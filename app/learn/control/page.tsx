@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ControlSimulator } from '@/components/simulation/ControlSimulator';
-import { MathBlock } from '@/components/mathematics/MathBlock';
+import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Cpu, Sparkles, BookOpen } from 'lucide-react';
 
@@ -42,47 +42,101 @@ export default function ControlPage() {
         <ControlSimulator />
       </div>
 
-      {/* 2. Mathematical Rigor */}
-      <div className="p-6 rounded-2xl glass-panel space-y-6">
-        <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-mono text-sm font-bold border-b border-slate-200 dark:border-slate-800/80 pb-3">
-          <BookOpen className="w-4 h-4" />
-          <span>{isId ? 'Formulasi Kendali Kemudi' : 'Steering Control Formulations'}</span>
-        </div>
+      {/* 2. Pure Pursuit Formula Explainer */}
+      <FormulaExplainer
+        id="formula-pure-pursuit"
+        title={isId ? 'Hukum Kemudi Geometris Pure Pursuit' : 'Pure Pursuit Geometric Steering Law'}
+        latex="\delta = \arctan\left( \frac{2 L \sin\alpha}{L_f} \right)"
+        meaning={
+          isId
+            ? 'Menghitung sudut kemudi roda depan delta yang mengarahkan robot menuju titik target pada jalur yang berjarak sejauh L_f di depan robot dengan sudut relatif alpha.'
+            : 'Calculates the front steering angle delta required to follow a circular arc intersecting a lookahead point at distance L_f with relative heading angle alpha.'
+        }
+        whyExplanation={
+          isId
+            ? 'Pure Pursuit membentuk busur lingkaran antara pusat roda belakang robot dan titik lookahead target. Semakin besar sudut alpha (target melenceng jauh), kemudi berbelok semakin tajam. Semakin besar jarak lookahead L_f, lintasan menjadi lebih halus dan stabil namun memotong tikungan (corner cutting).'
+            : 'Pure Pursuit fits a circular arc from rear axle to lookahead target. Larger alpha produces sharper turns. Increasing lookahead distance L_f stabilizes the steering response but introduces corner cutting.'
+        }
+        variables={[
+          { symbol: 'delta (δ)', name: 'Steering Angle', unit: 'rad', meaning: isId ? 'Sudut kemudi yang diberikan ke roda depan' : 'Commanded front wheel steering angle' },
+          { symbol: 'L', name: 'Wheelbase', unit: 'm', meaning: isId ? 'Jarak antara sumbu roda depan dan belakang' : 'Distance between front and rear axle centers' },
+          { symbol: 'L_f', name: 'Lookahead Distance', unit: 'm', meaning: isId ? 'Jarak pandang ke titik target pada jalur referensi' : 'Forward lookahead search distance along reference path' },
+          { symbol: 'alpha (α)', name: 'Relative Target Angle', unit: 'rad', meaning: isId ? 'Sudut antara orientasi hadap robot dan arah titik lookahead' : 'Angle between vehicle heading vector and lookahead point' },
+        ]}
+        derivationSteps={[
+          {
+            step: isId ? 'Geometri Busur Lingkaran (Hukum Sinus)' : 'Circular Arc Geometry',
+            latex: '\\frac{L_f}{\\sin(2\\alpha)} = \\frac{R}{\\sin(90^\\circ - \\alpha)} = \\frac{R}{\\cos\\alpha} \\implies R = \\frac{L_f}{2\\sin\\alpha}',
+            explanation: isId ? 'Menghitung jari-jari kelengkungan lingkaran R dari segitiga isosceles.' : 'Solving for turning radius R from the chord geometry.',
+          },
+          {
+            step: isId ? 'Pemetaan Model Sepeda Ackermann' : 'Ackermann Bicycle Steering Kinematics',
+            latex: '\\tan\\delta = \\frac{L}{R} = \\frac{2 L \\sin\\alpha}{L_f} \\implies \\delta = \\arctan\\left(\\frac{2 L \\sin\\alpha}{L_f}\\right)',
+            explanation: isId ? 'Menghubungkan wheelbase L dan kurvatur 1/R dengan sudut kemudi delta.' : 'Relating curvature to front wheel angle delta.',
+          },
+        ]}
+        numericalExample={{
+          inputs: { 'L (wheelbase)': 1.5, 'L_f (lookahead)': 3.0, 'alpha (rad)': 0.35 },
+          calculationSteps: [
+            'sin(0.35) = 0.3429',
+            'tan(delta) = (2 * 1.5 * 0.3429) / 3.0 = 1.0287 / 3.0 = 0.3429',
+            'delta = atan(0.3429) = 0.3303 rad (18.9°)',
+          ],
+          result: 'δ = 0.330 rad (18.9°)',
+        }}
+        roboticsApplication={
+          isId
+            ? 'Algoritma pelacakan trajektori klasik yang digunakan pada DARPA Grand Challenge dan kendaraan otonom kecepatan rendah hingga menengah.'
+            : 'Widely used path tracker for autonomous mobile robots and low-to-medium speed self-driving vehicles.'
+        }
+        calculator={{
+          params: [
+            { key: 'L', label: 'Wheelbase (L)', unit: 'm', default: 1.2, min: 0.5, max: 3.0, step: 0.1 },
+            { key: 'Lf', label: 'Lookahead (L_f)', unit: 'm', default: 2.5, min: 1.0, max: 6.0, step: 0.2 },
+            { key: 'alpha', label: 'Relative Angle (α)', unit: 'rad', default: 0.4, min: -1.2, max: 1.2, step: 0.05 },
+          ],
+          calculate: (inputs) => {
+            const { L, Lf, alpha } = inputs;
+            const delta = Math.atan((2 * L * Math.sin(alpha)) / Lf);
+            const deg = (delta * 180) / Math.PI;
+            return {
+              steps: [
+                `tan(δ) = (2 * ${L} * sin(${alpha})) / ${Lf} = ${Math.tan(delta).toFixed(3)}`,
+                `δ = atan(${Math.tan(delta).toFixed(3)}) = ${delta.toFixed(3)} rad (${deg.toFixed(1)}°)`,
+              ],
+              result: `δ = ${delta.toFixed(3)} rad (${deg.toFixed(1)}°)`,
+            };
+          },
+        }}
+      />
 
-        <div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            1. {isId ? 'Hukum Kendali Geometris Pure Pursuit' : 'Pure Pursuit Geometric Control Law'}
-          </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-            {isId
-              ? 'Menghitung sudut kemudi delta menuju titik target pada jarak lookahead L_f dengan sudut relatif alpha:'
-              : 'Computes steering angle delta targeting a goal point at lookahead distance L_f with relative angle alpha:'}
-          </p>
-          <div className="mt-3">
-            <MathBlock
-              latex="\delta = \arctan\left( \frac{2 L \sin\alpha}{L_f} \right)"
-              title={isId ? 'Hukum Kemudi Kurvatur Pure Pursuit' : 'Pure Pursuit Curvature Steering Law'}
-            />
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            2. {isId ? 'Kendali Sumbu Roda Depan Stanley' : 'Stanley Controller Front-Axle Steering'}
-          </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-            {isId
-              ? 'Mengeliminasi kesalahan heading theta_e dan kesalahan cross-track e(t) dengan umpan balik non-linear bergantung kecepatan:'
-              : 'Eliminates heading error theta_e and cross-track error e(t) with velocity-dependent proportional feedback:'}
-          </p>
-          <div className="mt-3">
-            <MathBlock
-              latex="\delta(t) = \theta_e(t) + \arctan\left( \frac{k \cdot e(t)}{v(t)} \right)"
-              title={isId ? 'Hukum Kendali Non-Linear Cross-Track Stanley' : 'Stanley Non-Linear Cross-Track Control Law'}
-            />
-          </div>
-        </div>
-      </div>
+      {/* 3. Stanley Controller Formula Explainer */}
+      <FormulaExplainer
+        id="formula-stanley-controller"
+        title={isId ? 'Kendali Sumbu Roda Depan Stanley' : 'Stanley Cross-Track Steering Controller'}
+        latex="\delta(t) = \theta_e(t) + \arctan\left( \frac{k \cdot e(t)}{v(t)} \right)"
+        meaning={
+          isId
+            ? 'Hukum kendali umpan balik non-linear yang mengoreksi kesalahan arah hadap (theta_e) dan kesalahan posisi melenceng samping (cross-track error e) secara proporsional terhadap kecepatan kendaraan.'
+            : 'Non-linear feedback control law eliminating heading error (theta_e) and lateral cross-track error (e) scaled inversely with vehicle velocity.'
+        }
+        whyExplanation={
+          isId
+            ? 'Ketika robot melaju kencang, koreksi kemudi harus lebih kecil/halus agar tidak tergelincir (oleh karena itu dibagi v(t)). Ketika robot melaju lambat, kemudi boleh berbelok tajam untuk segera kembali ke jalur.'
+            : 'At higher speeds, aggressive steering causes spinout; dividing by v(t) dampens lateral feedback. At low speeds, sharper steering angles rapidly eliminate tracking errors.'
+        }
+        variables={[
+          { symbol: 'theta_e (θ_e)', name: 'Heading Error', unit: 'rad', meaning: isId ? 'Selisih antara sudut hadap robot dan arah tangensial jalur' : 'Difference between vehicle heading and path tangent angle' },
+          { symbol: 'e(t)', name: 'Cross-Track Error', unit: 'm', meaning: isId ? 'Jarak tegak lurus dari sumbu roda depan ke titik terdekat di jalur' : 'Lateral distance from front axle center to nearest path point' },
+          { symbol: 'k', name: 'Gain Parameter', unit: 's^-1', meaning: isId ? 'Konstanta proporsional sensitivitas kesalahan samping' : 'Proportional cross-track correction gain' },
+          { symbol: 'v(t)', name: 'Forward Velocity', unit: 'm/s', meaning: isId ? 'Kecepatan maju kendaraan saat ini' : 'Instantaneous forward vehicle velocity' },
+        ]}
+        roboticsApplication={
+          isId
+            ? 'Juara kompetisi DARPA Grand Challenge (Stanford Racing Team - Robot "Stanley"). Standar emas kendali kemudi mobil otonom di jalan raya.'
+            : 'Winner of the DARPA Grand Challenge (Stanford "Stanley" vehicle); industry standard for road autonomous vehicle lane tracking.'
+        }
+      />
     </div>
   );
 }

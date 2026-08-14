@@ -5,6 +5,7 @@ import { KinematicsSimulator } from '@/components/simulation/KinematicsSimulator
 import { TransformSandbox } from '@/components/simulation/TransformSandbox';
 import { SpatialRotation3D } from '@/components/simulation/SpatialRotation3D';
 import { MathBlock } from '@/components/mathematics/MathBlock';
+import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   Compass,
@@ -46,15 +47,15 @@ export default function FundamentalsPage() {
       <div className="border-b border-slate-200 dark:border-slate-800/80 pb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 text-xs font-mono mb-3">
           <Compass className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400" />
-          <span>{isId ? 'Fondasi Robotika • 9 Bab Komprehensif' : 'Robotics Foundations • 9 Comprehensive Chapters'}</span>
+          <span>{isId ? 'Fondasi Robotika • Standar Penjelasan Matematis' : 'Robotics Foundations • Pedagogical Math Standard'}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
           {isId ? 'Dasar-Dasar Robotika, Matematika & Pemodelan' : 'Robotics Fundamentals, Mathematics & Modeling'}
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
           {isId
-            ? 'Kurikulum fundamental berstandar akademik (disadur dari buku Elements of Robotics & literatur klasik) yang mencakup 9 pilar penting: Pengantar, Geometri 2D/3D, Trajektori, Kinematika Kecepatan, Matriks, Pemodelan Status, hingga Dinamika Robot.'
-            : 'Academic foundation curriculum (synthesizing Elements of Robotics & classical literature) covering 9 core pillars: Introduction, 2D/3D Geometry, Trajectories, Velocity Kinematics, Matrices, Mathematical Modeling, and Robot Dynamics.'}
+            ? 'Setiap persamaan dilengkapi dengan arti intuitif, alasan fisik (Why?), penurunan rumus bertahap, satuan dimensional, contoh angka, dan kalkulator interaktif.'
+            : 'Every core formula is structured with intuitive meaning, physical reasoning (Why?), step-by-step derivation, dimensional units, worked numerical examples, and live calculators.'}
         </p>
 
         {/* 9 Chapters Pill Bar */}
@@ -91,7 +92,7 @@ export default function FundamentalsPage() {
 
             <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
               {isId
-                ? 'Robot otonom adalah mesin siber-fisik yang mampu mengambil keputusan mandiri melalui interaksi lingkungan fisik menggunakan sensor dan aktuator. Berbeda dari otomasi biasa (seperti mesin cuci), robot beroperasi dalam lingkungan tak pasti dan terus beradaptasi.'
+                ? 'Robot otonom adalah sistem siber-fisik yang mampu mengambil keputusan mandiri melalui interaksi lingkungan fisik menggunakan sensor dan aktuator. Berbeda dari otomasi biasa (seperti mesin cuci), robot beroperasi dalam lingkungan tak pasti dan terus beradaptasi.'
                 : 'An autonomous robot is a cyber-physical system capable of independent decision-making in physical environments via sensors and actuators. Unlike simple automata (e.g. dishwashers), robots operate in uncertain, dynamic environments.'}
             </p>
 
@@ -118,7 +119,7 @@ export default function FundamentalsPage() {
 
             <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs font-mono space-y-2">
               <strong className="text-slate-900 dark:text-slate-100 block font-bold">
-                {isId ? 'Klasifikasi Robot:' : 'Classification of Robots:'}
+                {isId ? 'Klasifikasi Robot (Berdasarkan Elements of Robotics):' : 'Classification of Robots (from Elements of Robotics):'}
               </strong>
               <ul className="space-y-1 text-slate-600 dark:text-slate-400 list-disc list-inside">
                 <li><strong>Fixed Manipulators:</strong> {isId ? 'Lengan robot industri terfiksasi di lantai dengan posisi presisi tinggi.' : 'Industrial robotic arms fixed to stable bases with high repeatable accuracy.'}</li>
@@ -143,37 +144,85 @@ export default function FundamentalsPage() {
             <TransformSandbox />
           </div>
 
-          <div className="p-6 rounded-2xl glass-panel space-y-6">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-mono text-cyan-600 dark:text-cyan-400">
-              {isId ? 'Fondasi Matematis Geometri Planar 2D' : 'Mathematical 2D Planar Geometry'}
-            </h3>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">1. {isId ? 'Koordinat Kartesian vs Polar' : 'Cartesian vs Polar Coordinates'}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                {isId ? 'Sebuah titik p dalam bidang 2D dapat dinyatakan dalam Kartesian (x, y) atau Polar (r, φ):' : 'A point p in 2D space can be expressed in Cartesian (x, y) or Polar (r, φ) coordinates:'}
-              </p>
-              <div className="mt-3">
-                <MathBlock
-                  latex="x = r \cos\phi, \quad y = r \sin\phi \iff r = \sqrt{x^2 + y^2}, \quad \phi = \text{atan2}(y, x)"
-                  title={isId ? 'Konversi Kartesian & Polar' : 'Cartesian-Polar Conversion'}
-                />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">2. {isId ? 'Rotasi Vektor dalam SO(2)' : 'Vector Rotation in SO(2)'}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                {isId ? 'Rotasi vektor sebesar sudut θ menghasilkan matriks rotasi ortogonal 2x2 R(θ):' : 'Rotating a vector by angle θ produces the 2x2 special orthogonal rotation matrix R(θ):'}
-              </p>
-              <div className="mt-3">
-                <MathBlock
-                  latex="\begin{bmatrix} x' \\ y' \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix}, \quad R^T R = I_2, \quad \det(R) = +1"
-                  title={isId ? 'Matriks Rotasi 2D SO(2)' : '2D Rotation Matrix in SO(2)'}
-                />
-              </div>
-            </div>
-          </div>
+          {/* Detailed Formula Explainer for 2D Transformation */}
+          <FormulaExplainer
+            id="formula-se2-transform"
+            title={isId ? 'Transformasi Matriks Homogen 2D SE(2)' : '2D SE(2) Homogeneous Transformation Matrix'}
+            latex="\mathbf{p}^W = T_R^W \mathbf{p}^R = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x^R \\ y^R \\ 1 \end{bmatrix}"
+            meaning={
+              isId
+                ? 'Mentransformasikan koordinat sebuah titik (misal hasil sensor LiDAR) dari kerangka lokal robot {R} ke kerangka koordinat global dunia {W}.'
+                : 'Transforms the coordinates of a point (e.g. LiDAR obstacle detection) from the local robot frame {R} into the global world reference frame {W}.'
+            }
+            whyExplanation={
+              isId
+                ? 'Dalam koordinat Kartesian biasa, rotasi dan translasi adalah operasi terpisah (p_W = R*p_R + t). Dengan menambahkan koordinat homogen 1 di baris ketiga, rotasi dan translasi dapat digabungkan menjadi SATU operasi perkalian matriks 3x3 yang sangat efisien dan mudah dikomposisikan secara berantai.'
+                : 'In standard Cartesian coordinates, rotation and translation are separate operations (p_W = R*p_R + t). By appending a homogeneous 1, rotation and translation combine into a SINGLE 3x3 matrix multiplication, enabling clean geometric composition.'
+            }
+            variables={[
+              { symbol: 'p^W', name: 'World Point', unit: 'm', meaning: isId ? 'Posisi titik dalam sistem koordinat global dunia' : 'Point coordinates in global world reference frame' },
+              { symbol: 'p^R', name: 'Robot Local Point', unit: 'm', meaning: isId ? 'Posisi titik relatif terhadap sensor di badan robot' : 'Point coordinates relative to sensor on robot body' },
+              { symbol: 'theta', name: 'Robot Heading (θ)', unit: 'rad', meaning: isId ? 'Sudut orientasi hadap robot terhadap sumbu X dunia' : 'Robot angular heading orientation relative to world X-axis' },
+              { symbol: 't_x, t_y', name: 'Translation Vector', unit: 'm', meaning: isId ? 'Posisi pusat robot (x, y) dalam koordinat dunia' : 'Robot center position (x, y) in world coordinates' },
+            ]}
+            derivationSteps={[
+              {
+                step: isId ? 'Rotasi Vektor dalam Sumbu Robot' : 'Rotate vector into aligned frame',
+                latex: 'x\' = x^R \cos\\theta - y^R \sin\\theta, \\quad y\' = x^R \sin\\theta + y^R \cos\\theta',
+                explanation: isId ? 'Menerapkan proyeksi trigonometri dari sudut hadap theta.' : 'Applying trigonometric projections for heading angle theta.',
+              },
+              {
+                step: isId ? 'Translasi ke Posisi Asal Robot di Dunia' : 'Translate by robot origin',
+                latex: 'x^W = x\' + t_x, \\quad y^W = y\' + t_y',
+                explanation: isId ? 'Menambahkan offset posisi pusat robot (t_x, t_y).' : 'Adding robot origin position offsets (t_x, t_y).',
+              },
+              {
+                step: isId ? 'Penyusunan Matriks Blok Homogen 3x3' : 'Assembly of 3x3 Homogeneous Matrix',
+                latex: 'T_R^W = \\begin{bmatrix} R(\\theta) & \\mathbf{t} \\\\ \\mathbf{0}^T & 1 \\end{bmatrix}',
+                explanation: isId ? 'Menggabungkan sub-matriks rotasi 2x2 dan vektor translasi 2x1.' : 'Combining 2x2 rotation sub-matrix and 2x1 translation vector.',
+              },
+            ]}
+            numericalExample={{
+              inputs: { 'x^R': 2.0, 'y^R': 1.0, 't_x': 5.0, 't_y': 3.0, 'theta (rad)': 0.5 },
+              calculationSteps: [
+                'cos(0.5) = 0.8776, sin(0.5) = 0.4794',
+                'x\' = 2.0 * 0.8776 - 1.0 * 0.4794 = 1.2758',
+                'y\' = 2.0 * 0.4794 + 1.0 * 0.8776 = 1.8364',
+                'x^W = 1.2758 + 5.0 = 6.2758 m',
+                'y^W = 1.8364 + 3.0 = 4.8364 m',
+              ],
+              result: 'p^W = [6.28, 4.84, 1]^T m',
+            }}
+            roboticsApplication={
+              isId
+                ? 'Digunakan pada sensor LiDAR dan Kamera untuk memproyeksikan rintangan yang terdeteksi di depan robot ke peta okupansi global secara instan.'
+                : 'Applied in LiDAR and Camera sensor pipelines to project obstacles detected in robot frame onto the global occupancy map.'
+            }
+            calculator={{
+              params: [
+                { key: 'xR', label: 'Local X (x^R)', unit: 'm', default: 2.0, min: -5.0, max: 5.0, step: 0.1 },
+                { key: 'yR', label: 'Local Y (y^R)', unit: 'm', default: 1.0, min: -5.0, max: 5.0, step: 0.1 },
+                { key: 'tx', label: 'Robot Pose X (t_x)', unit: 'm', default: 4.0, min: 0.0, max: 10.0, step: 0.5 },
+                { key: 'ty', label: 'Robot Pose Y (t_y)', unit: 'm', default: 2.0, min: 0.0, max: 10.0, step: 0.5 },
+                { key: 'theta', label: 'Robot Heading (θ)', unit: 'rad', default: 0.78, min: -3.14, max: 3.14, step: 0.1 },
+              ],
+              calculate: (inputs) => {
+                const { xR, yR, tx, ty, theta } = inputs;
+                const cosT = Math.cos(theta);
+                const sinT = Math.sin(theta);
+                const xw = tx + xR * cosT - yR * sinT;
+                const yw = ty + xR * sinT + yR * cosT;
+                return {
+                  steps: [
+                    `R(θ) = [[${cosT.toFixed(3)}, ${(-sinT).toFixed(3)}], [${sinT.toFixed(3)}, ${cosT.toFixed(3)}]]`,
+                    `x^W = ${tx} + (${xR}*${cosT.toFixed(3)} - ${yR}*${sinT.toFixed(3)}) = ${xw.toFixed(2)} m`,
+                    `y^W = ${ty} + (${xR}*${sinT.toFixed(3)} + ${yR}*${cosT.toFixed(3)}) = ${yw.toFixed(2)} m`,
+                  ],
+                  result: `p^W = [${xw.toFixed(2)}, ${yw.toFixed(2)}]^T m`,
+                };
+              },
+            }}
+          />
         </div>
       )}
 
@@ -190,37 +239,31 @@ export default function FundamentalsPage() {
             <SpatialRotation3D />
           </div>
 
-          <div className="p-6 rounded-2xl glass-panel space-y-6">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-mono text-cyan-600 dark:text-cyan-400">
-              {isId ? 'Rotasi Spasial 3D & Sudut Euler (Roll, Pitch, Yaw)' : '3D Spatial Rotations & Euler Angles'}
-            </h3>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">1. {isId ? 'Aturan Tangan Kanan & Rotasi Tiga Sumbu' : 'Right-Hand Rule & Principal Axis Rotations'}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                {isId ? 'Rotasi elementer pada sumbu X (Roll φ), Y (Pitch θ), dan Z (Yaw ψ):' : 'Elementary rotation matrices around principal X, Y, and Z axes:'}
-              </p>
-              <div className="mt-3">
-                <MathBlock
-                  latex="R_z(\psi) = \begin{bmatrix} \cos\psi & -\sin\psi & 0 \\ \sin\psi & \cos\psi & 0 \\ 0 & 0 & 1 \end{bmatrix}, \quad R_y(\theta) = \begin{bmatrix} \cos\theta & 0 & \sin\theta \\ 0 & 1 & 0 \\ -\sin\theta & 0 & \cos\theta \end{bmatrix}, \quad R_x(\phi) = \begin{bmatrix} 1 & 0 & 0 \\ 0 & \cos\phi & -\sin\phi \\ 0 & \sin\phi & \cos\phi \end{bmatrix}"
-                  title={isId ? 'Matriks Rotasi Sumbu Utama 3D' : '3D Principal Rotation Matrices'}
-                />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">2. {isId ? 'Representasi Kuaternion (Bebas Gimbal Lock)' : 'Quaternion Representation (Gimbal Lock Free)'}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                {isId ? 'Kuaternion unit q = (w, x, y, z) mengeliminasi singularitas Gimbal Lock pada sudut Euler:' : 'Unit quaternions q = (w, x, y, z) avoid Euler angle Gimbal Lock singularities:'}
-              </p>
-              <div className="mt-3">
-                <MathBlock
-                  latex="\mathbf{q} = \cos\frac{\theta}{2} + \mathbf{u} \sin\frac{\theta}{2} = [w, x, y, z]^T, \quad \|\mathbf{q}\| = 1"
-                  title={isId ? 'Kuaternion Rotasi Spasial' : 'Unit Rotation Quaternion'}
-                />
-              </div>
-            </div>
-          </div>
+          <FormulaExplainer
+            id="formula-euler-3d"
+            title={isId ? 'Komposisi Matriks Rotasi 3D Sudut Euler ZYX' : '3D ZYX Euler Angle Rotation Matrix'}
+            latex="R_{ZYX}(\psi, \theta, \phi) = R_z(\psi) R_y(\theta) R_x(\phi) = \begin{bmatrix} c_\psi c_\theta & c_\psi s_\theta s_\phi - s_\psi c_\phi & c_\psi s_\theta c_\phi + s_\psi s_\phi \\ s_\psi c_\theta & s_\psi s_\theta s_\phi + c_\psi c_\phi & s_\psi s_\theta c_\phi - c_\psi s_\phi \\ -s_\theta & c_\theta s_\phi & c_\theta c_\phi \end{bmatrix}"
+            meaning={
+              isId
+                ? 'Merepresentasikan orientasi orientasi benda kaku 3D melalui urutan 3 rotasi berurutan: Yaw (ψ) sumbu Z, Pitch (θ) sumbu Y, dan Roll (φ) sumbu X.'
+                : 'Encodes 3D rigid body spatial orientation through sequential rotations: Yaw (ψ) around Z, Pitch (θ) around Y, and Roll (φ) around X.'
+            }
+            whyExplanation={
+              isId
+                ? 'Rotasi dalam ruang 3D bersifat NON-KOMUTATIF (urutan rotasi menentukan orientasi akhir: R_x*R_y != R_y*R_x). Perkalian matriks berurutan dari kanan ke kiri menjamin transformasi sumbu bodi lokal yang akurat.'
+                : '3D rotations are fundamentally NON-COMMUTATIVE (order matters: R_x*R_y != R_y*R_x). Successive matrix multiplication from right to left maps local body rotations correctly.'
+            }
+            variables={[
+              { symbol: 'psi (ψ)', name: 'Yaw Angle (Heading)', unit: 'rad', meaning: isId ? 'Sudut putar robot mengelilingi sumbu vertikal Z' : 'Rotation angle around vertical Z-axis' },
+              { symbol: 'theta (θ)', name: 'Pitch Angle (Elevation)', unit: 'rad', meaning: isId ? 'Sudut kemiringan hidung robot mengelilingi sumbu lateral Y' : 'Tilt angle around lateral Y-axis' },
+              { symbol: 'phi (φ)', name: 'Roll Angle (Bank)', unit: 'rad', meaning: isId ? 'Sudut guling robot mengelilingi sumbu longitudinal X' : 'Bank angle around longitudinal X-axis' },
+            ]}
+            roboticsApplication={
+              isId
+                ? 'Digunakan pada sistem navigasi inersial drone (UAV), robot humanoid, dan sensor IMU 6-DOF untuk melacak sikap orientasi (attitude).'
+                : 'Essential for UAV drone flight controllers, humanoid balancing, and 6-DOF IMU sensor attitude tracking.'
+            }
+          />
         </div>
       )}
 
@@ -249,18 +292,32 @@ export default function FundamentalsPage() {
               </div>
             </div>
 
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">1. {isId ? 'Interpolasi Spline Polinomial Orde 5 (Quintic Spline)' : 'Quintic Polynomial Trajectory Interpolation'}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                {isId ? 'Menghasilkan transisi percepatan dan kecepatan yang mulus (C2-continuous):' : 'Guarantees smooth, continuous velocity and acceleration profiles (C2-continuous):'}
-              </p>
-              <div className="mt-3">
-                <MathBlock
-                  latex="s(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5"
-                  title={isId ? 'Persamaan Polinomial Kuintik Trajektori' : 'Quintic Polynomial Equation'}
-                />
-              </div>
-            </div>
+            <FormulaExplainer
+              id="formula-quintic-spline"
+              title={isId ? 'Spline Polinomial Kuintik Orde 5 (Trajectory Smoothing)' : 'Quintic Polynomial Trajectory Spline'}
+              latex="s(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5, \quad \dot{s}(0)=v_0, \, \ddot{s}(0)=a_0, \, \dot{s}(T)=v_f, \, \ddot{s}(T)=a_f"
+              meaning={
+                isId
+                  ? 'Menghubungkan dua waypoint dengan kurva kontinu orde-2 (C2) sehingga percepatan dan kecepatan berawal dan berakhir mulus tanpa sentakan (jerk).'
+                  : 'Connects two boundary waypoints with C2 continuity ensuring zero initial/final jerk and smooth acceleration.'
+              }
+              whyExplanation={
+                isId
+                  ? 'Polinomial orde 3 (kubik) hanya bisa memenuhi batas posisi dan kecepatan. Agar robot tidak mengalami hentakan torsi motor tiba-tiba, dibutuhkan batas percepatan awal/akhir (6 kondisi batas) yang mewajibkan polinomial berderajat 5 (kuintik).'
+                  : 'Cubic splines only constrain position and velocity. To eliminate sudden motor torque spikes, acceleration boundary conditions require 6 degrees of freedom, mandating a 5th-order (quintic) polynomial.'
+              }
+              variables={[
+                { symbol: 's(t)', name: 'Position Profile', unit: 'm', meaning: isId ? 'Posisi lintasan pada waktu t' : 'Displacement along trajectory at time t' },
+                { symbol: 'v_0, v_f', name: 'Boundary Velocities', unit: 'm/s', meaning: isId ? 'Kecepatan awal dan akhir segmen' : 'Initial and terminal velocities' },
+                { symbol: 'a_0, a_f', name: 'Boundary Accelerations', unit: 'm/s²', meaning: isId ? 'Percepatan awal dan akhir segmen' : 'Initial and terminal accelerations' },
+                { symbol: 'T', name: 'Segment Duration', unit: 's', meaning: isId ? 'Total waktu perjalanan antar waypoint' : 'Total duration between waypoints' },
+              ]}
+              roboticsApplication={
+                isId
+                  ? 'Digunakan pada perencana gerak lengan robot industri dan mobil otonom agar penumpang atau beban tidak terguncang.'
+                  : 'Applied in industrial robotic arm trajectory generators and autonomous vehicle passenger comfort motion planners.'
+              }
+            />
           </div>
         </div>
       )}
@@ -278,34 +335,81 @@ export default function FundamentalsPage() {
             <KinematicsSimulator />
           </div>
 
-          <div className="p-6 rounded-2xl glass-panel space-y-6">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-mono text-cyan-600 dark:text-cyan-400">
-              {isId ? 'Kinematika Maju & Invers Robot Roda Diferensial' : 'Differential-Drive Forward & Inverse Kinematics'}
-            </h3>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">1. {isId ? 'Model Kecepatan Ruang Status Planar' : 'Planar State-Space Velocity Model'}</h4>
-              <div className="mt-3">
-                <MathBlock
-                  latex="\begin{bmatrix} \dot{x} \\ \dot{y} \\ \dot{\theta} \end{bmatrix} = \begin{bmatrix} \cos\theta & 0 \\ \sin\theta & 0 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} v \\ \omega \end{bmatrix} = \begin{bmatrix} \frac{R}{2}\cos\theta & \frac{R}{2}\cos\theta \\ \frac{R}{2}\sin\theta & \frac{R}{2}\sin\theta \\ \frac{R}{L} & -\frac{R}{L} \end{bmatrix} \begin{bmatrix} \omega_R \\ \omega_L \end{bmatrix}"
-                  title={isId ? 'Matriks Jacobian Kinematika Diferensial' : 'Differential-Drive Kinematic Jacobian'}
-                />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">2. {isId ? 'Kendala Non-Holonomik (No-Slip Pfaffian)' : 'Pfaffian Non-Holonomic Constraint'}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                {isId ? 'Robot tidak dapat bergerak menyamping secara instan:' : 'Robot cannot move laterally without turning:'}
-              </p>
-              <div className="mt-3">
-                <MathBlock
-                  latex="-\dot{x}\sin\theta + \dot{y}\cos\theta = 0"
-                  title={isId ? 'Kendala Pfaffian Lateral' : 'Lateral Pfaffian Constraint'}
-                />
-              </div>
-            </div>
-          </div>
+          <FormulaExplainer
+            id="formula-diff-drive"
+            title={isId ? 'Kinematika Maju Robot Roda Diferensial (Unicycle)' : 'Differential-Drive Forward Kinematics'}
+            latex="v = \frac{v_R + v_L}{2}, \quad \omega = \frac{v_R - v_L}{L}, \quad R_{ICC} = \frac{L}{2} \left(\frac{v_R + v_L}{v_R - v_L}\right)"
+            meaning={
+              isId
+                ? 'Menghitung kecepatan linier maju v dan kecepatan sudut putar omega dari kecepatan putar roda kanan (v_R) dan roda kiri (v_L).'
+                : 'Computes forward linear velocity v and rotational angular velocity omega from right and left wheel speeds (v_R, v_L).'
+            }
+            whyExplanation={
+              isId
+                ? 'Ketika kedua roda berputar dengan kecepatan sama (v_R = v_L), robot bergerak lurus sempurna (v = v_R, omega = 0). Ketika kedua roda berputar berlawanan arah (v_R = -v_L), robot berputar di tempat (v = 0, omega = 2*v_R/L). Perbedaan kecepatan kedua roda menghasilkan momen rotasi mengelilingi pusat putar ICC.'
+                : 'When both wheels spin equally (v_R = v_L), motion is purely forward (v = v_R, omega = 0). When wheels spin in opposite directions (v_R = -v_L), the robot spins in place (v = 0, omega = 2*v_R/L). Wheel speed differences create rotation around the ICC.'
+            }
+            variables={[
+              { symbol: 'v', name: 'Linear Velocity', unit: 'm/s', meaning: isId ? 'Kecepatan maju titik tengah sumbu robot' : 'Forward speed of robot centerpoint' },
+              { symbol: 'omega (ω)', name: 'Angular Velocity', unit: 'rad/s', meaning: isId ? 'Laju rotasi sudut hadap robot' : 'Yaw rotation rate of robot chassis' },
+              { symbol: 'v_R', name: 'Right Wheel Velocity', unit: 'm/s', meaning: isId ? 'Kecepatan linier kontak roda kanan' : 'Tangential linear speed of right wheel' },
+              { symbol: 'v_L', name: 'Left Wheel Velocity', unit: 'm/s', meaning: isId ? 'Kecepatan linier kontak roda kiri' : 'Tangential linear speed of left wheel' },
+              { symbol: 'L', name: 'Wheelbase', unit: 'm', meaning: isId ? 'Jarak pemisah antara roda kiri dan kanan' : 'Lateral distance between wheel contact points' },
+              { symbol: 'R_ICC', name: 'Turning Radius', unit: 'm', meaning: isId ? 'Jari-jari lintasan lingkaran ke pusat putar' : 'Radius from robot center to Instantaneous Center of Curvature' },
+            ]}
+            derivationSteps={[
+              {
+                step: isId ? 'Kecepatan Roda sebagai Fungsi Rotasi Bersama' : 'Wheel tangential speeds',
+                latex: 'v_R = \\omega (R_{ICC} + L/2), \\quad v_L = \\omega (R_{ICC} - L/2)',
+                explanation: isId ? 'Setiap roda menempuh radius lingkaran yang berbeda relatif ke titik pusat putar ICC.' : 'Each wheel traverses a circular arc with distinct radius from the ICC.',
+              },
+              {
+                step: isId ? 'Penjumlahan Kecepatan untuk Mendapatkan v' : 'Summing equations for linear velocity',
+                latex: 'v_R + v_L = \\omega (2 R_{ICC}) = 2 v \\implies v = \\frac{v_R + v_L}{2}',
+                explanation: isId ? 'Rata-rata kecepatan menghasilkan laju translasi titik tengah robot.' : 'Averaging wheel speeds yields centerpoint linear velocity.',
+              },
+              {
+                step: isId ? 'Pengurangan Kecepatan untuk Mendapatkan omega' : 'Subtracting equations for angular velocity',
+                latex: 'v_R - v_L = \\omega L \\implies \\omega = \\frac{v_R - v_L}{L}',
+                explanation: isId ? 'Selisih kecepatan dibagi lebar sumbu roda menghasilkan kecepatan sudut.' : 'Speed differential divided by baseline wheelbase yields angular rate.',
+              },
+            ]}
+            numericalExample={{
+              inputs: { 'v_R': 1.5, 'v_L': 0.5, 'L': 0.4 },
+              calculationSteps: [
+                'v = (1.5 + 0.5) / 2 = 1.0 m/s',
+                'omega = (1.5 - 0.5) / 0.4 = 2.5 rad/s',
+                'R_ICC = 1.0 / 2.5 = 0.40 m',
+              ],
+              result: 'v = 1.0 m/s, ω = 2.5 rad/s, R_ICC = 0.40 m',
+            }}
+            roboticsApplication={
+              isId
+                ? 'Digunakan pada seluruh mobile robot roda dua (seperti Thymio, TurtleBot, robot vacuum cleaner, dan AGV gudang).'
+                : 'Standard kinematic model for dual-wheel mobile robots (TurtleBot, warehouse AGVs, delivery rovers).'
+            }
+            calculator={{
+              params: [
+                { key: 'vR', label: 'Right Wheel Speed (v_R)', unit: 'm/s', default: 1.2, min: -2.0, max: 2.0, step: 0.1 },
+                { key: 'vL', label: 'Left Wheel Speed (v_L)', unit: 'm/s', default: 0.8, min: -2.0, max: 2.0, step: 0.1 },
+                { key: 'L', label: 'Wheelbase (L)', unit: 'm', default: 0.35, min: 0.1, max: 1.0, step: 0.05 },
+              ],
+              calculate: (inputs) => {
+                const { vR, vL, L } = inputs;
+                const v = (vR + vL) / 2;
+                const w = (vR - vL) / L;
+                const rIcc = Math.abs(w) > 1e-4 ? v / w : Infinity;
+                return {
+                  steps: [
+                    `v = (${vR} + ${vL}) / 2 = ${v.toFixed(2)} m/s`,
+                    `ω = (${vR} - ${vL}) / ${L} = ${w.toFixed(2)} rad/s`,
+                    `R_ICC = ${v.toFixed(2)} / ${w.toFixed(2)} = ${isFinite(rIcc) ? rIcc.toFixed(2) + ' m' : '∞ (Straight)'}`,
+                  ],
+                  result: `v = ${v.toFixed(2)} m/s, ω = ${w.toFixed(2)} rad/s`,
+                };
+              },
+            }}
+          />
         </div>
       )}
 
@@ -318,31 +422,31 @@ export default function FundamentalsPage() {
               <span>{isId ? 'Bab 6: Kinematika Kecepatan Spasial 3D & Matriks Jacobian' : 'Chapter 6: 3D Velocity Kinematics & Geometric Jacobian'}</span>
             </div>
 
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              {isId
-                ? 'Dalam ruang 3D, kecepatan ujung manipulator (end-effector) atau badan robot tersusun atas kecepatan linier v in R^3 dan kecepatan sudut omega in R^3 (Twist V = [v, omega]^T in se(3)).'
-                : 'In 3D space, spatial velocity (Twist V = [v, omega]^T in se(3)) relates joint velocities to end-effector spatial motion via the Geometric Jacobian Matrix J(q).'}
-            </p>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">1. {isId ? 'Persamaan Kecepatan Jacobian Manipulator' : 'Manipulator Jacobian Velocity Equation'}</h4>
-              <div className="mt-3">
-                <MathBlock
-                  latex="\mathbf{V}_e = \begin{bmatrix} \mathbf{v}_e \\ \boldsymbol{\omega}_e \end{bmatrix} = J(\mathbf{q})\, \dot{\mathbf{q}} = \begin{bmatrix} J_v(\mathbf{q}) \\ J_\omega(\mathbf{q}) \end{bmatrix} \dot{\mathbf{q}}"
-                  title={isId ? 'Transformasi Kecepatan Joint ke Kecepatan Ujung' : 'Geometric Jacobian Mapping'}
-                />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">2. {isId ? 'Matriks Skew-Symmetric Rotasi Kecepatan Sudut' : 'Skew-Symmetric Cross Product Matrix'}</h4>
-              <div className="mt-3">
-                <MathBlock
-                  latex="[\boldsymbol{\omega}]_\times = \begin{bmatrix} 0 & -\omega_z & \omega_y \\ \omega_z & 0 & -\omega_x \\ -\omega_y & \omega_x & 0 \end{bmatrix}, \quad \dot{R} = [\boldsymbol{\omega}]_\times R"
-                  title={isId ? 'Turunan Matriks Rotasi terhadap Waktu' : 'Time Derivative of Rotation Matrix'}
-                />
-              </div>
-            </div>
+            <FormulaExplainer
+              id="formula-jacobian-3d"
+              title={isId ? 'Pemetaan Jacobian Manipulator Robot 3D' : 'Manipulator Geometric Jacobian Mapping'}
+              latex="\mathbf{V}_e = \begin{bmatrix} \mathbf{v}_e \\ \boldsymbol{\omega}_e \end{bmatrix} = J(\mathbf{q})\, \dot{\mathbf{q}} = \begin{bmatrix} J_v(\mathbf{q}) \\ J_\omega(\mathbf{q}) \end{bmatrix} \dot{\mathbf{q}}"
+              meaning={
+                isId
+                  ? 'Menghubungkan kecepatan sudut setiap sendi motor (q_dot) dengan kecepatan linier (v_e) dan kecepatan sudut spasial (omega_e) pada ujung robot (end-effector).'
+                  : 'Relates joint motor angular velocities (q_dot) directly to end-effector linear and angular spatial velocity (twist).'
+              }
+              whyExplanation={
+                isId
+                  ? 'Pergerakan satu sendi mempengaruhi posisi seluruh link berikutnya. Matriks Jacobian adalah turunan parsial posisi ujung terhadap setiap variabel sendi (J = d(FK)/dq).'
+                  : 'Each joint motion propagates along the kinematic chain. The Jacobian represents the partial derivatives of end-effector pose with respect to joint coordinates.'
+              }
+              variables={[
+                { symbol: 'V_e', name: 'Spatial Twist', unit: 'm/s, rad/s', meaning: isId ? 'Vektor 6x1 kecepatan linier dan sudut ujung robot' : '6x1 linear and angular end-effector velocity vector' },
+                { symbol: 'J(q)', name: 'Geometric Jacobian', unit: 'm/rad', meaning: isId ? 'Matriks transformasi kecepatan dimensi 6 x n' : '6 x n velocity sensitivity matrix' },
+                { symbol: 'q_dot', name: 'Joint Velocities', unit: 'rad/s', meaning: isId ? 'Vektor kecepatan putar motor di setiap sendi' : 'Vector of joint motor rotation rates' },
+              ]}
+              roboticsApplication={
+                isId
+                  ? 'Digunakan pada kontrol kecepatan lengan robot (seperti manipulator pembedahan dan pengelasan mobil) serta analisis singularitas konfigurasi.'
+                  : 'Critical for industrial robot arm trajectory tracking, force control, and kinematic singularity avoidance.'
+              }
+            />
           </div>
         </div>
       )}
@@ -356,25 +460,31 @@ export default function FundamentalsPage() {
               <span>{isId ? 'Bab 7: Aljabar Matriks & Transformasi Homogen' : 'Chapter 7: Matrix Foundations for Robotics'}</span>
             </div>
 
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">1. {isId ? 'Matriks Transformasi Homogen 4x4 SE(3)' : '4x4 Homogeneous Transformation Matrix in SE(3)'}</h4>
-              <div className="mt-3">
-                <MathBlock
-                  latex="T = \begin{bmatrix} R & \mathbf{p} \\ \mathbf{0}_{1\times 3} & 1 \end{bmatrix} = \begin{bmatrix} r_{11} & r_{12} & r_{13} & x \\ r_{21} & r_{22} & r_{23} & y \\ r_{31} & r_{32} & r_{33} & z \\ 0 & 0 & 0 & 1 \end{bmatrix}, \quad T^{-1} = \begin{bmatrix} R^T & -R^T \mathbf{p} \\ \mathbf{0} & 1 \end{bmatrix}"
-                  title={isId ? 'Matriks SE(3) & Invers Kaku' : 'SE(3) Transformation & Rigid Inverse'}
-                />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">2. {isId ? 'Matriks Kovarians Sensor & Fusi Ketidakpastian' : 'Covariance Matrix in Sensor Estimation'}</h4>
-              <div className="mt-3">
-                <MathBlock
-                  latex="\boldsymbol{\Sigma} = \begin{bmatrix} \sigma_x^2 & \sigma_{xy} \\ \sigma_{yx} & \sigma_y^2 \end{bmatrix}, \quad \text{cov}(x, y) = \frac{1}{N-1}\sum_{i=1}^N (x_i - \bar{x})(y_i - \bar{y})"
-                  title={isId ? 'Matriks Kovarians 2D' : '2D Covariance Matrix'}
-                />
-              </div>
-            </div>
+            <FormulaExplainer
+              id="formula-se3-matrix"
+              title={isId ? 'Matriks Transformasi Homogen 4x4 SE(3)' : '4x4 SE(3) Homogeneous Transformation Matrix'}
+              latex="T = \begin{bmatrix} R & \mathbf{p} \\ \mathbf{0}_{1\times 3} & 1 \end{bmatrix} = \begin{bmatrix} r_{11} & r_{12} & r_{13} & x \\ r_{21} & r_{22} & r_{23} & y \\ r_{31} & r_{32} & r_{33} & z \\ 0 & 0 & 0 & 1 \end{bmatrix}, \quad T^{-1} = \begin{bmatrix} R^T & -R^T \mathbf{p} \\ \mathbf{0} & 1 \end{bmatrix}"
+              meaning={
+                isId
+                  ? 'Representasi matematis lengkap untuk translasi 3D dan rotasi spasial sebuah objek kaku dalam ruang 3 dimensi.'
+                  : 'Complete mathematical representation for 3D rigid body translation and spatial rotation in 3-dimensional space.'
+              }
+              whyExplanation={
+                isId
+                  ? 'Invers matriks homogen dapat dihitung secara instan tanpa inversi numerik yang berat karena sifat ortogonalitas rotasi (R^-1 = R^T).'
+                  : 'The rigid inverse is computed in closed-form without numerical matrix inversion by exploiting the orthogonality of rotation submatrices (R^-1 = R^T).'
+              }
+              variables={[
+                { symbol: 'R', name: '3D Rotation Submatrix', unit: 'unitless', meaning: isId ? 'Submatriks 3x3 yang mengatur orientasi spasial' : '3x3 orthogonal spatial orientation matrix' },
+                { symbol: 'p', name: 'Translation Vector', unit: 'm', meaning: isId ? 'Vektor 3x1 posisi translasi [x, y, z]^T' : '3x1 spatial translation vector' },
+                { symbol: 'T^-1', name: 'Rigid Inverse', unit: 'unitless', meaning: isId ? 'Matriks transformasi arah sebaliknya' : 'Inverse coordinate transformation matrix' },
+              ]}
+              roboticsApplication={
+                isId
+                  ? 'Fondasi komputasi format TF di ROS / ROS2 dan kalibrasi kamera ke badan robot (Eye-to-Hand).'
+                  : 'Universal backbone of ROS/ROS2 TF transforms and hand-eye camera-to-robot coordinate calibration.'
+              }
+            />
           </div>
         </div>
       )}
@@ -388,22 +498,32 @@ export default function FundamentalsPage() {
               <span>{isId ? 'Bab 8: Pemodelan Status (State-Space) & Model Pengukuran' : 'Chapter 8: State-Space & Sensor Measurement Modeling'}</span>
             </div>
 
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">1. {isId ? 'Model Sistem Dinamik Non-Linear Diskrit' : 'Discrete Non-Linear System Modeling'}</h4>
-              <div className="mt-3">
-                <MathBlock
-                  latex="\mathbf{x}_{k} = f(\mathbf{x}_{k-1}, \mathbf{u}_{k}) + \mathbf{w}_k, \quad \mathbf{z}_k = h(\mathbf{x}_k) + \mathbf{v}_k"
-                  title={isId ? 'Persamaan Status & Pengukuran Sensor' : 'State Transition & Observation Model'}
-                />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">2. {isId ? 'Finite State Machine (FSM) Robotika Reaktif' : 'Finite State Machine (FSM) in Reactive Robotics'}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                {isId ? 'Model otomata berhingga yang mengatur transisi status robot (Search -> Avoid -> Follow) berdasarkan masukan event sensor.' : 'Finite automaton governing robot mode transitions (Search -> Avoid -> Follow) triggered by sensor events.'}
-              </p>
-            </div>
+            <FormulaExplainer
+              id="formula-bayes-model"
+              title={isId ? 'Model Status Diskrit & Pembaruan Teorema Bayes' : 'Discrete State-Space & Recursive Bayes Filter'}
+              latex="\mathbf{x}_{k} = f(\mathbf{x}_{k-1}, \mathbf{u}_{k}) + \mathbf{w}_k, \quad \text{bel}(\mathbf{x}_k) = \eta \cdot p(\mathbf{z}_k \mid \mathbf{x}_k) \int p(\mathbf{x}_k \mid \mathbf{u}_k, \mathbf{x}_{k-1}) \text{bel}(\mathbf{x}_{k-1}) d\mathbf{x}_{k-1}"
+              meaning={
+                isId
+                  ? 'Memperbarui probabilitas posisi robot dengan menggabungkan perintah gerak aktuator dan pembacaan sensor ber-noise secara rekursif.'
+                  : 'Recursively estimates robot pose probability by fusing actuator motion commands with noisy sensor measurements.'
+              }
+              whyExplanation={
+                isId
+                  ? 'Sensor dan aktuator dunia nyata tidak pernah 100% sempurna. Model probabilitas Bayes secara matematis memperhitungkan noise Gaussian untuk menghasilkan estimasi posisi yang paling mendekati kenyataan.'
+                  : 'Real sensors and actuators carry stochastic noise. Bayesian estimation mathematically filters uncertainty to extract maximum-likelihood true robot pose.'
+              }
+              variables={[
+                { symbol: 'x_k', name: 'State Vector', unit: 'm, rad', meaning: isId ? 'Status sejati robot pada langkah waktu k' : 'True robot state at timestep k' },
+                { symbol: 'u_k', name: 'Control Input', unit: 'm/s, rad/s', meaning: isId ? 'Perintah kendali yang dikirim ke motor' : 'Control command issued to actuators' },
+                { symbol: 'z_k', name: 'Sensor Measurement', unit: 'm', meaning: isId ? 'Data pengukuran yang terbaca oleh sensor' : 'Observation reading returned by sensors' },
+                { symbol: 'w_k, v_k', name: 'Process & Sensor Noise', unit: 'variance', meaning: isId ? 'Ketidakpastian acak Gaussian' : 'Stochastic Gaussian noise perturbations' },
+              ]}
+              roboticsApplication={
+                isId
+                  ? 'Jantung algoritma Extended Kalman Filter (EKF), Unscented Kalman Filter (UKF), dan Particle Filter (MCL) pada mobil otonom dan robot penjelajah Mars.'
+                  : 'The foundation of Extended Kalman Filters (EKF), UKF, and Monte Carlo localization on self-driving cars and planetary rovers.'
+              }
+            />
           </div>
         </div>
       )}
@@ -417,25 +537,32 @@ export default function FundamentalsPage() {
               <span>{isId ? 'Bab 9: Dinamika Robot, Gaya & Torsi' : 'Chapter 9: Robot Dynamics, Forces & Torques'}</span>
             </div>
 
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">1. {isId ? 'Persamaan Gerak Newton-Euler & Inersia' : 'Newton-Euler Equations of Motion'}</h4>
-              <div className="mt-3">
-                <MathBlock
-                  latex="\mathbf{F} = m \mathbf{a} = m \ddot{\mathbf{p}}, \quad \boldsymbol{\tau} = I \boldsymbol{\alpha} + \boldsymbol{\omega} \times (I \boldsymbol{\omega})"
-                  title={isId ? 'Persamaan Translasi & Rotasi Newton-Euler' : 'Newton-Euler Force & Torque Equations'}
-                />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">2. {isId ? 'Formulasi Dinamika Euler-Lagrange Manipulator' : 'Euler-Lagrange Manipulator Dynamics'}</h4>
-              <div className="mt-3">
-                <MathBlock
-                  latex="M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q}) = \boldsymbol{\tau} - \mathbf{f}_{friction}"
-                  title={isId ? 'Persamaan Dinamika Standar Manipulator' : 'Standard Manipulator Dynamic Equation'}
-                />
-              </div>
-            </div>
+            <FormulaExplainer
+              id="formula-euler-lagrange"
+              title={isId ? 'Persamaan Dinamika Manipulator Euler-Lagrange' : 'Euler-Lagrange Manipulator Dynamic Equations'}
+              latex="M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q}) = \boldsymbol{\tau} - \mathbf{f}_{friction}"
+              meaning={
+                isId
+                  ? 'Menghitung torsi motor (tau) yang diperlukan untuk menghasilkan percepatan sendi robot (q_ddot) dengan memperhitungkan massa inersia, gaya sentrifugal/Coriolis, dan gravitasi.'
+                  : 'Calculates the actuator joint torques (tau) required to produce acceleration (q_ddot) considering inertia, Coriolis forces, and gravity.'
+              }
+              whyExplanation={
+                isId
+                  ? 'Kinematika hanya melihat posisi dan kecepatan tanpa peduli massa. Dalam realitas fisik, robot yang membawa beban berat membutuhkan torsi motor yang jauh lebih besar untuk berakselerasi dan melawan gravitasi.'
+                  : 'Kinematics ignores mass and inertia. In physical systems, moving heavy payloads requires dynamic feedforward torque compensation against inertia and gravity.'
+              }
+              variables={[
+                { symbol: 'M(q)', name: 'Inertia Matrix', unit: 'kg·m²', meaning: isId ? 'Matriks massa dan inersia simetris positif definit' : 'Symmetric positive-definite mass/inertia matrix' },
+                { symbol: 'C(q, q_dot)', name: 'Coriolis & Centrifugal Matrix', unit: 'N·m·s/rad', meaning: isId ? 'Efek gaya sentrifugal akibat rotasi sendi bersamaan' : 'Velocity-dependent Coriolis and centrifugal effects' },
+                { symbol: 'g(q)', name: 'Gravity Vector', unit: 'N·m', meaning: isId ? 'Torsi yang dibutuhkan untuk menahan beban gravitasi bumi' : 'Joint torques required to balance gravitational loads' },
+                { symbol: 'tau (τ)', name: 'Actuator Torque', unit: 'N·m', meaning: isId ? 'Torsi yang diberikan oleh motor listrik ke sendi' : 'Torque delivered by electric motor actuators' },
+              ]}
+              roboticsApplication={
+                isId
+                  ? 'Digunakan pada kontroler torsi berbasis kompensasi gravitasi (Computed Torque Control) pada robot industri KUKA, ABB, dan robot humanoid.'
+                  : 'Implemented in computed torque controllers and model predictive controllers (MPC) on industrial arms and humanoid robots.'
+              }
+            />
           </div>
         </div>
       )}
