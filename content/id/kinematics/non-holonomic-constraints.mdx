@@ -1,0 +1,131 @@
+---
+id: non-holonomic-constraints
+title: Kendala Gerak Non-Holonomik & Bentuk Pfaffian (M07)
+slug: non-holonomic-constraints
+category: kinematics
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - differential-drive-kinematics
+  - 2d-rotation-matrices
+references:
+  - Steven M. LaValle (2006). Planning Algorithms (Chapter 13: Nonholonomic Planning). Cambridge University Press.
+  - Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Chapter 13). Cambridge University Press.
+components:
+  - HolonomicConstraintSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Kendala Gerak Non-Holonomik & Bentuk Pfaffian (M07)
+
+> "Mengapa mobil atau robot roda diferensial tidak bisa bergeser langsung ke samping saat parkir paralel, meskipun pada akhirnya mampu mencapai titik tersebut melalui serangkaian manuver maju-mundur?"
+
+Kendala mekanis pada sistem robotik diklasifikasikan menjadi **holonomik** (membatasi koordinat posisi konfigurasi secara langsung, $f(q) = 0$) atau **non-holonomik** (membatasi arah kecepatan sesaat tanpa mengurangi ruang jangkauan posisi jangka panjang, $A(q)\dot{q} = 0$).
+
+---
+
+## 1. Penurunan Rumus: Kendala Roda Tanpa-Selip Samping
+
+Pada robot roda diferensial atau mobil konvensional, roda menggelinding bebas ke arah depan, namun **dilarang tergelincir ke samping**:
+
+Pada kerangka acuan lokal bodi robot $\{R\}$, kecepatan samping lateral bernilai tepat nol:
+
+$$
+\dot{y}_R = 0
+$$
+
+Mentransformasikan vektor kecepatan global $(\dot{x}, \dot{y})$ ke kerangka lokal bodi melalui matriks rotasi $R(-\theta)$:
+
+$$
+\begin{bmatrix} \dot{x}_R \\ \dot{y}_R \end{bmatrix} = \begin{bmatrix} \cos\theta & \sin\theta \\ -\sin\theta & \cos\theta \end{bmatrix} \begin{bmatrix} \dot{x} \\ \dot{y} \end{bmatrix}
+$$
+
+Menyamakan baris kedua $\dot{y}_R = 0$ menghasilkan persamaan kanonikal **Kendala Kecepatan Pfaffian**:
+
+$$
+-\dot{x}\sin\theta + \dot{y}\cos\theta = 0
+$$
+
+Dalam bentuk matriks aljabar $A(q)\dot{q} = 0$ di mana $q = [x, y, \theta]^T$:
+
+$$
+\begin{bmatrix} -\sin\theta & \cos\theta & 0 \end{bmatrix} \begin{bmatrix} \dot{x} \\ \dot{y} \\ \dot{\theta} \end{bmatrix} = 0
+$$
+
+---
+
+## 2. Ketidakterintegralan & Keterkendalian (Lie Brackets)
+
+Persamaan diferensial kendala di atas tidak dapat diintegralkan menjadi fungsi posisi aljabar murni:
+
+$$
+\int (-\sin\theta \, dx + \cos\theta \, dy) \neq f(x, y, \theta)
+$$
+
+### 2.1 Medan Vektor Kendali
+Sistem robotik digerakkan oleh dua input kendali independen $u = [v, \omega]^T$:
+
+$$
+\dot{q} = g_1(q) v + g_2(q) \omega = \begin{bmatrix} \cos\theta \\ \sin\theta \\ 0 \end{bmatrix} v + \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix} \omega
+$$
+
+### 2.2 Operator Lie Bracket (Medan Parkir Paralel)
+Menghitung Lie bracket $[g_1, g_2] = \frac{\partial g_2}{\partial q} g_1 - \frac{\partial g_1}{\partial q} g_2$:
+
+$$
+[g_1, g_2] = \begin{bmatrix} \sin\theta \\ -\cos\theta \\ 0 \end{bmatrix}
+$$
+
+Vektor $[g_1, g_2]$ mengarah **tepat ke arah samping (lateral)**! Dengan melakukan osilasi maju ($g_1$) dan belok ($g_2$), robot dapat menghasilkan pergeseran samping (manuver parkir paralel). Berdasarkan **Teorema Chow-Rashevsky**, robot tetap memiliki keterkendalian penuh pada seluruh ruang konfigurasi $\mathbb{R}^2 \times S^1$.
+
+---
+
+## 3. Video Pembelajaran: Perencanaan Gerak Non-Holonomik
+
+<VideoEmbed
+  title="Nonholonomic Motion Planning — Prof. Steven LaValle"
+  videoId="W8wQ5Vvj1sA"
+/>
+
+---
+
+## 4. Simulator Interaktif Sistem Holonomik vs. Non-Holonomik
+
+Beralih antara mode **Holonomik (Omni/Mecanum)** dan **Non-Holonomik (Unicycle)**. Rasakan bagaimana robot non-holonomik terkunci strictly pada arah garis singgung sesaatnya:
+
+<HolonomicConstraintSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m07"
+  question="Mengapa mobil atau robot diferensial memerlukan manuver berulang (maju-belok-mundur) untuk parkir paralel di ruang sempit?"
+  options={[
+    {
+      id: "A",
+      text: "Karena kendala non-holonomik melarang kecepatan sesaat ke arah samping, sehingga membutuhkan gerakan Lie bracket (kombinasi bergantian antara translasi maju dan belok) untuk menghasilkan perpindahan posisi lateral.",
+      isCorrect: true,
+      explanation: "Tepat! Kendala Pfaffian membatasi vektor kecepatan sesaat, namun komposisi Lie bracket memungkinkan robot menjangkau seluruh orientasi konfigurasi melalui manuver bertahap."
+    },
+    {
+      id: "B",
+      text: "Karena transmisi mesin mobil hanya memiliki satu gigi rasio.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena mobil tidak memiliki rem.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan vektor Lie bracket [g1, g2] yang mengarah ke samping."
+/>

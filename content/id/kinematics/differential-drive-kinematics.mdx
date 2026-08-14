@@ -1,0 +1,126 @@
+---
+id: differential-drive-kinematics
+title: Kinematika Roda Diferensial & Pusat Kurvatur Seketika ICC (M06)
+slug: differential-drive-kinematics
+category: kinematics
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - vectors-and-coordinate-geometry
+  - 2d-rotation-matrices
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 5). Springer Open.
+  - Roland Siegwart, Illah R. Nourbakhsh, Davide Scaramuzza (2011). Introduction to Autonomous Mobile Robots (Chapter 3). MIT Press.
+components:
+  - KinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Kinematika Roda Diferensial & Pusat Kurvatur Seketika ICC (M06)
+
+> "Bagaimana kecepatan putar independen dari dua motor roda paralel diterjemahkan menjadi trajektori kecepatan linier dan radius belok robot bergerak?"
+
+Konfigurasi **unicycle roda diferensial** adalah arsitektur mekanis paling populer di dunia robotika bergerak otonom (AGV industri, robot logistik gudang, robot pembersih vakum, hingga robot edukasi).
+
+---
+
+## 1. Persamaan Kinematika Maju (*Forward Kinematics*)
+
+Misalkan $r$ adalah radius roda, $L$ adalah jarak sumbu antar roda (*track baseline*), dan $\omega_L, \omega_R$ adalah kecepatan sudut putar roda kiri dan kanan:
+
+### 1.1 Kecepatan Linier Masing-Masing Roda
+$$
+v_L = r \cdot \omega_L, \qquad v_R = r \cdot \omega_R
+$$
+
+### 1.2 Kecepatan Linier & Sudut Bodi Robot
+Kecepatan maju linier titik tengah bodi $v$ dan kecepatan sudut rotasi robot $\omega$ dirumuskan sebagai:
+
+$$
+\begin{aligned}
+v &= \frac{v_R + v_L}{2} = \frac{r}{2}(\omega_R + \omega_L) \\
+\omega &= \frac{v_R - v_L}{L} = \frac{r}{L}(\omega_R - \omega_L)
+\end{aligned}
+$$
+
+### 1.3 Propagasi Status dalam Koordinat Global Dunia
+Dalam sistem koordinat Kartesius global $(x, y, \theta)$:
+
+$$
+\begin{bmatrix} \dot{x} \\ \dot{y} \\ \dot{\theta} \end{bmatrix} = \begin{bmatrix} \cos\theta & 0 \\ \sin\theta & 0 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} v \\ \omega \end{bmatrix} = \begin{bmatrix} \frac{r}{2}(\omega_R + \omega_L)\cos\theta \\ \frac{r}{2}(\omega_R + \omega_L)\sin\theta \\ \frac{r}{L}(\omega_R - \omega_L) \end{bmatrix}
+$$
+
+---
+
+## 2. Penurunan Rumus: Instantaneous Center of Curvature (ICC)
+
+Saat robot diferensial berbelok ($\omega \neq 0$), kedua roda bergerak melingkari satu titik pusat sesaat bersama yang disebut **Instantaneous Center of Curvature (ICC)** pada garis sumbu roda.
+
+Radius belok $R$ dari pusat bodi ke titik ICC adalah:
+
+$$
+R = \frac{v}{\omega} = \frac{L}{2} \left( \frac{v_R + v_L}{v_R - v_L} \right)
+$$
+
+Koordinat global titik ICC dihitung dengan:
+
+$$
+\text{ICC} = \begin{bmatrix} x - R \sin\theta \\ y + R \cos\theta \end{bmatrix}
+$$
+
+### Tiga Rezim Gerak Utama:
+1. **$v_L = v_R$**: $\omega = 0, R = \infty \implies$ **Gerak lurus murni**.
+2. **$v_L = -v_R$**: $v = 0, R = 0 \implies$ **Rotasi berputar di tempat (*point turn*)**.
+3. **$v_L = 0, v_R > 0$**: $R = L/2 \implies$ **Berputar melingkari roda kiri yang diam**.
+
+---
+
+## 3. Video Pembelajaran: Kinematika Roda Diferensial & Odometri
+
+<VideoEmbed
+  title="Differential Drive Kinematics & Odometry — Mobile Robotics"
+  videoId="aE7RQNhwnZg"
+/>
+
+---
+
+## 4. Simulator Interaktif Kinematika Roda Diferensial
+
+Atur *slider* kecepatan roda kiri dan kanan ($v_L, v_R$). Amati trajektori lingkaran waktu-nyata, vektor kecepatan, dan pergeseran titik ICC:
+
+<KinematicsSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m06"
+  question="Jika sebuah robot roda diferensial dengan lebar sumbu L = 0.5m memiliki kecepatan roda v_L = -0.2 m/s dan v_R = +0.2 m/s, berapa kecepatan linier v dan kecepatan sudut omega robot?"
+  options={[
+    {
+      id: "A",
+      text: "v = 0.0 m/s (titik tengah robot diam) dan omega = +0.8 rad/s (berotasi murni berlawanan arah jarum jam di tempat).",
+      isCorrect: true,
+      explanation: "Tepat! v = (0.2 + (-0.2))/2 = 0 m/s, dan omega = (0.2 - (-0.2))/0.5 = 0.4 / 0.5 = 0.8 rad/s."
+    },
+    {
+      id: "B",
+      text: "v = 0.2 m/s dan omega = 0 rad/s.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "v = 0.4 m/s dan omega = 1.0 rad/s.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Gunakan rumus v = (v_R + v_L)/2 dan omega = (v_R - v_L)/L."
+/>

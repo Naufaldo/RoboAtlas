@@ -23,6 +23,8 @@ import { PidTuningSimulator } from '@/components/simulation/PidTuningSimulator';
 import { OdometryDriftSimulator } from '@/components/simulation/OdometryDriftSimulator';
 import { CspaceInflationSimulator } from '@/components/simulation/CspaceInflationSimulator';
 import { BayesianFilterSimulator } from '@/components/simulation/BayesianFilterSimulator';
+import { TransformChainSimulator } from '@/components/simulation/TransformChainSimulator';
+import { HolonomicConstraintSimulator } from '@/components/simulation/HolonomicConstraintSimulator';
 import { ConceptCheck } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
@@ -223,6 +225,16 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<BayesianFilterSimulator')) {
         nodes.push(<BayesianFilterSimulator key={`comp-bfs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<TransformChainSimulator')) {
+        nodes.push(<TransformChainSimulator key={`comp-tcs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<HolonomicConstraintSimulator')) {
+        nodes.push(<HolonomicConstraintSimulator key={`comp-hcs-${i}`} />);
         i++;
         continue;
       }

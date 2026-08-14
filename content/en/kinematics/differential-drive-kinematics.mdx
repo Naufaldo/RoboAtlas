@@ -1,0 +1,126 @@
+---
+id: differential-drive-kinematics
+title: Differential Drive Kinematics & Instantaneous Center of Curvature (M06)
+slug: differential-drive-kinematics
+category: kinematics
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - vectors-and-coordinate-geometry
+  - 2d-rotation-matrices
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 5). Springer Open.
+  - Roland Siegwart, Illah R. Nourbakhsh, Davide Scaramuzza (2011). Introduction to Autonomous Mobile Robots (Chapter 3). MIT Press.
+components:
+  - KinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Differential Drive Kinematics & Instantaneous Center of Curvature (M06)
+
+> "How do independent rotational speeds of two parallel motorized wheels translate into the 2D linear trajectory and turning curvature of a mobile robot?"
+
+The **differential drive unicycle** is the most widely deployed chassis configuration in autonomous mobile robotics (AGVs, warehouse robots, robotic vacuum cleaners, and educational rovers).
+
+---
+
+## 1. Forward Kinematic Equations
+
+Let $r$ be the wheel radius, $L$ the axle track width (baseline distance between wheels), and $\omega_L, \omega_R$ the angular velocities of the left and right wheels:
+
+### 1.1 Individual Wheel Linear Velocities
+$$
+v_L = r \cdot \omega_L, \qquad v_R = r \cdot \omega_R
+$$
+
+### 1.2 Robot Chassis Linear and Angular Velocities
+The robot chassis midpoint forward speed $v$ and counter-clockwise rotational velocity $\omega$ are:
+
+$$
+\begin{aligned}
+v &= \frac{v_R + v_L}{2} = \frac{r}{2}(\omega_R + \omega_L) \\
+\omega &= \frac{v_R - v_L}{L} = \frac{r}{L}(\omega_R - \omega_L)
+\end{aligned}
+$$
+
+### 1.3 State Propagation in World Coordinates
+In global Cartesian coordinates $(x, y, \theta)$:
+
+$$
+\begin{bmatrix} \dot{x} \\ \dot{y} \\ \dot{\theta} \end{bmatrix} = \begin{bmatrix} \cos\theta & 0 \\ \sin\theta & 0 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} v \\ \omega \end{bmatrix} = \begin{bmatrix} \frac{r}{2}(\omega_R + \omega_L)\cos\theta \\ \frac{r}{2}(\omega_R + \omega_L)\sin\theta \\ \frac{r}{L}(\omega_R - \omega_L) \end{bmatrix}
+$$
+
+---
+
+## 2. Derivation: Instantaneous Center of Curvature (ICC)
+
+When a differential robot turns ($\omega \neq 0$), both wheels must rotate around a common instantaneous pivot point called the **Instantaneous Center of Curvature (ICC)** lying on the common wheel axis.
+
+The turn radius $R$ from the chassis center to the ICC is:
+
+$$
+R = \frac{v}{\omega} = \frac{L}{2} \left( \frac{v_R + v_L}{v_R - v_L} \right)
+$$
+
+The global coordinates of the ICC are:
+
+$$
+\text{ICC} = \begin{bmatrix} x - R \sin\theta \\ y + R \cos\theta \end{bmatrix}
+$$
+
+### Three Canonical Operating Regimes:
+1. **$v_L = v_R$**: $\omega = 0, R = \infty \implies$ **Pure straight motion**.
+2. **$v_L = -v_R$**: $v = 0, R = 0 \implies$ **In-place point turn**.
+3. **$v_L = 0, v_R > 0$**: $R = L/2 \implies$ **Pivot turn about the stationary left wheel**.
+
+---
+
+## 3. Video Lecture: Differential Drive Kinematics & Odometry
+
+<VideoEmbed
+  title="Differential Drive Kinematics & Odometry — Mobile Robotics"
+  videoId="aE7RQNhwnZg"
+/>
+
+---
+
+## 4. Interactive Differential Drive Simulator
+
+Control the left and right wheel velocities ($v_L, v_R$) using the sliders below. Observe the real-time circular trajectory, velocity vectors, and ICC location:
+
+<KinematicsSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m06"
+  question="If a differential drive robot with track width L = 0.5m has wheel speeds v_L = -0.2 m/s and v_R = +0.2 m/s, what is its linear velocity v and angular velocity omega?"
+  options={[
+    {
+      id: "A",
+      text: "v = 0.0 m/s (chassis stationary in position) and omega = +0.8 rad/s (pure counter-clockwise rotation in place).",
+      isCorrect: true,
+      explanation: "Exact! v = (0.2 + (-0.2))/2 = 0 m/s, and omega = (0.2 - (-0.2))/0.5 = 0.4 / 0.5 = 0.8 rad/s."
+    },
+    {
+      id: "B",
+      text: "v = 0.2 m/s and omega = 0 rad/s.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "v = 0.4 m/s and omega = 1.0 rad/s.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Use the formula v = (v_R + v_L)/2 and omega = (v_R - v_L)/L."
+/>

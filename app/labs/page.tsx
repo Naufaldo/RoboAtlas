@@ -22,6 +22,8 @@ import { PidTuningSimulator } from '@/components/simulation/PidTuningSimulator';
 import { OdometryDriftSimulator } from '@/components/simulation/OdometryDriftSimulator';
 import { CspaceInflationSimulator } from '@/components/simulation/CspaceInflationSimulator';
 import { BayesianFilterSimulator } from '@/components/simulation/BayesianFilterSimulator';
+import { TransformChainSimulator } from '@/components/simulation/TransformChainSimulator';
+import { HolonomicConstraintSimulator } from '@/components/simulation/HolonomicConstraintSimulator';
 import {
   Compass,
   Cpu,
@@ -261,6 +263,30 @@ export default function LabsPage() {
       icon: '📈',
       lessonHref: '/learn/estimation/bayes-filter-and-kalman',
       component: <BayesianFilterSimulator />,
+    },
+    {
+      id: 'transform-composition',
+      category: 'math',
+      titleEn: 'Transform Composition & Matrix Non-Commutativity',
+      titleId: 'Komposisi Transformasi & Sifat Non-Komutatif',
+      descEn: 'Compare final poses between T1*T2 vs T2*T1 to understand spatial frame chaining.',
+      descId: 'Bandingkan pose akhir antara T1*T2 vs T2*T1 untuk memahami rantai kerangka spasial.',
+      levelBadge: 'Level 2',
+      icon: '📐',
+      lessonHref: '/learn/geometry/transform-composition-and-chains',
+      component: <TransformChainSimulator />,
+    },
+    {
+      id: 'holonomic-constraints',
+      category: 'kinematics',
+      titleEn: 'Holonomic vs Non-Holonomic Motion Constraints',
+      titleId: 'Kendala Gerak Holonomik vs Non-Holonomik',
+      descEn: 'Experience why differential unicycles cannot slide sideways due to Pfaffian constraints.',
+      descId: 'Rasakan mengapa robot diferensial tidak dapat meluncur ke samping karena kendala Pfaffian.',
+      levelBadge: 'Level 3',
+      icon: '🚫',
+      lessonHref: '/learn/kinematics/non-holonomic-constraints',
+      component: <HolonomicConstraintSimulator />,
     },
     {
       id: 'multi-agent-swarm',

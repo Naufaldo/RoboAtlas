@@ -1,0 +1,115 @@
+---
+id: sensor-noise-and-uncertainty
+title: Model Derau Sensor, Ketidakpastian Gaussian & Kerapatan Probabilitas (M08)
+slug: sensor-noise-and-uncertainty
+category: sensors
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - vectors-and-coordinate-geometry
+  - sensor-fundamentals
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 2 & 6). MIT Press.
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 4). Springer Open.
+components:
+  - SensorNoiseSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Model Derau Sensor, Ketidakpastian Gaussian & Kerapatan Probabilitas (M08)
+
+> "Tidak ada sensor fisik di dunia nyata yang 100% sempurna. Bagaimana cara memodelkan derau pengukuran secara matematis agar robot mampu membedakan kondisi sebenarnya dari sinyal palsu?"
+
+Dalam robotika dunia nyata, sensor (LiDAR, ultrasonik, enkoder optik roda, IMU, GPS) selalu terpapar fluktuasi termal acak, galat kuantisasi digital, dan gangguan lingkungan fisik.
+
+---
+
+## 1. Model Pengukuran Aditif
+
+Hubungan antara status posisi fisik sebenarnya $x$ dan nilai pembacaan sensor $z$ dimodelkan sebagai:
+
+$$
+z = h(x) + b + \epsilon
+$$
+
+Di mana:
+- $h(x)$ adalah fungsi pengukuran fisik ideal.
+- $b$ adalah **bias sistematik** konstan (galat pergeseran titik nol / *offset error*).
+- $\epsilon \sim \mathcal{N}(0, \sigma^2)$ adalah **derau acak Gaussian** dengan rata-rata nol dan variansi $\sigma^2$.
+
+---
+
+## 2. Penurunan Rumus: Fungsi Kerapatan Probabilitas Gaussian (PDF)
+
+Berdasarkan **Teorema Limit Pusat (*Central Limit Theorem*)**, gabungan berbagai sumber derau mikroskopis acak terakumulasi menjadi kurva distribusi normal (Gaussian):
+
+$$
+p(z \mid x) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(z - h(x) - b)^2}{2\sigma^2} \right)
+$$
+
+### Statistik Sampel (Estimasi Empiris)
+Dari $N$ data sampel sensor yang tercatat $z_1, z_2, \dots, z_N$:
+
+$$
+\begin{aligned}
+\text{Rata-rata Sampel } \bar{z} &= \frac{1}{N} \sum_{i=1}^N z_i \\
+\text{Variansi Sampel } s^2 &= \frac{1}{N-1} \sum_{i=1}^N (z_i - \bar{z})^2
+\end{aligned}
+$$
+
+### Interval Kepercayaan (*Empirical Rule*):
+- **Tingkat Keyakinan $1\sigma$**: $68.27\%$ sampel berada pada rentang $[\mu - \sigma, \mu + \sigma]$.
+- **Tingkat Keyakinan $2\sigma$**: $95.45\%$ sampel berada pada rentang $[\mu - 2\sigma, \mu + 2\sigma]$.
+- **Tingkat Keyakinan $3\sigma$**: $99.73\%$ sampel berada pada rentang $[\mu - 3\sigma, \mu + 3\sigma]$.
+
+---
+
+## 3. Video Pembelajaran: Model Pengukuran Sensor & Robotika Probabilistik
+
+<VideoEmbed
+  title="Probabilistic Robotics: Sensor Measurement Models"
+  videoId="Tbcw8P9lG0Y"
+/>
+
+---
+
+## 4. Simulator Interaktif Derau Sensor & Distribusi Gaussian
+
+Atur jarak *ground truth*, bias sistematik $b$, dan deviasi standar derau $\sigma$. Amati histogram sampel data nyata yang mencocokkan kurva lonceng Gaussian teoretis:
+
+<SensorNoiseSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m08"
+  question="Jika sebuah sensor jarak ultrasonik memiliki bias sistematik b = +0.10m dan variansi derau acak sigma^2 = 0.01m^2 (sigma = 0.10m), apa hasil dari merata-ratakan 10.000 data sampel pengukuran?"
+  options={[
+    {
+      id: "A",
+      text: "Perhitungan rata-rata akan menekan fluktuasi derau acak mendekati nol (sigma / sqrt(N)), namun TIDAK AKAN menghilangkan bias sistematik b = +0.10m tanpa kalibrasi eksplisit pada perangkat lunak.",
+      isCorrect: true,
+      explanation: "Tepat! Hukum bilangan besar mereduksi fluktuasi acak ber-rata-rata nol, namun offset bias konstan tetap melekat sampai dikurangi secara terprogram melalui kalibrasi sensor."
+    },
+    {
+      id: "B",
+      text: "Merata-ratakan sampel akan menghilangkan seluruh bias dan derau secara sempurna menjadi 0.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Merata-ratakan sampel membuat derau semakin besar.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan perbedaan antara derau acak rata-rata nol dan konstanta offset bias."
+/>

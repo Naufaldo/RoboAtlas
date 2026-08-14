@@ -1,0 +1,121 @@
+---
+id: transform-composition-and-chains
+title: Komposisi Transformasi, Sifat Non-Komutatif & Rantai Kinematik (M05)
+slug: transform-composition-and-chains
+category: geometry
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - coordinate-frames-and-transforms
+  - 2d-rotation-matrices
+references:
+  - John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 2). Pearson.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 2). Springer.
+components:
+  - TransformChainSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Komposisi Transformasi, Sifat Non-Komutatif & Rantai Kinematik (M05)
+
+> "Dalam urutan apa robot harus mengalikan matriks transformasi untuk menghitung posisi ujung aktuator (end-effector) atau sensor terhadap peta dunia?"
+
+Ketika membangun rantai kinematika maju untuk lengan robotik artikulasi atau menyusun transformasi bertingkat pada kendaraan otonom (seperti Map $\to$ Odom $\to$ Base Link $\to$ Camera), urutan perkalian matriks bersifat sangat krusial.
+
+---
+
+## 1. Aturan Perkalian-Kanan (Post) vs. Perkalian-Kiri (Pre)
+
+Dalam geometri spasial, perkalian matriks bersifat **non-komutatif**:
+
+$$
+T_1 T_2 \neq T_2 T_1
+$$
+
+### 1.1 Post-Multiplication (Transformasi Terhadap Kerangka Lokal Berurutan)
+Ketika setiap translasi atau rotasi berikutnya dilakukan **relatif terhadap kerangka acuan lokal yang baru saja terbentuk**:
+
+$$
+T_{\text{akhir}} = T_1 \cdot T_2 \cdot T_3 \cdots T_n
+$$
+
+*(Kita mengalikan matriks baru dari sisi kanan. Ini adalah standar pada kinematika maju Denavit-Hartenberg).*
+
+### 1.2 Pre-Multiplication (Transformasi Terhadap Kerangka Acuan Dunia Tetap)
+Ketika transformasi dilakukan **relatif terhadap kerangka acuan global dunia $\{W\}$ yang statis**:
+
+$$
+T_{\text{akhir}} = T_n \cdots T_3 \cdot T_2 \cdot T_1
+$$
+
+*(Kita mengalikan matriks baru dari sisi kiri).*
+
+---
+
+## 2. Penurunan Rumus: Membedakan $T_{\text{trans}} T_{\text{rot}}$ vs. $T_{\text{rot}} T_{\text{trans}}$
+
+Tinjau matriks translasi murni $T_{\text{trans}}(\mathbf{t})$ dan matriks rotasi murni $T_{\text{rot}}(\theta)$:
+
+### Urutan A: Translasi Dahulu, Lalu Rotasi ($T_A = T_{\text{trans}} \cdot T_{\text{rot}}$)
+$$
+T_A = \begin{bmatrix} I & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix} \begin{bmatrix} R(\theta) & \mathbf{0} \\ \mathbf{0}^T & 1 \end{bmatrix} = \begin{bmatrix} R(\theta) & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix}
+$$
+Titik pangkal kerangka berpindah ke $\mathbf{t}$, lalu berotasi di tempat pada posisi $\mathbf{t}$.
+
+### Urutan B: Rotasi Dahulu, Lalu Translasi di Dunia ($T_B = T_{\text{rot}} \cdot T_{\text{trans}}$)
+$$
+T_B = \begin{bmatrix} R(\theta) & \mathbf{0} \\ \mathbf{0}^T & 1 \end{bmatrix} \begin{bmatrix} I & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix} = \begin{bmatrix} R(\theta) & R(\theta)\mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix}
+$$
+Titik pangkal kerangka ikut **terotasi** sebesar $\theta$ ke posisi koordinat baru $R(\theta)\mathbf{t}$, menghasilkan lokasi fisik yang sama sekali berbeda!
+
+---
+
+## 3. Video Pembelajaran: Transformasi 2D & Komposisi Matriks
+
+<VideoEmbed
+  title="2D Transformations and Matrix Composition — Robot Academy"
+  videoId="N2a1Vq3P-7U"
+/>
+
+---
+
+## 4. Simulator Interaktif Rantai Transformasi
+
+Atur translasi $(\Delta x, \Delta y)$ dan sudut rotasi $\theta$. Saksikan perbedaan nyata posisi spasial akhir antara **Urutan A** (Sian) dan **Urutan B** (Amber):
+
+<TransformChainSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m05"
+  question="Jika sebuah robot bergerak translasi sejauh (10m, 0m) lalu melakukan rotasi 90 derajat berlawanan arah jarum jam terhadap kerangka lokal barunya, di manakah titik koordinat akhir robot?"
+  options={[
+    {
+      id: "A",
+      text: "Pada koordinat (x = 10m, y = 0m) dengan orientasi menghadap ke utara (+90 derajat).",
+      isCorrect: true,
+      explanation: "Tepat! Translasi awal memindahkan titik ke (10, 0), lalu rotasi kerangka lokal memutar orientasi robot menjadi 90 derajat tanpa menggeser posisi titik (10, 0)."
+    },
+    {
+      id: "B",
+      text: "Pada koordinat (x = 0m, y = 10m) menghadap ke timur.",
+      isCorrect: false,
+      explanation: "Salah. Posisi tersebut terjadi jika rotasi dilakukan terlebih dahulu sebelum translasi di dunia."
+    },
+    {
+      id: "C",
+      text: "Kembali ke titik awal (0, 0).",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan proses translasi terlebih dahulu ke titik baru, lalu berputar di tempat."
+/>

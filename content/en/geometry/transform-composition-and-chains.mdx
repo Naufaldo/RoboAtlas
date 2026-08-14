@@ -1,0 +1,121 @@
+---
+id: transform-composition-and-chains
+title: Transform Composition, Matrix Non-Commutativity & Kinematic Chains (M05)
+slug: transform-composition-and-chains
+category: geometry
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - coordinate-frames-and-transforms
+  - 2d-rotation-matrices
+references:
+  - John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 2). Pearson.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 2). Springer.
+components:
+  - TransformChainSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Transform Composition, Matrix Non-Commutativity & Kinematic Chains (M05)
+
+> "In what sequence should a robot multiply transformation matrices to calculate where an end-effector or onboard sensor is relative to the world map?"
+
+When building kinematic chains for articulated robot arms or cascading transformations in autonomous vehicles (e.g. Map $\to$ Odom $\to$ Base Link $\to$ Camera), the order of matrix multiplication is fundamental.
+
+---
+
+## 1. Post-Multiplication vs. Pre-Multiplication Rules
+
+In spatial geometry, matrix multiplication is **non-commutative**:
+
+$$
+T_1 T_2 \neq T_2 T_1
+$$
+
+### 1.1 Post-Multiplication (Local Frame Successive Transformations)
+When every subsequent translation or rotation occurs **relative to the newly transformed local coordinate frame**:
+
+$$
+T_{\text{final}} = T_1 \cdot T_2 \cdot T_3 \cdots T_n
+$$
+
+*(We multiply on the right. This is standard in forward kinematics and Denavit-Hartenberg conventions).*
+
+### 1.2 Pre-Multiplication (Fixed World Frame Transformations)
+When transformations occur **relative to the static, unmoving global World frame $\{W\}$**:
+
+$$
+T_{\text{final}} = T_n \cdots T_3 \cdot T_2 \cdot T_1
+$$
+
+*(We multiply on the left).*
+
+---
+
+## 2. Derivation: Visualizing $T_{\text{trans}} T_{\text{rot}}$ vs. $T_{\text{rot}} T_{\text{trans}}$
+
+Consider a pure translation matrix $T_{\text{trans}}(\mathbf{t})$ and a pure rotation matrix $T_{\text{rot}}(\theta)$:
+
+### Order A: Translate First, Then Rotate ($T_A = T_{\text{trans}} \cdot T_{\text{rot}}$)
+$$
+T_A = \begin{bmatrix} I & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix} \begin{bmatrix} R(\theta) & \mathbf{0} \\ \mathbf{0}^T & 1 \end{bmatrix} = \begin{bmatrix} R(\theta) & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix}
+$$
+The origin moves to $\mathbf{t}$, and the frame rotates in place at position $\mathbf{t}$.
+
+### Order B: Rotate First, Then Translate in World ($T_B = T_{\text{rot}} \cdot T_{\text{trans}}$)
+$$
+T_B = \begin{bmatrix} R(\theta) & \mathbf{0} \\ \mathbf{0}^T & 1 \end{bmatrix} \begin{bmatrix} I & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix} = \begin{bmatrix} R(\theta) & R(\theta)\mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix}
+$$
+The origin position is **rotated** by $\theta$ to the new coordinate $R(\theta)\mathbf{t}$, ending up in a completely different location in space!
+
+---
+
+## 3. Video Lecture: 2D Transformations & Matrix Composition
+
+<VideoEmbed
+  title="2D Transformations and Matrix Composition — Robot Academy"
+  videoId="N2a1Vq3P-7U"
+/>
+
+---
+
+## 4. Interactive Transform Chain Laboratory
+
+Adjust the translation $(\Delta x, \Delta y)$ and rotation angle $\theta$. Observe the stark difference in final spatial positions between **Order A** (Cyan) and **Order B** (Amber):
+
+<TransformChainSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m05"
+  question="If you apply a translation of (10m, 0m) followed by a 90-degree counter-clockwise rotation about the new local frame, where does the frame origin end up?"
+  options={[
+    {
+      id: "A",
+      text: "At (x = 10m, y = 0m) facing upwards (+90 deg).",
+      isCorrect: true,
+      explanation: "Exact! Translating first moves the frame to (10, 0), and rotating about the local frame changes its heading to +90 degrees while staying at (10, 0)."
+    },
+    {
+      id: "B",
+      text: "At (x = 0m, y = 10m) facing east.",
+      isCorrect: false,
+      explanation: "Incorrect. That would happen if you rotated 90 degrees first and then translated along the world X axis."
+    },
+    {
+      id: "C",
+      text: "At (0, 0).",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about translating first, then rotating about the new local origin."
+/>

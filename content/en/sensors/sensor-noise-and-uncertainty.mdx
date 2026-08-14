@@ -1,0 +1,115 @@
+---
+id: sensor-noise-and-uncertainty
+title: Sensor Noise Models, Gaussian Uncertainty & Probability Density (M08)
+slug: sensor-noise-and-uncertainty
+category: sensors
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - vectors-and-coordinate-geometry
+  - sensor-fundamentals
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 2 & 6). MIT Press.
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 4). Springer Open.
+components:
+  - SensorNoiseSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Sensor Noise Models, Gaussian Uncertainty & Probability Density (M08)
+
+> "No physical sensor is ever 100% perfect. How do we model measurement noise mathematically so our robot can distinguish true state from sensor corruption?"
+
+In real-world robotics, sensors (LiDAR, ultrasonic, optical encoders, IMU, GPS) are corrupted by physical thermal fluctuations, quantization errors, and environmental interference.
+
+---
+
+## 1. The Additive Measurement Model
+
+The relationship between ground-truth state $x$ and actual sensor reading $z$ is:
+
+$$
+z = h(x) + b + \epsilon
+$$
+
+Where:
+- $h(x)$ is the ideal physical measurement function.
+- $b$ is the constant or slow-drifting **systematic bias** (e.g., zero-offset error).
+- $\epsilon \sim \mathcal{N}(0, \sigma^2)$ is the zero-mean random **Gaussian noise** with variance $\sigma^2$.
+
+---
+
+## 2. Derivation: The Gaussian Probability Density Function (PDF)
+
+By the **Central Limit Theorem**, compounding microscopic physical noise sources aggregate into a normal (Gaussian) distribution:
+
+$$
+p(z \mid x) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(z - h(x) - b)^2}{2\sigma^2} \right)
+$$
+
+### Sample Statistics (Empirical Estimation)
+Given $N$ recorded sensor samples $z_1, z_2, \dots, z_N$:
+
+$$
+\begin{aligned}
+\text{Sample Mean } \bar{z} &= \frac{1}{N} \sum_{i=1}^N z_i \\
+\text{Sample Variance } s^2 &= \frac{1}{N-1} \sum_{i=1}^N (z_i - \bar{z})^2
+\end{aligned}
+$$
+
+### Confidence Intervals (Empirical Rule):
+- **$1\sigma$ Confidence**: $68.27\%$ of readings lie within $[\mu - \sigma, \mu + \sigma]$.
+- **$2\sigma$ Confidence**: $95.45\%$ of readings lie within $[\mu - 2\sigma, \mu + 2\sigma]$.
+- **$3\sigma$ Confidence**: $99.73\%$ of readings lie within $[\mu - 3\sigma, \mu + 3\sigma]$.
+
+---
+
+## 3. Video Lecture: Sensor Measurement Models & Probabilistic Robotics
+
+<VideoEmbed
+  title="Probabilistic Robotics: Sensor Measurement Models"
+  videoId="Tbcw8P9lG0Y"
+/>
+
+---
+
+## 4. Interactive Sensor Noise & Gaussian Distribution Simulator
+
+Adjust the ground truth distance, systematic bias $b$, and noise standard deviation $\sigma$. Observe the sample histogram fit against the theoretical Gaussian bell curve:
+
+<SensorNoiseSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m08"
+  question="If an ultrasonic range sensor has a systematic bias b = +0.10m and random variance sigma^2 = 0.01m^2 (sigma = 0.10m), what will averaging 10,000 samples achieve?"
+  options={[
+    {
+      id: "A",
+      text: "Averaging reduces the random noise variance towards zero (sigma / sqrt(N)), but DOES NOT remove the systematic bias b = +0.10m without explicit sensor calibration.",
+      isCorrect: true,
+      explanation: "Exact! The law of large numbers averages out zero-mean random fluctuations, but constant bias remains unchanged unless subtracted by software calibration."
+    },
+    {
+      id: "B",
+      text: "Averaging removes all bias and noise completely.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Averaging increases the sensor noise.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the difference between random zero-mean noise and constant systematic offset."
+/>
