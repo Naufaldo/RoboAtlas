@@ -2,22 +2,16 @@
 
 All notable changes to the **RoboAtlas** project are tracked in the root [`CHANGELOG.md`](../CHANGELOG.md).
 
-## Current Version:## [0.4.0] - 2026-08-14
+## Current Version: [0.4.0] - 2026-08-14
 
 ### Added
-- **10-Level Master Robotics Curriculum Hierarchy** (`docs/RoboAtlas_Master_Curriculum.md`):
-  - Progressive learning dependency graph organized into 10 structured levels:
-    - **Level 0**: Robotics Orientation (Sense-Plan-Act & Taxonomy)
-    - **Level 1**: Mathematical Foundations ($SE(2)$, $SO(3)$, Quaternions, Probability)
-    - **Level 2**: Computational Foundations & Graph Theory
-    - **Level 3**: Robot Kinematics & Velocity Modeling (Unicycle, Jacobians)
-    - **Level 4**: Sensing, Perception & LiDAR Raycasting
-    - **Level 5**: Probabilistic Localization & Occupancy Grid Mapping
-    - **Level 6**: Path Planning & Trajectory Generation ($A^*$, Dijkstra, Splines)
-    - **Level 7**: Feedback Control & Dynamic Robotics (Pure Pursuit, Stanley)
-    - **Level 8**: SLAM & Spatial Autonomy (ICP Scan Registration, SVD)
-    - **Level 9**: Multi-Agent & Swarm Intelligence (Laplacian Consensus)
-  - Interactive dual-view dashboard in `/learn` (Progressive 10-Level Pathway vs. Domain Laboratories).
+- **21-Level Master Robotics Curriculum Hierarchy v1.0** (`docs/RoboAtlas_Master_Curriculum_v1.md`):
+  - Progressive learning dependency graph organized across 4 primary tiers and 21 technical levels (Levels 0 through 20):
+    - **Tier 1 (Foundations)**: Level 0 (Orientation), Level 1 (Math Foundations), Level 2 (Coordinate Frames), Level 3 (Kinematics), Level 4 (Differential Motion).
+    - **Tier 2 (Core Autonomy)**: Level 5 (Sensors & Perception), Level 6 (Path Planning), Level 7 (Dynamics & Control), Level 8 (Localization & Estimation).
+    - **Tier 3 (Spatial Intelligence & SLAM)**: Level 9 (Occupancy Mapping), Level 10 (SLAM), Level 11 (Integrated Navigation), Level 12 (Autonomous Systems).
+    - **Tier 4 (Advanced Embodiments & Specializations)**: Level 13 (ROS 2), Level 14 (Manipulation), Level 15 (Aerial), Level 16 (Legged), Level 17 (Learning/RL), Level 18 (Multi-Agent Swarms), Level 19 (Lie Groups), Level 20 (Research Topics).
+  - Interactive dual-view dashboard in `/learn` (21-Level Tiered Pathway vs. Domain Laboratories).
 - **Canonical MDX Content Architecture** (`docs/RoboAtlas_MDX_Content_Architecture.md`):
   - Structured content directory layout (`content/en/` and `content/id/`) across learning domains.
   - Standardized YAML frontmatter schema with stable cross-language lesson IDs.

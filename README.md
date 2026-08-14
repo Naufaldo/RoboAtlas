@@ -15,7 +15,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License MIT" /></a>
   <img src="https://img.shields.io/badge/Bilingual-EN%20%7C%20ID-8b5cf6?style=for-the-badge" alt="Bilingual EN | ID" />
   <img src="https://img.shields.io/badge/Theme-Dark%20%2F%20Light-f59e0b?style=for-the-badge" alt="Dual Theme" />
-  <img src="https://img.shields.io/badge/Curriculum-10_Levels_(0--9)-cyan?style=for-the-badge" alt="10-Level Master Curriculum" />
+  <img src="https://img.shields.io/badge/Curriculum-21_Levels_(0--20)-cyan?style=for-the-badge" alt="21-Level Master Curriculum" />
   <img src="https://img.shields.io/badge/Content-MDX_Canonical-3b82f6?style=for-the-badge" alt="MDX Canonical" />
   <img src="https://img.shields.io/badge/Mobile-Touch_Optimized-ec4899?style=for-the-badge" alt="Mobile Touch Optimized" />
 </p>
@@ -35,46 +35,40 @@ RoboAtlas re-imagines robotics education as an original **TypeScript-native inte
 
 ---
 
-## 🎓 10-Level Master Robotics Curriculum Hierarchy
+## 🎓 21-Level Master Robotics Curriculum Hierarchy (v1.0)
 
-Organized at **[`/learn`](https://naufaldo.github.io/RoboAtlas/learn/)** as a progressive dependency graph from physical intuition to full swarm autonomy:
+Organized at **[`/learn`](https://naufaldo.github.io/RoboAtlas/learn/)** and specified in **[`docs/RoboAtlas_Master_Curriculum_v1.md`](docs/RoboAtlas_Master_Curriculum_v1.md)** across 4 progressive learning tiers:
 
 ```text
-LEVEL 0: Robotics Orientation (Sense-Plan-Act & Robot Anatomy)
-   ↓
-LEVEL 1: Mathematical Foundations (Vectors, SE(2)/SE(3), Quaternions, Probability)
-   ↓
-LEVEL 2: Computational Foundations (Numerical Errors, Graph Search, Priority Queues)
-   ↓
-LEVEL 3: Robot Kinematics & Modeling (Unicycle, Non-Holonomic Constraints, Jacobians)
-   ↓
-LEVEL 4: Sensing & Perception (Encoders, IMU, LiDAR Raycasting, Noise Distributions)
-   ↓
-LEVEL 5: Localization & Mapping (Monte Carlo MCL, Log-Odds Occupancy Grids)
-   ↓
-LEVEL 6: Path Planning & Navigation (Dijkstra, A*, Admissible Heuristics, Splines)
-   ↓
-LEVEL 7: Control & Dynamic Robotics (Pure Pursuit, Stanley Feedback, Newton-Euler)
-   ↓
-LEVEL 8: SLAM & Spatial Autonomy (ICP Scan Matching, Closed-Form SVD)
-   ↓
-LEVEL 9: Multi-Agent & Swarm Intelligence (Graph Laplacian Consensus, Formations)
+TIER 1: FOUNDATIONS (LEVELS 0 – 4)
+Level 0: Robotics Orientation (Sense-Plan-Act & Robot Anatomy)
+Level 1: Mathematical & Geometric Foundations (Scalars, Vectors, Matrices, Probability)
+Level 2: Coordinate Frames & Transformations (SE(2)/SE(3) Homogeneous Transforms)
+Level 3: Robot Modeling & Kinematics (Differential Unicycle, ICC, Forward/Inverse Kinematics)
+Level 4: Robot Motion & Differential Geometry (Spatial Twists, Geometric Jacobians)
+
+TIER 2: CORE AUTONOMY (LEVELS 5 – 8)
+Level 5: Sensors & Perception (Encoders, IMU, LiDAR Raycasting, Noise Models)
+Level 6: Path & Trajectory Planning (Dijkstra, A*, C-Space, RRT, Quintic Splines)
+Level 7: Robot Dynamics & Control (Pure Pursuit, Stanley Feedback, Newton-Euler)
+Level 8: Localization & State Estimation (Recursive Bayes, Monte Carlo MCL, EKF)
+
+TIER 3: SPATIAL INTELLIGENCE & SLAM (LEVELS 9 – 12)
+Level 9: Spatial Mapping & Costmaps (Log-Odds Grid, Distance Transforms, Inflation)
+Level 10: Simultaneous Localization & Mapping (SLAM, ICP Scan Matching, SVD)
+Level 11: Integrated Autonomous Navigation (Global/Local Planners, DWA, TEB)
+Level 12: Autonomous Systems Architecture (Behavior Trees, Mission Executives)
+
+TIER 4: ADVANCED EMBODIMENTS & SPECIALIZATIONS (LEVELS 13 – 20)
+Level 13: Robotics Software Engineering & ROS 2 (DDS, URDF, Computation Graphs)
+Level 14: Manipulation Robotics & Articulated Arms (6-DOF IK, DH Parameters)
+Level 15: Aerial Robotics & Quadrotors (Flight Dynamics, Differential Flatness)
+Level 16: Legged Robotics & Quadruped Locomotion (ZMP, Inverted Pendulum, Gaits)
+Level 17: Learning-Based Robotics & RL (Sim-to-Real, Policy Gradients, VLA)
+Level 18: Multi-Agent Robotics & Swarms (Graph Laplacian Consensus, Formations)
+Level 19: Advanced Robotics Mathematics & Lie Groups (SO(3)/SE(3) Manifolds)
+Level 20: Robotics Research & Emerging Topics (NeRF SLAM, Soft Continuum)
 ```
-
-### Detailed Level Overview
-
-| Level | Name | Core Focus | Interactive Laboratory |
-|---|---|---|---|
-| **Level 0** | **Orientation** | Cyber-physical autonomy, Sense-Plan-Act, hardware/software anatomy, taxonomy. | `SensePlanActExplorer.tsx` |
-| **Level 1** | **Mathematics** | $SE(2)$ planar transforms, $SO(3)$ Euler angles, matrix decompositions, probability. | `TransformSandbox.tsx` |
-| **Level 2** | **Computation** | Floating-point stability, graph structures, priority queues, algorithmic complexity. | Min-Heap Visualizer |
-| **Level 3** | **Kinematics** | Differential-drive unicycle kinematics, ICC, Pfaffian non-holonomic constraints. | `KinematicsSimulator.tsx` |
-| **Level 4** | **Perception** | LiDAR raycasting, Gaussian rangefinder noise models, odometry drift. | Raycast LiDAR Visualizer |
-| **Level 5** | **Localization & Mapping** | Recursive Bayesian filters, Monte Carlo MCL particle filters, Log-Odds occupancy grids. | `LocalizationSimulator.tsx` & `MappingSimulator.tsx` |
-| **Level 6** | **Planning & Navigation** | $A^*$ heuristic search, Dijkstra, Octile/Euclidean heuristics, Quintic polynomial splines. | `PathPlanningSimulator.tsx` |
-| **Level 7** | **Control & Dynamics** | Pure Pursuit lookahead geometry, Stanley cross-track steering feedback, Newton-Euler dynamics. | `ControlSimulator.tsx` |
-| **Level 8** | **SLAM** | Chicken-and-egg spatial dilemma, Iterative Closest Point (ICP), closed-form SVD alignment. | `SlamSimulator.tsx` |
-| **Level 9** | **Multi-Agent & Swarm** | Communication graph topologies, Graph Laplacian consensus $\dot{\mathbf{x}} = -\mathcal{L}\mathbf{x}$, leader-follower formations. | `MultiAgentSimulator.tsx` |
 
 ---
 
@@ -104,16 +98,17 @@ LEVEL 9: Multi-Agent & Swarm Intelligence (Graph Laplacian Consensus, Formations
   - **`MappingSimulator.tsx`**: 360° LiDAR Raycaster with Log-Odds Bayesian Occupancy Grid probability updates.
   - **`SlamSimulator.tsx`**: Step-by-step Iterative Closest Point (ICP) scan matching with closed-form SVD rigid alignment.
   - **`MultiAgentSimulator.tsx`**: Swarm coordination with Graph Laplacian consensus, leader-follower formations (V-shape, Circle, Line), and Boids flocking.
+  - **`CoordinateFrameExplorer.tsx`**, **`VectorVisualizer.tsx`**, **`DotProductExplorer.tsx`**: Interactive geometric and mathematical foundations labs.
 - ⚡ **100% Client-Side Architecture**: Pure TypeScript and HTML5 Canvas 2D engine. Zero server latency, zero database overhead, and instant load times.
 
 ---
 
 ## 📖 Comprehensive Documentation
 
-- 📚 **[Master Curriculum Specification](docs/RoboAtlas_Master_Curriculum.md)** — Comprehensive 10-level robotics curriculum graph and module breakdown.
+- 📚 **[Master Curriculum Specification v1.0](docs/RoboAtlas_Master_Curriculum_v1.md)** — The single source of truth for the 21-level robotics curriculum hierarchy.
 - 📋 **[System Specification](docs/SPECIFICATION.md)** — Architectural design, 5-layer hierarchy, KaTeX standards, and static export rules.
 - 🗺️ **[Feature Roadmap](docs/ROADMAP.md)** — Detailed breakdown of Milestones 1 through 8 and future Phase 2/3 capabilities.
-- 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 15 Core Agentic Rules, 8-Step Workflow Loop, and bilingual/changelog guidelines.
+- 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 16 Core Agentic Rules, 8-Step Workflow Loop, and bilingual/changelog guidelines.
 - 📜 **[Changelog](CHANGELOG.md)** — Detailed version release history adhering to Keep a Changelog and SemVer.
 - 📑 **[MDX Content Architecture](docs/RoboAtlas_MDX_Content_Architecture.md)** — MDX directory layout, frontmatter schemas, and authoring specifications.
 - 🎨 **[Learner-First UI/UX Specification](docs/RoboAtlas_UI_UX_Learner_First_Spec.md)** — Cognitive load reduction, design personality, Math-Code bridge, and reference guidelines.

@@ -14,7 +14,7 @@ The platform is designed to be:
 5. **Bilingual & Dual-Theme**: 1-click toggling between English/Indonesian and Dark/Light mode.
 6. **100% Client-Side**: Static export architecture (`output: 'export'`) without server-side runtimes or database overhead for Phase 1.
 7. **Canonical MDX Content Layer**: All educational lessons authored in structured MDX (`content/en/` and `content/id/`) with Gray-Matter frontmatter parsing.
-8. **Master Curriculum Hierarchy**: Structured 10-level progressive dependency graph (Levels 0–9) ensuring seamless learning from zero to multi-agent autonomy.
+8. **Master Curriculum Hierarchy**: Structured 21-level progressive dependency graph (Levels 0–20) ensuring seamless learning from zero to multi-agent autonomy.
 
 ---
 
@@ -31,30 +31,39 @@ RoboAtlas is an **original educational platform** structured around three founda
 
 ---
 
-## 3. 10-Level Master Robotics Curriculum Hierarchy
+## 3. 21-Level Master Robotics Curriculum Hierarchy (v1.0)
 
-Organized at [`/learn`](../app/learn/page.tsx) and [`docs/RoboAtlas_Master_Curriculum.md`](RoboAtlas_Master_Curriculum.md):
+Organized at [`/learn`](../app/learn/page.tsx) and specified in [`docs/RoboAtlas_Master_Curriculum_v1.md`](RoboAtlas_Master_Curriculum_v1.md):
 
 ```text
-LEVEL 0: Robotics Orientation (Sense-Plan-Act & Robot Anatomy)
-   ↓
-LEVEL 1: Mathematical Foundations (Vectors, SE(2)/SE(3), Quaternions, Probability)
-   ↓
-LEVEL 2: Computational Foundations (Numerical Errors, Graph Search, Priority Queues)
-   ↓
-LEVEL 3: Robot Kinematics & Modeling (Unicycle, Non-Holonomic Constraints, Jacobians)
-   ↓
-LEVEL 4: Sensing & Perception (Encoders, IMU, LiDAR Raycasting, Noise Distributions)
-   ↓
-LEVEL 5: Localization & Mapping (Monte Carlo MCL, Log-Odds Occupancy Grids)
-   ↓
-LEVEL 6: Path Planning & Navigation (Dijkstra, A*, Admissible Heuristics, Splines)
-   ↓
-LEVEL 7: Control & Dynamic Robotics (Pure Pursuit, Stanley Feedback, Newton-Euler)
-   ↓
-LEVEL 8: SLAM & Spatial Autonomy (ICP Scan Matching, Closed-Form SVD)
-   ↓
-LEVEL 9: Multi-Agent & Swarm Intelligence (Graph Laplacian Consensus, Formations)
+TIER 1: FOUNDATIONS (LEVELS 0 – 4)
+Level 0: Robotics Orientation
+Level 1: Mathematical & Geometric Foundations
+Level 2: Coordinate Frames & Transformations
+Level 3: Robot Modeling & Kinematics
+Level 4: Robot Motion & Differential Geometry
+
+TIER 2: CORE AUTONOMY (LEVELS 5 – 8)
+Level 5: Sensors & Perception
+Level 6: Path & Trajectory Planning
+Level 7: Robot Dynamics & Control
+Level 8: Localization & State Estimation
+
+TIER 3: SPATIAL INTELLIGENCE & SLAM (LEVELS 9 – 12)
+Level 9: Spatial Mapping & Costmaps
+Level 10: Simultaneous Localization & Mapping (SLAM)
+Level 11: Integrated Autonomous Navigation
+Level 12: Autonomous Systems Architecture
+
+TIER 4: ADVANCED EMBODIMENTS & SPECIALIZATIONS (LEVELS 13 – 20)
+Level 13: Robotics Software Engineering & ROS 2
+Level 14: Manipulation Robotics & Articulated Arms
+Level 15: Aerial Robotics & Quadrotors
+Level 16: Legged Robotics & Quadruped Locomotion
+Level 17: Learning-Based Robotics & RL
+Level 18: Multi-Agent Robotics & Swarm Intelligence
+Level 19: Advanced Robotics Mathematics & Lie Groups
+Level 20: Robotics Research & Emerging Topics
 ```
 
 ---

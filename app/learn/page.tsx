@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { DOMAINS } from '@/lib/navigation/curriculum';
 import { MASTER_CURRICULUM_LEVELS } from '@/lib/navigation/master-curriculum-levels';
@@ -18,7 +18,7 @@ import {
   GraduationCap,
   Sparkles,
   Clock,
-  ShieldCheck,
+  Filter,
   CheckCircle2,
 } from 'lucide-react';
 
@@ -37,6 +37,20 @@ export default function LearnPage() {
   const isId = locale === 'id';
 
   const [activeTab, setActiveTab] = useState<'levels' | 'domains'>('levels');
+  const [selectedTier, setSelectedTier] = useState<string>('All');
+
+  const tiers = [
+    { key: 'All', labelEn: 'All 21 Levels (0–20)', labelId: 'Semua 21 Level (0–20)' },
+    { key: 'Foundations', labelEn: 'Tier 1: Foundations (0–4)', labelId: 'Tier 1: Fondasi (0–4)' },
+    { key: 'Core Autonomy', labelEn: 'Tier 2: Core Autonomy (5–8)', labelId: 'Tier 2: Otonomi Utama (5–8)' },
+    { key: 'Spatial Intelligence', labelEn: 'Tier 3: Spatial Intelligence & SLAM (9–12)', labelId: 'Tier 3: Kecerdasan Spasial (9–12)' },
+    { key: 'Advanced Embodiments', labelEn: 'Tier 4: Advanced & Swarms (13–20)', labelId: 'Tier 4: Spesialisasi & Kawanan (13–20)' },
+  ];
+
+  const filteredLevels = useMemo(() => {
+    if (selectedTier === 'All') return MASTER_CURRICULUM_LEVELS;
+    return MASTER_CURRICULUM_LEVELS.filter((l) => l.tier === selectedTier);
+  }, [selectedTier]);
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
@@ -44,15 +58,15 @@ export default function LearnPage() {
       <div className="border-b border-slate-200 dark:border-slate-800/80 pb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 text-xs font-mono mb-3">
           <BookOpen className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400" />
-          <span>{isId ? 'RoboAtlas Master Curriculum' : 'RoboAtlas Master Curriculum'}</span>
+          <span>{isId ? 'RoboAtlas Master Curriculum v1.0' : 'RoboAtlas Master Curriculum v1.0'}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-          {isId ? 'Kurikulum Master Robotika Otonom' : 'Autonomous Robotics Master Curriculum'}
+          {isId ? 'Kurikulum Master Robotika Otonom (Level 0 – 20)' : 'Autonomous Robotics Master Curriculum (Levels 0 – 20)'}
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 max-w-3xl leading-relaxed font-sans">
           {isId
-            ? 'Struktur kurikulum berjenjang Level 0 hingga Level 9 yang dirancang berdasarkan literatur akademis Elements of Robotics, Foundations of Robotics, dan Planning Algorithms. Mulai dari konsep dasar hingga kemandirian otonom penuh.'
-            : 'A progressive 10-level learning pathway structured around classical robotics literature. From physical intuition and mathematical foundations to full spatial autonomy and swarm intelligence.'}
+            ? 'Struktur kurikulum komprehensif 21 jenjang pembelajaran yang menyintesis literatur Elements of Robotics, Foundations of Robotics, dan Planning Algorithms. Dari intuisi fisik hingga manipulasi, SLAM, dan kecerdasan kawanan.'
+            : 'A comprehensive 21-level learning hierarchy synthesizing classical textbooks into progressive interactive tiers. From physical intuition to manipulation, SLAM, and swarm intelligence.'}
         </p>
 
         {/* Tab Switcher */}
@@ -66,7 +80,7 @@ export default function LearnPage() {
             }`}
           >
             <GraduationCap className="w-4 h-4" />
-            <span>{isId ? 'Jalur Belajar Berjenjang (Level 0–9)' : 'Progressive Pathway (Levels 0–9)'}</span>
+            <span>{isId ? 'Jalur Belajar Berjenjang (Level 0–20)' : '21-Level Curriculum Map (0–20)'}</span>
           </button>
 
           <button
@@ -83,25 +97,32 @@ export default function LearnPage() {
         </div>
       </div>
 
-      {/* VIEW 1: PROGRESSIVE LEVELS (0–9) */}
+      {/* VIEW 1: PROGRESSIVE LEVELS (0–20) */}
       {activeTab === 'levels' && (
         <div className="space-y-6 animate-fadeIn">
-          <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-xs font-mono text-cyan-800 dark:text-cyan-300 flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-500" />
-              <span>
-                {isId
-                  ? 'Total 10 Jenjang Kurikulum • Dilengkapi Simulator Interaktif & Verifikasi Matematis'
-                  : '10 Progressive Curriculum Levels • Equipped with 60 FPS Interactive Labs & Mathematical Bridges'}
-              </span>
-            </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-sans">
-              Elements of Robotics • Foundations of Robotics • Planning Algorithms
+          {/* Tier Filter Bar */}
+          <div className="p-3.5 rounded-xl glass-panel flex items-center gap-2 flex-wrap text-xs font-mono">
+            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-semibold mr-1">
+              <Filter className="w-3.5 h-3.5 text-cyan-500" />
+              <span>{isId ? 'Kategori Jenjang:' : 'Curriculum Tiers:'}</span>
             </span>
+            {tiers.map((tItem) => (
+              <button
+                key={tItem.key}
+                onClick={() => setSelectedTier(tItem.key)}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  selectedTier === tItem.key
+                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent'
+                }`}
+              >
+                {isId ? tItem.labelId : tItem.labelEn}
+              </button>
+            ))}
           </div>
 
           <div className="space-y-4">
-            {MASTER_CURRICULUM_LEVELS.map((level) => (
+            {filteredLevels.map((level) => (
               <div
                 key={level.id}
                 className="p-5 sm:p-6 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 transition-all hover:border-cyan-500/40 shadow-lg space-y-4"
@@ -112,6 +133,9 @@ export default function LearnPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 font-mono text-xs font-bold">
                         Level {level.level}
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
+                        {level.tier}
                       </span>
                       <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono">
                         {isId ? level.titleId : level.titleEn}
@@ -179,7 +203,7 @@ export default function LearnPage() {
                       <Icon className="w-5 h-5" />
                     </div>
                     <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800/80 text-cyan-700 dark:text-cyan-300 border border-slate-300 dark:border-slate-700">
-                      {domain.milestone}
+                      {domain.levelBadge}
                     </span>
                   </div>
 
