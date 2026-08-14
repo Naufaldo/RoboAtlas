@@ -3,7 +3,7 @@
 > **Learn Robotics by Seeing It Work.**  
 > An interactive, visual-first robotics learning platform and algorithm laboratory.
 
-[![CI & GitHub Pages Deploy](https://github.com/username/RoboAtlas/actions/workflows/deploy.yml/badge.svg)](https://github.com/username/RoboAtlas/actions)
+[![CI & GitHub Pages Deploy](https://github.com/Naufaldo/RoboAtlas/actions/workflows/deploy.yml/badge.svg)](https://github.com/Naufaldo/RoboAtlas/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript: Strict](https://img.shields.io/badge/TypeScript-Strict-blue?logo=typescript)](tsconfig.json)
 
@@ -19,13 +19,24 @@ Inspired by the educational breadth of Atsushi Sakai's renowned [PythonRobotics]
 
 ## 📚 7 Core Robotics Domains
 
-1. **Fundamentals & Kinematics** — 2D SE(2) / 3D SE(3) coordinate frames, rigid body transforms, unicycle and bicycle kinematics.
-2. **Localization & State Estimation** — Extended Kalman Filters (EKF), Unscented Kalman Filters (UKF), Monte Carlo Particle Filters (MCL).
-3. **Mapping & Spatial Representations** — Probabilistic Occupancy Grids, Log-Odds updates, Euclidean Distance Transforms (EDT), Costmaps.
-4. **SLAM (Simultaneous Localization & Mapping)** — Iterative Closest Point (ICP) scan matching, FastSLAM, Pose Graph Optimization.
-5. **Path Planning & Trajectory Generation** — Dijkstra, A* Search, D* Lite, Artificial Potential Fields (APF), RRT & RRT*.
-6. **Robot Control & Path Tracking** — Pure Pursuit, Stanley Cross-Track Controller, PID feedback, LQR.
-7. **Multi-Agent Robotics & Swarms** — Algebraic Graph Laplacian Consensus, Leader-Follower formations, Flocking dynamics.
+1. **[Fundamentals & Kinematics](https://naufaldo.github.io/RoboAtlas/learn/fundamentals/)** — 2D SE(2) / 3D SE(3) coordinate frames, rigid body transforms, unicycle and bicycle kinematics.
+2. **[Localization & State Estimation](https://naufaldo.github.io/RoboAtlas/learn/localization/)** — Extended Kalman Filters (EKF), Unscented Kalman Filters (UKF), Monte Carlo Particle Filters (MCL).
+3. **[Mapping & Spatial Representations](https://naufaldo.github.io/RoboAtlas/learn/mapping/)** — Probabilistic Occupancy Grids, Log-Odds updates, Euclidean Distance Transforms (EDT), Costmaps.
+4. **[SLAM (Simultaneous Localization & Mapping)](https://naufaldo.github.io/RoboAtlas/learn/slam/)** — Iterative Closest Point (ICP) scan matching, FastSLAM, Pose Graph Optimization.
+5. **[Path Planning & Trajectory Generation](https://naufaldo.github.io/RoboAtlas/learn/planning/)** — Dijkstra, A* Search, D* Lite, Artificial Potential Fields (APF), RRT & RRT*.
+6. **[Robot Control & Path Tracking](https://naufaldo.github.io/RoboAtlas/learn/control/)** — Pure Pursuit, Stanley Cross-Track Controller, PID feedback, LQR.
+7. **[Multi-Agent Robotics & Swarms](https://naufaldo.github.io/RoboAtlas/learn/multi-agent/)** — Algebraic Graph Laplacian Consensus, Leader-Follower formations, Flocking dynamics.
+
+---
+
+## 📖 Comprehensive Documentation
+
+- 📋 **[System Specification](docs/SPECIFICATION.md)** — Architectural design, 5-layer hierarchy, KaTeX standards, and static export rules.
+- 🗺️ **[Feature Roadmap](docs/ROADMAP.md)** — Detailed breakdown of Milestones 1 through 8 and future Phase 2/3 capabilities (Algorithm Lab, benchmarks, Three.js).
+- 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 10 Core Agentic Rules, 8-Step Workflow Loop, and Definition of Done (DoD) for AI agents and human collaborators.
+- 🏗️ **[Architecture Overview](ARCHITECTURE.md)** — Modular 5-layer system overview.
+- 🤝 **[Contributing Guide](CONTRIBUTING.md)** — Development standards and pull request workflows.
+- 📜 **[Third-Party Notices](THIRD_PARTY_NOTICES.md)** — Attribution to PythonRobotics and academic citations.
 
 ---
 
@@ -55,7 +66,7 @@ Interactive UI (Controls, Sliders, Telemetry HUD)
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/RoboAtlas.git
+git clone https://github.com/Naufaldo/RoboAtlas.git
 cd RoboAtlas
 
 # Install dependencies
@@ -90,22 +101,10 @@ npm run build
 
 RoboAtlas is configured out-of-the-box for **GitHub Pages** static deployment via GitHub Actions:
 
-1. Push your repository to GitHub.
+1. Push your repository to GitHub (`https://github.com/Naufaldo/RoboAtlas`).
 2. In your repository settings on GitHub, navigate to **Settings** → **Pages**.
 3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-4. Push to `main` branch. The automated workflow in `.github/workflows/deploy.yml` will automatically lint, test, build, and deploy the site to `https://<your-username>.github.io/<repo-name>/`.
-
----
-
-## 📖 Citation & Academic References
-
-RoboAtlas draws theoretical and structural inspiration from classical literature and open-source benchmarks:
-
-- **PythonRobotics Reference**: Atsushi Sakai ([PythonRobotics](https://github.com/AtsushiSakai/PythonRobotics), [Online Textbook](https://atsushisakai.github.io/PythonRobotics/index.html)).
-- **Probabilistic Robotics**: Thrun, S., Burgard, W., & Fox, D. (MIT Press, 2005).
-- **Planning Algorithms**: LaValle, S. M. (Cambridge University Press, 2006).
-
-See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and individual algorithm documentation for comprehensive citations.
+4. Push to `main` branch. The automated workflow in `.github/workflows/deploy.yml` will automatically lint, test, build, and deploy the site to `https://Naufaldo.github.io/RoboAtlas/`.
 
 ---
 

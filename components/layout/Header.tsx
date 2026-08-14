@@ -72,7 +72,7 @@ export function Header() {
           </a>
 
           <a
-            href="https://github.com"
+            href="https://github.com/Naufaldo/RoboAtlas"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center h-8 w-8 rounded-lg text-slate-400 bg-slate-900 hover:text-slate-100 hover:bg-slate-800 border border-slate-800 transition-colors"
