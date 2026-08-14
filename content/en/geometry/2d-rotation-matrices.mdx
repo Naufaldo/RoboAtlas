@@ -1,0 +1,135 @@
+---
+id: 2d-rotation-matrices
+title: 2D Spatial Rotation & Special Orthogonal Group SO(2) (M03)
+slug: 2d-rotation-matrices
+category: geometry
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - vectors-and-coordinate-geometry
+  - dot-product-and-projection
+references:
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 2). Springer.
+  - Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control. Cambridge University Press.
+components:
+  - SpatialRotation2D
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# 2D Spatial Rotation & Special Orthogonal Group SO(2) (M03)
+
+> "When a robot rotates its chassis or an articulated arm bends at a joint, how do we transform coordinates without distorting physical geometry?"
+
+Rotations in robotics must preserve lengths and angles between vectors (rigid-body motion). In 2D planar space, rotations belong to the Lie group known as the **Special Orthogonal Group $\text{SO}(2)$**.
+
+---
+
+## 1. Step-by-Step Trigonometric Derivation
+
+Consider an initial 2D point $P = [x, y]^T$ located at distance $r$ and angle $\alpha$ from origin:
+
+$$
+x = r \cos\alpha, \qquad y = r \sin\alpha
+$$
+
+Rotating point $P$ counter-clockwise by angle $\theta$ to new point $P' = [x', y']^T$:
+
+$$
+\begin{aligned}
+x' &= r \cos(\alpha + \theta) \\
+y' &= r \sin(\alpha + \theta)
+\end{aligned}
+$$
+
+Applying the trigonometric angle-sum identities:
+- $\cos(\alpha + \theta) = \cos\alpha \cos\theta - \sin\alpha \sin\theta$
+- $\sin(\alpha + \theta) = \sin\alpha \cos\theta + \cos\alpha \sin\theta$
+
+Substituting $x = r\cos\alpha$ and $y = r\sin\alpha$:
+
+$$
+\begin{aligned}
+x' &= x \cos\theta - y \sin\theta \\
+y' &= x \sin\theta + y \cos\theta
+\end{aligned}
+$$
+
+Writing this system in matrix-vector form gives the **2D Rotation Matrix $R(\theta) \in \text{SO}(2)$**:
+
+$$
+\begin{bmatrix} x' \\ y' \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix}
+$$
+
+---
+
+## 2. Fundamental Properties of SO(2) Matrices
+
+Any valid rotation matrix $R \in \text{SO}(2)$ satisfies three core mathematical properties:
+
+1. **Orthogonality Property (Trivial Inverse)**:
+   $$
+   R^T R = I \implies R^{-1} = R^T = \begin{bmatrix} \cos\theta & \sin\theta \\ -\sin\theta & \cos\theta \end{bmatrix} = R(-\theta)
+   $$
+   *(Inverting a rotation matrix is simply taking its matrix transpose!)*
+
+2. **Unit Determinant (No Reflections)**:
+   $$
+   \det(R) = \cos^2\theta - (-\sin^2\theta) = \cos^2\theta + \sin^2\theta = +1
+   $$
+
+3. **Norm Preservation (Rigid Body Isometry)**:
+   $$
+   \|R \mathbf{v}\| = \|\mathbf{v}\| \quad \forall \mathbf{v} \in \mathbb{R}^2
+   $$
+
+---
+
+## 3. Video Lecture: Linear Transformations & Rotation Matrices
+
+<VideoEmbed
+  title="Linear transformations and matrices — Linear Algebra"
+  videoId="kYB8IZa5AuE"
+/>
+
+---
+
+## 4. Interactive 2D Spatial Rotation Simulator
+
+Drag point $P$ or adjust the angle slider $\theta$. Watch how the matrix transforms the coordinate frame and computes $P'$ in real-time:
+
+<SpatialRotation2D />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m03"
+  question="Why is computing the inverse of a rotation matrix in robotics software computationally trivial (O(1))?"
+  options={[
+    {
+      id: "A",
+      text: "Because rotation matrices belong to the orthogonal group SO(n), where the matrix inverse is mathematically identical to its matrix transpose (R^-1 = R^T).",
+      isCorrect: true,
+      explanation: "Exact! Swapping rows and columns (transpose) computes the exact inverse without needing expensive Gaussian elimination."
+    },
+    {
+      id: "B",
+      text: "Because rotation angles can only be 0 or 90 degrees.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because rotation matrices are diagonal.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the property R^T R = I."
+/>

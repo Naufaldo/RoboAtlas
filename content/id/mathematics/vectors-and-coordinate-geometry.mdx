@@ -1,0 +1,118 @@
+---
+id: vectors-and-coordinate-geometry
+title: Vektor, Geometri Koordinat & Metrik Euclidean (M01)
+slug: vectors-and-coordinate-geometry
+category: mathematics
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 35
+prerequisites:
+  - intro-to-robotics
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 2). Springer Open.
+  - Gilbert Strang (2016). Introduction to Linear Algebra (5th ed.). Wellesley-Cambridge Press.
+components:
+  - VectorVisualizer
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Vektor, Geometri Koordinat & Metrik Euclidean (M01)
+
+> "Pada ruang fisik nyata, bagaimana cara merepresentasikan di mana robot berada dan ke arah mana vektor kecepatan atau gaya aktuator bekerja?"
+
+Robotika beroperasi pada ruang geometris fisik Euclidean. Untuk mengendalikan pergerakan robot, merencanakan trajektori jalur, dan memproses pancaran sensor LiDAR, kita wajib mendeskripsikan besaran yang memiliki **magnitudo (panjang/nilai)** sekaligus **arah orientasi**.
+
+---
+
+## 1. Skalar vs. Vektor
+
+1. **Skalar**: Sebuah nilai kuantitas numerik tunggal yang hanya merepresentasikan besaran (contoh: massa robot $m = 12.5\text{ kg}$, suhu baterai $T = 38.2^\circ\text{C}$, waktu $t = 4.2\text{ s}$).
+2. **Vektor**: Kumpulan angka terurut yang merepresentasikan panah berarah di ruang geometris.
+
+Pada bidang datar 2D, vektor posisi atau kecepatan $\mathbf{v} \in \mathbb{R}^2$ dituliskan dalam bentuk komponen Kartesius:
+
+$$
+\mathbf{v} = \begin{bmatrix} v_x \\ v_y \end{bmatrix}
+$$
+
+---
+
+## 2. Penurunan Rumus: Magnitudo, Normalisasi & Bentuk Polar
+
+### 2.1 Magnitudo Euclidean (Norma L2)
+Berdasarkan Teorema Pythagoras, panjang atau magnitudo vektor $\mathbf{v}$ dihitung dengan:
+
+$$
+\|\mathbf{v}\| = \sqrt{v_x^2 + v_y^2}
+$$
+
+### 2.2 Vektor Arah Satuan (Normalisasi)
+Untuk mengisolasi arah orientasi murni dengan panjang satu satuan $\|\hat{\mathbf{v}}\| = 1$:
+
+$$
+\hat{\mathbf{v}} = \frac{\mathbf{v}}{\|\mathbf{v}\|} = \begin{bmatrix} \frac{v_x}{\sqrt{v_x^2 + v_y^2}} \\ \frac{v_y}{\sqrt{v_x^2 + v_y^2}} \end{bmatrix}
+$$
+
+### 2.3 Konversi Koordinat Kartesius ke Polar
+Sebuah vektor 2D dapat dinyatakan secara ekuivalen menggunakan panjang radius $r = \|\mathbf{v}\|$ dan sudut rotasi berlawanan arah jarum jam $\theta$:
+
+$$
+\begin{aligned}
+r &= \sqrt{v_x^2 + v_y^2} \\
+\theta &= \text{atan2}(v_y, v_x) \\
+v_x &= r \cos\theta, \qquad v_y = r \sin\theta
+\end{aligned}
+$$
+
+*(Kita menggunakan fungsi `atan2(y, x)` daripada $\arctan(y/x)$ untuk membedakan keempat kuadran sudut secara akurat dari $-\pi$ hingga $+\pi$).*
+
+---
+
+## 3. Video Pembelajaran: Intuisi Geometris Vektor
+
+<VideoEmbed
+  title="Vectors, what even are they? — Linear Algebra"
+  videoId="fNk_zzaMoEs"
+/>
+
+---
+
+## 4. Simulator Interaktif Penjelajah Vektor
+
+Tarik ujung panah vektor pada grid koordinat di bawah ini untuk mengamati penguraian komponen Kartesius, magnitudo $\|\mathbf{v}\|$, sudut $\theta$, dan vektor satuan $\hat{\mathbf{v}}$ secara waktu-nyata:
+
+<VectorVisualizer />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m01"
+  question="Mengapa fungsi dua argumen atan2(y, x) selalu digunakan dalam kode pemrograman robotika alih-alih fungsi standar arctan(y / x)?"
+  options={[
+    {
+      id: "A",
+      text: "Karena atan2 memeriksa tanda positif/negatif dari nilai x dan y secara independen, sehingga mampu membedakan seluruh 4 kuadran sudut (-pi, +pi] secara tepat dan menghindari galat pembagian dengan nol saat x = 0.",
+      isCorrect: true,
+      explanation: "Tepat! Fungsi standar arctan(y/x) tidak mampu membedakan kuadran II dan IV serta menyebabkan error pembagian dengan nol jika x = 0."
+    },
+    {
+      id: "B",
+      text: "Karena fungsi atan2 hanya bisa dieksekusi oleh kartu grafis GPU.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena vektor robot hanya ada pada kuadran positif.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang perbedaan nilai tanda saat x < 0 vs x > 0 atau ketika x bernilai 0."
+/>

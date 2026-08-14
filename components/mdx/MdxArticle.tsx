@@ -7,6 +7,7 @@ import { VectorVisualizer } from '@/components/educational/VectorVisualizer';
 import { DotProductExplorer } from '@/components/educational/DotProductExplorer';
 import { TransformSandbox } from '@/components/simulation/TransformSandbox';
 import { SpatialRotation3D } from '@/components/simulation/SpatialRotation3D';
+import { SpatialRotation2D } from '@/components/simulation/SpatialRotation2D';
 import { KinematicsSimulator } from '@/components/simulation/KinematicsSimulator';
 import { PathPlanningSimulator } from '@/components/simulation/PathPlanningSimulator';
 import { ControlSimulator } from '@/components/simulation/ControlSimulator';
@@ -142,6 +143,11 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<SpatialRotation3D')) {
         nodes.push(<SpatialRotation3D key={`comp-sr3d-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<SpatialRotation2D')) {
+        nodes.push(<SpatialRotation2D key={`comp-sr2d-${i}`} />);
         i++;
         continue;
       }

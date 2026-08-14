@@ -1,0 +1,118 @@
+---
+id: vectors-and-coordinate-geometry
+title: Vectors, Coordinate Geometry & Euclidean Metrics (M01)
+slug: vectors-and-coordinate-geometry
+category: mathematics
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 35
+prerequisites:
+  - intro-to-robotics
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 2). Springer Open.
+  - Gilbert Strang (2016). Introduction to Linear Algebra (5th ed.). Wellesley-Cambridge Press.
+components:
+  - VectorVisualizer
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Vectors, Coordinate Geometry & Euclidean Metrics (M01)
+
+> "In physical space, how do we represent where a robot is located and in what direction its velocity or actuators are pushing?"
+
+Robotics operates in Euclidean physical space. To command robot motion, plan trajectories, and interpret sensor rays, we must describe quantities that have both **magnitude** (how much) and **direction** (which way).
+
+---
+
+## 1. Scalars vs. Vectors
+
+1. **Scalar**: A single real numerical quantity describing magnitude only (e.g., robot mass $m = 12.5\text{ kg}$, battery temperature $T = 38.2^\circ\text{C}$, time $t = 4.2\text{ s}$).
+2. **Vector**: An ordered list of numbers representing a directed geometric arrow in space.
+
+In 2D planar space, a position or velocity vector $\mathbf{v} \in \mathbb{R}^2$ is written in Cartesian component form:
+
+$$
+\mathbf{v} = \begin{bmatrix} v_x \\ v_y \end{bmatrix}
+$$
+
+---
+
+## 2. Derivation: Magnitude, Normalization & Polar Form
+
+### 2.1 Euclidean Magnitude (Norm)
+By the Pythagorean Theorem, the length of vector $\mathbf{v}$ (its Euclidean $L_2$ norm) is:
+
+$$
+\|\mathbf{v}\| = \sqrt{v_x^2 + v_y^2}
+$$
+
+### 2.2 Unit Direction Vector (Normalization)
+To isolate pure spatial direction with unit length $\|\hat{\mathbf{v}}\| = 1$:
+
+$$
+\hat{\mathbf{v}} = \frac{\mathbf{v}}{\|\mathbf{v}\|} = \begin{bmatrix} \frac{v_x}{\sqrt{v_x^2 + v_y^2}} \\ \frac{v_y}{\sqrt{v_x^2 + v_y^2}} \end{bmatrix}
+$$
+
+### 2.3 Cartesian to Polar Conversion
+A 2D vector can be equivalently expressed by its length $r = \|\mathbf{v}\|$ and counter-clockwise angle $\theta$:
+
+$$
+\begin{aligned}
+r &= \sqrt{v_x^2 + v_y^2} \\
+\theta &= \text{atan2}(v_y, v_x) \\
+v_x &= r \cos\theta, \qquad v_y = r \sin\theta
+\end{aligned}
+$$
+
+*(We use `atan2(y, x)` instead of $\arctan(y/x)$ to unambiguously determine the correct quadrant from $-\pi$ to $+\pi$).*
+
+---
+
+## 3. Video Lecture: Geometric Intuition of Vectors
+
+<VideoEmbed
+  title="Vectors, what even are they? — Linear Algebra"
+  videoId="fNk_zzaMoEs"
+/>
+
+---
+
+## 4. Interactive Vector Explorer Simulator
+
+Drag the arrow endpoint on the Cartesian grid below to observe real-time component decomposition, Euclidean magnitude $\|\mathbf{v}\|$, orientation $\theta$, and unit vector $\hat{\mathbf{v}}$:
+
+<VectorVisualizer />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m01"
+  question="Why is the two-argument function atan2(y, x) used in robotics software instead of the traditional arctan(y / x)?"
+  options={[
+    {
+      id: "A",
+      text: "Because atan2 examines the signs of both x and y independently, correctly distinguishing all 4 quadrants across (-pi, +pi] and avoiding division-by-zero when x = 0.",
+      isCorrect: true,
+      explanation: "Exact! Standard arctan(y/x) cannot distinguish quadrant II from IV and errors when x = 0."
+    },
+    {
+      id: "B",
+      text: "Because atan2 runs on GPU hardware only.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because vectors only exist in the positive quadrant.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about what happens when x < 0 vs x > 0 or when x = 0."
+/>

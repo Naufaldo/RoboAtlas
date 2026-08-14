@@ -1,0 +1,132 @@
+---
+id: dot-product-and-projection
+title: Dot Product, Orthogonality & Vector Projection (M02)
+slug: dot-product-and-projection
+category: mathematics
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - vectors-and-coordinate-geometry
+references:
+  - Gilbert Strang (2016). Introduction to Linear Algebra (5th ed.). Wellesley-Cambridge Press.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 2). Springer.
+components:
+  - DotProductExplorer
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Dot Product, Orthogonality & Vector Projection (M02)
+
+> "When a robot tracks a planned path or computes lateral steering error, how do we mathematically measure alignment and project one vector onto another?"
+
+The **dot product** (also called the scalar product or inner product) is one of the most widely utilized mathematical operations in autonomous robotics. It serves as the foundation for **cross-track error calculation**, **Pure Pursuit steering**, **LiDAR surface normal estimation**, and **Iterative Closest Point (ICP)**.
+
+---
+
+## 1. Algebraic vs. Geometric Definitions
+
+For two vectors $\mathbf{a} = [a_x, a_y]^T$ and $\mathbf{b} = [b_x, b_y]^T$ with angle $\theta$ between them:
+
+### 1.1 Algebraic Definition (Component Sum)
+$$
+\mathbf{a} \cdot \mathbf{b} = a_x b_x + a_y b_y = \sum_{i=1}^n a_i b_i
+$$
+
+### 1.2 Geometric Definition (Cosine Formula)
+$$
+\mathbf{a} \cdot \mathbf{b} = \|\mathbf{a}\| \|\mathbf{b}\| \cos\theta
+$$
+
+Equating both definitions yields the angle $\theta$:
+
+$$
+\theta = \arccos\left( \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{a}\| \|\mathbf{b}\|} \right)
+$$
+
+---
+
+## 2. Derivation: Vector Projection & Orthogonal Decomposition
+
+In path tracking algorithms (such as Stanley or MPC), a robot needs to decompose its position displacement vector $\mathbf{a}$ into:
+1. **Parallel component** $\mathbf{a}_\parallel$ along the path direction $\mathbf{b}$ (longitudinal progress).
+2. **Perpendicular component** $\mathbf{a}_\perp$ orthogonal to $\mathbf{b}$ (**lateral cross-track error $e_{\text{lat}}$**).
+
+```text
+                  a
+                 /|
+                / |  a_perp (Cross-Track Error)
+               /  |
+              /___|____________ b (Path Direction)
+                a_parallel (Projection)
+```
+
+### 2.1 Scalar Projection (Length of Shadow)
+The signed scalar length of vector $\mathbf{a}$ projected onto the unit direction of $\mathbf{b}$ is:
+
+$$
+\text{comp}_{\mathbf{b}}(\mathbf{a}) = \|\mathbf{a}\| \cos\theta = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|}
+$$
+
+### 2.2 Vector Projection
+Multiplying the scalar length by unit vector $\hat{\mathbf{b}} = \frac{\mathbf{b}}{\|\mathbf{b}\|}$ gives the projection vector:
+
+$$
+\mathbf{a}_\parallel = \text{proj}_{\mathbf{b}}(\mathbf{a}) = \left( \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|^2} \right) \mathbf{b}
+$$
+
+### 2.3 Orthogonal Cross-Track Error Vector
+$$
+\mathbf{a}_\perp = \mathbf{a} - \mathbf{a}_\parallel = \mathbf{a} - \left( \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|^2} \right) \mathbf{b}
+$$
+
+---
+
+## 3. Video Lecture: Geometric Duality of the Dot Product
+
+<VideoEmbed
+  title="Dot products and duality — Linear Algebra"
+  videoId="LyGKycYT2v0"
+/>
+
+---
+
+## 4. Interactive Dot Product & Projection Explorer
+
+Drag the endpoints of vectors $\mathbf{a}$ and $\mathbf{b}$. Observe the dynamic angle $\theta$, sign of the dot product (positive when acute, negative when obtuse, exactly zero when orthogonal), and the projected shadow:
+
+<DotProductExplorer />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m02"
+  question="If the dot product between a robot velocity vector v and an obstacle surface normal vector n is exactly ZERO (v . n = 0), what does this physically mean?"
+  options={[
+    {
+      id: "A",
+      text: "The robot is moving exactly parallel (tangential) to the obstacle surface, meaning it will graze past without colliding along the normal.",
+      isCorrect: true,
+      explanation: "Exact! v . n = 0 implies cos(theta) = 0 (theta = 90 deg), so the velocity vector is completely orthogonal to the surface normal."
+    },
+    {
+      id: "B",
+      text: "The robot has stopped moving entirely.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "The obstacle has disappeared.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about what cos(theta) = 0 means geometrically."
+/>

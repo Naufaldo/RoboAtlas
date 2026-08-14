@@ -1,0 +1,128 @@
+---
+id: coordinate-frames-and-transforms
+title: Kerangka Koordinat, Transformasi SE(2) & Pohon Transformasi (M04)
+slug: coordinate-frames-and-transforms
+category: geometry
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - vectors-and-coordinate-geometry
+  - 2d-rotation-matrices
+references:
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 2). Springer.
+  - John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 2). Pearson.
+components:
+  - CoordinateFrameExplorer
+  - TransformSandbox
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Kerangka Koordinat, Transformasi SE(2) & Pohon Transformasi (M04)
+
+> "Ketika sensor LiDAR yang terpasang di atas robot bergerak mendeteksi dinding pada koordinat lokal (x, y), berapakah koordinat fisik dinding tersebut pada peta global ruangan?"
+
+Dalam robotika otonom, tidak pernah ada hanya satu kerangka acuan. Sistem robotik modern memelihara struktur pohon hierarki kerangka acuan koordinat (seperti sistem ROS TF2):
+
+```text
+Kerangka Acuan Dunia {W}
+      ↓ (Pose Odometri Robot T_W^R)
+Kerangka Acuan Bodi Robot {R}
+      ↓ (Kalibrasi Pemasangan Sensor T_R^S)
+Kerangka Acuan Sensor LiDAR {S}
+```
+
+---
+
+## 1. Koordinat Homogen & Grup Euclidean Khusus SE(2)
+
+Rotasi murni adalah operasi linier ($R \mathbf{p}$), namun translasi pergeseran bersifat afinitas ($\mathbf{p} + \mathbf{t}$). Agar rotasi dan translasi dapat digabungkan ke dalam satu operasi perkalian matriks tunggal yang elegan, koordinat 2D diperluas menjadi **koordinat homogen** $[x, y, 1]^T \in \mathbb{P}^2$.
+
+**Matriks Transformasi Homogen $T \in \text{SE}(2)$** dirumuskan sebagai:
+
+$$
+T = \begin{bmatrix} R(\theta) & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix}
+$$
+
+Mentransformasikan titik $P^B$ dari kerangka $\{B\}$ ke kerangka $\{A\}$:
+
+$$
+\begin{bmatrix} x^A \\ y^A \\ 1 \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x^B \\ y^B \\ 1 \end{bmatrix}
+$$
+
+---
+
+## 2. Penurunan Rumus: Rantai Transformasi & Invers Analitik
+
+### 2.1 Komposisi Rantai Transformasi
+Untuk mencari matriks transformasi dari Kerangka Dunia $\{W\}$ langsung ke Kerangka Sensor $\{S\}$, kita mengalikan rantai transformasi sepanjang pohon:
+
+$$
+T_W^S = T_W^R \cdot T_R^S
+$$
+
+Diberikan titik pantulan laser $\mathbf{p}^S$ yang diukur oleh LiDAR, koordinat globalnya pada peta dunia $\mathbf{p}^W$ adalah:
+
+$$
+\mathbf{p}^W = T_W^S \cdot \mathbf{p}^S = T_W^R \cdot T_R^S \cdot \mathbf{p}^S
+$$
+
+*(Perhatian: Perkalian matriks bersifat non-komutatif: $T_1 T_2 \neq T_2 T_1$. Urutan perkalian sangat menentukan!)*
+
+### 2.2 Invers Analitik Matriks $T^{-1}$
+Berdasarkan struktur blok matriks khusus $\text{SE}(2)$, invers analitik diperoleh secara instan tanpa eliminasi Gauss:
+
+$$
+T^{-1} = \begin{bmatrix} R^T & -R^T \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix}
+$$
+
+---
+
+## 3. Video Pembelajaran: Kerangka Koordinat & Transformasi Homogen
+
+<VideoEmbed
+  title="Coordinate Frames and Transformations — Robot Academy"
+  videoId="P3q8J9y9_aM"
+/>
+
+---
+
+## 4. Simulator Interaktif Kerangka Koordinat & Rantai Transformasi
+
+Geser posisi translasi dan rotasi bodi robot serta modul sensor di bawah ini. Amati bagaimana rantai perkalian matriks $T_W^S = T_W^R \cdot T_R^S$ memetakan data pengukuran lokal langsung ke koordinat peta global:
+
+<CoordinateFrameExplorer />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m04"
+  question="Mengapa urutan perkalian matriks transformasi sangat krusial dalam robotika (yakni T_1 * T_2 != T_2 * T_1)?"
+  options={[
+    {
+      id: "A",
+      text: "Karena melakukan translasi terlebih dahulu lalu rotasi menggeser titik pangkal sebelum orientasi berubah, sedangkan merotasi terlebih dahulu akan mengubah arah vektor translasi pergeseran itu sendiri.",
+      isCorrect: true,
+      explanation: "Tepat! Sifat non-komutatif matriks SE(2) mencerminkan perbedaan geometris mendasar antara pergerakan terhadap kerangka lokal vs kerangka acuan dunia tetap."
+    },
+    {
+      id: "B",
+      text: "Karena komputer hanya bisa membaca matriks dari kanan ke kiri.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena koordinat homogen memiliki 3 baris.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Bayangkan perbedaan antara berputar di tempat lalu berjalan maju vs berjalan maju lalu berputar di tempat."
+/>

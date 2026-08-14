@@ -1,0 +1,135 @@
+---
+id: 2d-rotation-matrices
+title: Rotasi Spasial 2D & Grup Ortogonal Khusus SO(2) (M03)
+slug: 2d-rotation-matrices
+category: geometry
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - vectors-and-coordinate-geometry
+  - dot-product-and-projection
+references:
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 2). Springer.
+  - Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control. Cambridge University Press.
+components:
+  - SpatialRotation2D
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Rotasi Spasial 2D & Grup Ortogonal Khusus SO(2) (M03)
+
+> "Ketika bodi robot berputar atau sendi lengan mekanik berotasi, bagaimana cara mentransformasikan koordinat spasial tanpa mengubah atau merusak geometri fisik aslinya?"
+
+Rotasi dalam mekanika robotika wajib mempertahankan panjang vektor dan sudut antar komponen (*gerak benda kaku / rigid-body motion*). Pada bidang datar 2D, seluruh matriks rotasi membentuk grup Lie yang dikenal sebagai **Special Orthogonal Group $\text{SO}(2)$**.
+
+---
+
+## 1. Penurunan Rumus Trigonometri Langkah-demi-Langkah
+
+Tinjau sebuah titik awal $P = [x, y]^T$ dengan jarak radius $r$ dan sudut $\alpha$ dari titik pusat:
+
+$$
+x = r \cos\alpha, \qquad y = r \sin\alpha
+$$
+
+Ketika titik $P$ dirotasikan berlawanan arah jarum jam sebesar sudut $\theta$ menghasilkan titik baru $P' = [x', y']^T$:
+
+$$
+\begin{aligned}
+x' &= r \cos(\alpha + \theta) \\
+y' &= r \sin(\alpha + \theta)
+\end{aligned}
+$$
+
+Menggunakan identitas trigonometri penjumlahan sudut:
+- $\cos(\alpha + \theta) = \cos\alpha \cos\theta - \sin\alpha \sin\theta$
+- $\sin(\alpha + \theta) = \sin\alpha \cos\theta + \cos\alpha \sin\theta$
+
+Substitusikan $x = r\cos\alpha$ dan $y = r\sin\alpha$:
+
+$$
+\begin{aligned}
+x' &= x \cos\theta - y \sin\theta \\
+y' &= x \sin\theta + y \cos\theta
+\end{aligned}
+$$
+
+Menyusun persamaan di atas dalam bentuk matriks-vektor menghasilkan **Matriks Rotasi 2D $R(\theta) \in \text{SO}(2)$**:
+
+$$
+\begin{bmatrix} x' \\ y' \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix}
+$$
+
+---
+
+## 2. Sifat-Sifat Fundamental Matriks SO(2)
+
+Setiap matriks rotasi yang valid dalam $\text{SO}(2)$ memenuhi tiga sifat matematika krusial:
+
+1. **Sifat Ortogonalitas (Invers Sangat Mudah)**:
+   $$
+   R^T R = I \implies R^{-1} = R^T = \begin{bmatrix} \cos\theta & \sin\theta \\ -\sin\theta & \cos\theta \end{bmatrix} = R(-\theta)
+   $$
+   *(Mencari invers matriks rotasi cukup dengan melakukan transpose matriks!)*
+
+2. **Determinan Satuan (Bebas Efek Cermin/Refleksi)**:
+   $$
+   \det(R) = \cos^2\theta - (-\sin^2\theta) = \cos^2\theta + \sin^2\theta = +1
+   $$
+
+3. **Preservasi Panjang (Isometri Benda Kaku)**:
+   $$
+   \|R \mathbf{v}\| = \|\mathbf{v}\| \quad \forall \mathbf{v} \in \mathbb{R}^2
+   $$
+
+---
+
+## 3. Video Pembelajaran: Transformasi Linier & Matriks Rotasi
+
+<VideoEmbed
+  title="Linear transformations and matrices — Linear Algebra"
+  videoId="kYB8IZa5AuE"
+/>
+
+---
+
+## 4. Simulator Interaktif Rotasi Spasial 2D
+
+Geser posisi titik $P$ atau atur *slider* sudut rotasi $\theta$. Amati pembaruan matriks transformasi dan kalkulasi titik terotasi $P'$ secara langsung:
+
+<SpatialRotation2D />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m03"
+  question="Mengapa komputasi invers dari sebuah matriks rotasi dalam software robotika sangat ringan dan cepat (kompleksitas O(1))?"
+  options={[
+    {
+      id: "A",
+      text: "Karena matriks rotasi tergolong grup ortogonal SO(n), di mana operasi invers matriks identik secara matematis dengan operasi transpose (R^-1 = R^T).",
+      isCorrect: true,
+      explanation: "Tepat! Cukup menukar baris dan kolom (transpose), invers rotasi langsung diperoleh tanpa eliminasi Gauss yang berat."
+    },
+    {
+      id: "B",
+      text: "Karena sudut rotasi robot selalu bernilai 90 derajat.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena matriks rotasi tidak memiliki nilai negatif.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan sifat ortogonal R^T R = I."
+/>

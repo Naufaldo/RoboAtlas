@@ -1,0 +1,132 @@
+---
+id: dot-product-and-projection
+title: Dot Product, Ortogonalitas & Proyeksi Vektor (M02)
+slug: dot-product-and-projection
+category: mathematics
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - vectors-and-coordinate-geometry
+references:
+  - Gilbert Strang (2016). Introduction to Linear Algebra (5th ed.). Wellesley-Cambridge Press.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 2). Springer.
+components:
+  - DotProductExplorer
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Dot Product, Ortogonalitas & Proyeksi Vektor (M02)
+
+> "Ketika robot otonom melacak lintasan jalur atau menghitung galat kemudi lateral, bagaimana cara mengukur keselarasan arah dan memproyeksikan satu vektor ke vektor lainnya?"
+
+**Perkalian titik (*dot product*)** (juga disebut *skalar product* atau *inner product*) adalah salah satu operasi matematika aljabar linier paling fundamental dalam robotika. Operasi ini menjadi fondasi utama perhitungan **galat lateral (*cross-track error*)**, **kemudi Pure Pursuit**, **estimasi vektor normal permukaan LiDAR**, dan **Iterative Closest Point (ICP)**.
+
+---
+
+## 1. Definisi Aljabar vs. Geometris
+
+Untuk dua vektor $\mathbf{a} = [a_x, a_y]^T$ dan $\mathbf{b} = [b_x, b_y]^T$ dengan sudut apit $\theta$:
+
+### 1.1 Definisi Aljabar (Penjumlahan Komponen)
+$$
+\mathbf{a} \cdot \mathbf{b} = a_x b_x + a_y b_y = \sum_{i=1}^n a_i b_i
+$$
+
+### 1.2 Definisi Geometris (Rumus Kosinus)
+$$
+\mathbf{a} \cdot \mathbf{b} = \|\mathbf{a}\| \|\mathbf{b}\| \cos\theta
+$$
+
+Menyamakan kedua rumus di atas memungkinkan kita mencari besar sudut $\theta$:
+
+$$
+\theta = \arccos\left( \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{a}\| \|\mathbf{b}\|} \right)
+$$
+
+---
+
+## 2. Penurunan Rumus: Proyeksi Vektor & Dekomposisi Ortogonal
+
+Dalam algoritma pelacakan jalur (seperti Stanley Controller atau MPC), robot perlu menguraikan vektor pergeseran $\mathbf{a}$ menjadi dua komponen:
+1. **Komponen paralel** $\mathbf{a}_\parallel$ yang searah dengan garis jalur $\mathbf{b}$ (kemajuan longitudinal).
+2. **Komponen tegak lurus** $\mathbf{a}_\perp$ yang ortogonal terhadap $\mathbf{b}$ (**galat samping / *cross-track error* $e_{\text{lat}}$**).
+
+```text
+                  a
+                 /|
+                / |  a_perp (Cross-Track Error)
+               /  |
+              /___|____________ b (Arah Jalur)
+                a_parallel (Proyeksi)
+```
+
+### 2.1 Proyeksi Skalar (Panjang Bayangan)
+Panjang bertanda dari vektor $\mathbf{a}$ yang diproyeksikan ke arah vektor satuan $\mathbf{b}$ adalah:
+
+$$
+\text{comp}_{\mathbf{b}}(\mathbf{a}) = \|\mathbf{a}\| \cos\theta = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|}
+$$
+
+### 2.2 Proyeksi Vektor
+Mengalikan panjang skalar dengan vektor satuan $\hat{\mathbf{b}} = \frac{\mathbf{b}}{\|\mathbf{b}\|}$ menghasilkan vektor proyeksi:
+
+$$
+\mathbf{a}_\parallel = \text{proj}_{\mathbf{b}}(\mathbf{a}) = \left( \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|^2} \right) \mathbf{b}
+$$
+
+### 2.3 Vektor Galat Ortogonal (Cross-Track Error)
+$$
+\mathbf{a}_\perp = \mathbf{a} - \mathbf{a}_\parallel = \mathbf{a} - \left( \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|^2} \right) \mathbf{b}
+$$
+
+---
+
+## 3. Video Pembelajaran: Dualitas Geometris Dot Product
+
+<VideoEmbed
+  title="Dot products and duality — Linear Algebra"
+  videoId="LyGKycYT2v0"
+/>
+
+---
+
+## 4. Simulator Interaktif Penjelajah Dot Product & Proyeksi
+
+Geser ujung vektor $\mathbf{a}$ dan $\mathbf{b}$. Amati perubahan dinamis sudut $\theta$, tanda nilai dot product (positif untuk sudut lancip, negatif untuk sudut tumpul, tepat nol saat tegak lurus), dan bayangan proyeksi:
+
+<DotProductExplorer />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m02"
+  question="Jika nilai dot product antara vektor kecepatan robot v dan vektor normal permukaan dinding n tepat bernilai NOL (v . n = 0), apa makna fisik dari kondisi ini?"
+  options={[
+    {
+      id: "A",
+      text: "Robot bergerak persis sejajar (tangensial) menyusuri dinding, artinya robot tidak bergerak mendekat ataupun menjauh dari permukaan normal.",
+      isCorrect: true,
+      explanation: "Tepat! v . n = 0 mengindikasikan cos(theta) = 0 (sudut 90 derajat), sehingga arah gerak robot sepenuhnya tegak lurus terhadap vektor normal dinding."
+    },
+    {
+      id: "B",
+      text: "Robot berhenti total.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Dinding rintangan menghilang.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan makna geometris dari cos(theta) = 0."
+/>

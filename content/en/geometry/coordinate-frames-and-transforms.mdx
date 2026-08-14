@@ -1,0 +1,128 @@
+---
+id: coordinate-frames-and-transforms
+title: Coordinate Frames, SE(2) Transforms & Frame Trees (M04)
+slug: coordinate-frames-and-transforms
+category: geometry
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - vectors-and-coordinate-geometry
+  - 2d-rotation-matrices
+references:
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 2). Springer.
+  - John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 2). Pearson.
+components:
+  - CoordinateFrameExplorer
+  - TransformSandbox
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Coordinate Frames, SE(2) Transforms & Frame Trees (M04)
+
+> "When a LiDAR mounted on a moving robot detects an obstacle at (x, y), what is the obstacle's true coordinate in the global factory floor map?"
+
+In autonomous robotics, there is never just one coordinate frame. A complete robot system maintains a hierarchical tree of coordinate reference frames (such as ROS TF2):
+
+```text
+World Frame {W}
+      ↓ (Robot Odometry Pose T_W^R)
+Robot Body Frame {R}
+      ↓ (Sensor Mounting Calibration T_R^S)
+LiDAR Sensor Frame {S}
+```
+
+---
+
+## 1. Homogeneous Coordinates & The Special Euclidean Group SE(2)
+
+Pure rotation is linear ($R \mathbf{p}$), but translation is affine ($\mathbf{p} + \mathbf{t}$). To combine rotation and translation into a single unified matrix multiplication, we augment 2D coordinates into **homogeneous coordinates** $[x, y, 1]^T \in \mathbb{P}^2$.
+
+The **Homogeneous Transformation Matrix $T \in \text{SE}(2)$** is:
+
+$$
+T = \begin{bmatrix} R(\theta) & \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix}
+$$
+
+Transforming a point $P^B$ defined in frame $\{B\}$ to frame $\{A\}$:
+
+$$
+\begin{bmatrix} x^A \\ y^A \\ 1 \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x^B \\ y^B \\ 1 \end{bmatrix}
+$$
+
+---
+
+## 2. Derivation: Frame Chain Composition & Analytical Inverse
+
+### 2.1 Transform Chain Composition
+To compute the transformation from World frame $\{W\}$ to Sensor frame $\{S\}$, we multiply along the transform tree:
+
+$$
+T_W^S = T_W^R \cdot T_R^S
+$$
+
+Given a detected laser beam reflection point $\mathbf{p}^S$ measured by the LiDAR, its global coordinate in the map $\mathbf{p}^W$ is:
+
+$$
+\mathbf{p}^W = T_W^S \cdot \mathbf{p}^S = T_W^R \cdot T_R^S \cdot \mathbf{p}^S
+$$
+
+*(Note: Matrix multiplication is non-commutative: $T_1 T_2 \neq T_2 T_1$. Order matters!)*
+
+### 2.2 Analytical Matrix Inverse $T^{-1}$
+Because of the structured block form, the exact analytical inverse of an SE(2) transformation is:
+
+$$
+T^{-1} = \begin{bmatrix} R^T & -R^T \mathbf{t} \\ \mathbf{0}^T & 1 \end{bmatrix}
+$$
+
+---
+
+## 3. Video Lecture: Coordinate Frames & Homogeneous Transforms
+
+<VideoEmbed
+  title="Coordinate Frames and Transformations — Robot Academy"
+  videoId="P3q8J9y9_aM"
+/>
+
+---
+
+## 4. Interactive Coordinate Frame & Transform Chain Laboratory
+
+Translate and rotate the robot chassis and sensor mount below. Observe how the homogeneous transformation chain $T_W^S = T_W^R \cdot T_R^S$ maps local sensor measurements into the global map:
+
+<CoordinateFrameExplorer />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m04"
+  question="Why is matrix multiplication order crucial when combining transforms (i.e., T_1 * T_2 != T_2 * T_1)?"
+  options={[
+    {
+      id: "A",
+      text: "Because translating then rotating moves the coordinate origin before orientation changes, whereas rotating first rotates the translation direction vector itself.",
+      isCorrect: true,
+      explanation: "Exact! The non-commutative nature of SE(2) matrices reflects the geometric difference between post-multiplication (local frame) and pre-multiplication (fixed world frame)."
+    },
+    {
+      id: "B",
+      text: "Because matrices can only multiply from right to left in computers.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because homogeneous coordinates have 3 rows.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about rotating then walking forward vs walking forward then rotating."
+/>
