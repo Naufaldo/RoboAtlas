@@ -6,31 +6,67 @@ category: fundamentals
 difficulty: beginner
 language: en
 interactive: true
-estimatedMinutes: 15
+estimatedMinutes: 30
 prerequisites: []
 references:
   - ben-ari-elements-of-robotics
   - herath-foundations-of-robotics
 components:
   - LessonOrientation
+  - VideoEmbed
   - SensePlanActExplorer
+  - RobotClassificationExplorer
+  - ConceptCheck
+  - AcademicReferences
 ---
 
-# Introduction to Autonomous Robotics
+# Introduction to Robotics & Autonomous Systems
 
-An autonomous robot is a cyber-physical system capable of independent decision-making in physical environments via sensors and actuators. Unlike simple pre-programmed automation (such as washing machines), robots operate in uncertain, dynamic environments.
+## What is Robotics?
+
+When you hear the word **robot**, you might imagine a humanoid, an industrial arm in an automotive plant, a warehouse automated guided vehicle, or an aerial drone.
+
+Robotics is an interdisciplinary field concerned with building machines that can **sense, compute, and act in the physical world**.
+
+A useful way to think about a robot is:
+
+> A robot is a physical machine that uses sensing, computation, and actuation to perform tasks in the physical world.
+
+The essential idea is that a robot is not simply a computer and not simply a mechanical device. It is a closed-loop system connecting the physical world, sensory perception, and algorithmic computation.
+
+---
 
 ## The Sense-Plan-Act Loop
 
-1. **SENSE (Sensors)**:
-   - Proprioceptive sensors (internal status: wheel encoders, IMU, battery monitors).
-   - Exteroceptive sensors (environment: LiDAR, Stereo Cameras, Ultrasonic Sonar).
-2. **PLAN (Computation & Intelligence)**:
-   - State Estimation, Spatial Mapping, and Collision-Free Path Planning.
-3. **ACT (Actuators & Locomotion)**:
-   - DC brushless motors, steering servos, and differential-drive wheel velocity integrators.
+To operate autonomously in dynamic environments, a robot executes the continuous **Sense $\to$ Plan $\to$ Act** cycle:
 
-## Robot Classifications
-- **Fixed Base Manipulators**: Industrial arm robots fixed to factory bases with high repeatable precision.
-- **Mobile Terrestrial**: Differential-drive unicycles, Ackermann vehicles, quadruped/humanoid legged walkers.
-- **Aerial & Marine**: Multirotor drones and underwater autonomous vehicles (AUVs) operating in 6-DOF spatial configurations.
+1. **SENSE**: Perceive the environment using exteroceptive sensors (LiDAR, Cameras, Sonar) and proprioceptive sensors (encoders, IMU).
+2. **UNDERSTAND & ESTIMATE**: Fuse sensor data to estimate true state $\mathbf{x}_k = (x, y, \theta)$ and update occupancy grid maps.
+3. **PLAN**: Compute collision-free paths using graph search algorithms like A* or trajectory splines.
+4. **ACT**: Generate actuator commands (motor PWM voltage, steering servo angles) to drive wheels or limbs.
+5. **OBSERVE AGAIN**: Close the feedback loop at frequencies between 10 Hz to 100 Hz.
+
+---
+
+## What Distinguishes a Robot From Simple Automation?
+
+Consider a standard washing machine:
+- It has motors, timers, and buttons.
+- But it blindly runs fixed pre-programmed cycles regardless of whether clothes are clean, tangled, or overloaded.
+
+Now consider an **autonomous vacuum robot**:
+- It observes obstacles, builds a map of the room, plans optimal coverage paths, and recovers when trapped.
+- It adapts its actions in response to real-time physical perception.
+
+---
+
+## Video Reference: What Qualifies as a Robot?
+
+Professor Kagan Tumer (Oregon State University) discusses the nuances of what qualifies as a robot and why embodiment and autonomous decision-making are core principles.
+
+<VideoEmbed
+  title="What is a robot?"
+  provider="youtube"
+  videoId="-nGlDsk1rS4"
+  sourceUrl="https://www.youtube.com/watch?v=-nGlDsk1rS4"
+/>

@@ -10,6 +10,10 @@ import { LessonOrientation } from '@/components/layout/LessonOrientation';
 import { LessonNavigation } from '@/components/layout/LessonNavigation';
 import { MathCodeBridge } from '@/components/educational/MathCodeBridge';
 import { AcademicReferences } from '@/components/educational/AcademicReferences';
+import { VideoEmbed } from '@/components/educational/VideoEmbed';
+import { ConceptCheck } from '@/components/educational/ConceptCheck';
+import { SensePlanActExplorer } from '@/components/simulation/SensePlanActExplorer';
+import { RobotClassificationExplorer } from '@/components/simulation/RobotClassificationExplorer';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   Compass,
@@ -143,50 +147,94 @@ export default function FundamentalsPage() {
       {/* CHAPTER 1: INTRODUCTION TO ROBOTICS */}
       {activeChapter === 1 && (
         <div className="space-y-6 animate-fadeIn">
+          {/* Conceptual Card */}
           <div className="p-6 rounded-2xl glass-panel space-y-6">
             <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-mono text-sm font-bold border-b border-slate-200 dark:border-slate-800/80 pb-3">
               <BookOpen className="w-4 h-4" />
-              <span>{isId ? 'Bab 1: Apa itu Robotika Otonom & Klasifikasinya' : 'Chapter 1: What is Autonomous Robotics?'}</span>
+              <span>{isId ? 'Bab 1: Apa itu Robotika & Sistem Otonom?' : 'Chapter 1: What is Autonomous Robotics?'}</span>
             </div>
 
-            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
               {isId
-                ? 'Robot otonom adalah sistem siber-fisik yang mampu mengambil keputusan mandiri melalui interaksi lingkungan fisik menggunakan sensor dan aktuator. Berbeda dari otomasi biasa (seperti mesin cuci), robot beroperasi dalam lingkungan tak pasti dan terus beradaptasi.'
-                : 'An autonomous robot is a cyber-physical system capable of independent decision-making in physical environments via sensors and actuators. Unlike simple automata (e.g. dishwashers), robots operate in uncertain, dynamic environments.'}
+                ? 'Robotika adalah disiplin ilmu yang mempelajari sistem terintegrasi yang mampu mengamati (Sense), memproses (Compute), dan bertindak (Act) di dunia fisik nyata. Robot bukan sekadar komputer tanpa badan dan bukan mesin otomatis biasa tanpa persepsi adaptif.'
+                : 'Robotics is an interdisciplinary field concerned with building machines that sense, compute, and act in the physical world. A robot is neither a disembodied computer nor a rigid blind automation machine.'}
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
-              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-1.5">
-                <strong className="text-cyan-600 dark:text-cyan-400 block text-sm">1. SENSE (Sensor)</strong>
-                <p className="text-slate-600 dark:text-slate-400">
-                  {isId ? 'Sensor Proprioseptif (status internal: enkoder roda, IMU) & Eksteroseptif (lingkungan luar: LiDAR, Kamera, Sonar).' : 'Proprioceptive sensors (internal: encoders, IMU) & Exteroceptive sensors (environment: LiDAR, Camera, Sonar).'}
-                </p>
-              </div>
-              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-1.5">
-                <strong className="text-emerald-600 dark:text-emerald-400 block text-sm">2. PLAN (Otak/Komputasi)</strong>
-                <p className="text-slate-600 dark:text-slate-400">
-                  {isId ? 'Memperbarui estimasi status (State Estimation), membangun peta (Mapping), dan merencanakan jalur bebas tabrakan (Path Planning).' : 'Compute state estimation, construct spatial maps, and generate collision-free paths.'}
-                </p>
-              </div>
-              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-1.5">
-                <strong className="text-amber-600 dark:text-amber-400 block text-sm">3. ACT (Aktuator)</strong>
-                <p className="text-slate-600 dark:text-slate-400">
-                  {isId ? 'Motor DC, servo kemudi, aktuator roda diferensial untuk menggerakkan robot mengikuti rencana.' : 'DC motors, steering servos, and differential-drive actuators executing control commands.'}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs font-mono space-y-2">
-              <strong className="text-slate-900 dark:text-slate-100 block font-bold">
-                {isId ? 'Klasifikasi Robot (Berdasarkan Elements of Robotics):' : 'Classification of Robots (from Elements of Robotics):'}
-              </strong>
-              <ul className="space-y-1 text-slate-600 dark:text-slate-400 list-disc list-inside">
-                <li><strong>Fixed Manipulators:</strong> {isId ? 'Lengan robot industri terfiksasi di lantai dengan posisi presisi tinggi.' : 'Industrial robotic arms fixed to stable bases with high repeatable accuracy.'}</li>
-                <li><strong>Mobile Terrestrial:</strong> {isId ? 'Robot beroda (differential, omnidirectional) dan berkaki (quadruped, humanoid).' : 'Wheeled robots (differential, omnidirectional) and legged robots.'}</li>
-                <li><strong>Aerial & Aquatic:</strong> {isId ? 'Drone quadrotor, AUV bawah laut dengan 6 derajat kebebasan (6-DOF).' : 'Aerial drones and underwater autonomous vehicles with 6 degrees of freedom (6-DOF).'}</li>
-              </ul>
-            </div>
+            {/* Video Reference */}
+            <VideoEmbed
+              title={isId ? 'Rujukan Kuliah: Apa yang Mengkualifikasikan Sebuah Robot?' : 'Reference Lecture: What qualifies as a robot?'}
+              provider="youtube"
+              videoId="-nGlDsk1rS4"
+              sourceUrl="https://www.youtube.com/watch?v=-nGlDsk1rS4"
+              author="Prof. Kagan Tumer (Oregon State University)"
+              duration="3m 45s"
+            />
           </div>
+
+          {/* Interactive Sense-Plan-Act Simulator */}
+          <SensePlanActExplorer />
+
+          {/* Interactive Robot Classification Sandbox */}
+          <RobotClassificationExplorer />
+
+          {/* Concept Check Quiz */}
+          <ConceptCheck
+            id="quiz-ch1"
+            question={
+              isId
+                ? 'Apa perbedaan mendasar antara mesin cuci otomatis (otomasi biasa) dengan robot pembersih lantai otonom (AMR)?'
+                : 'What is the fundamental difference between a standard automatic washing machine and an autonomous vacuum robot (AMR)?'
+            }
+            options={[
+              {
+                id: 'A',
+                text: isId ? 'Mesin cuci menggunakan motor listrik, sedangkan robot tidak.' : 'Washing machines use electric motors, while robots do not.',
+                isCorrect: false,
+                explanation: isId ? 'Keduanya menggunakan motor listrik sebagai aktuator.' : 'Both rely on electric motors for mechanical actuation.',
+              },
+              {
+                id: 'B',
+                text: isId
+                  ? 'Robot merespons persepsi sensor secara dinamis di lingkungan tak pasti, sedangkan mesin cuci menjalankan urutan tetap tanpa memetakan dunia luar.'
+                  : 'The robot dynamically closes the loop based on real-time sensor perception, whereas the washing machine blindly executes a fixed schedule.',
+                isCorrect: true,
+                explanation: isId
+                  ? 'Tepat sekali! Robot memiliki loop Sense-Plan-Act yang terus beradaptasi dengan ketidakpastian dunia nyata.'
+                  : 'Correct! An autonomous robot continuously closes the Sense-Plan-Act loop to handle dynamic environmental uncertainty.',
+              },
+              {
+                id: 'C',
+                text: isId ? 'Mesin cuci tidak memiliki tombol daya.' : 'Washing machines have no power buttons.',
+                isCorrect: false,
+                explanation: isId ? 'Pilihan ini tidak benar.' : 'Incorrect.',
+              },
+            ]}
+            hint={isId ? 'Pikirkan tentang peran umpan balik sensor lingkungan.' : 'Think about the role of environmental sensory feedback.'}
+          />
+
+          {/* Academic Citations */}
+          <AcademicReferences
+            references={[
+              {
+                id: 1,
+                authors: 'Marco Ben-Ari & Francesco Mondada',
+                year: 2018,
+                title: 'Elements of Robotics',
+                publisher: 'Springer Open',
+                chapterCoverage: 'Chapter 1: Introduction to Robotics & Braitenberg Vehicles',
+                doiOrUrl: 'https://doi.org/10.1007/978-3-319-62533-1',
+              },
+              {
+                id: 2,
+                authors: 'Deepak Herath & David St-Onge',
+                year: 2022,
+                title: 'Foundations of Robotics: A Multidisciplinary Approach with Python and ROS',
+                publisher: 'Springer',
+                chapterCoverage: 'Chapter 1: Autonomous Systems & Sense-Plan-Act Loop',
+                doiOrUrl: 'https://doi.org/10.1007/978-981-19-1983-1',
+              },
+            ]}
+          />
         </div>
       )}
 

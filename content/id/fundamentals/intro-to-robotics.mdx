@@ -6,31 +6,67 @@ category: fundamentals
 difficulty: beginner
 language: id
 interactive: true
-estimatedMinutes: 15
+estimatedMinutes: 30
 prerequisites: []
 references:
   - ben-ari-elements-of-robotics
   - herath-foundations-of-robotics
 components:
   - LessonOrientation
+  - VideoEmbed
   - SensePlanActExplorer
+  - RobotClassificationExplorer
+  - ConceptCheck
+  - AcademicReferences
 ---
 
-# Pengantar Robotika Otonom
+# Pengantar Robotika & Sistem Otonom
 
-Robot otonom adalah sistem siber-fisik yang mampu mengambil keputusan mandiri melalui interaksi lingkungan fisik menggunakan sensor dan aktuator. Berbeda dari otomasi biasa (seperti mesin cuci), robot beroperasi dalam lingkungan tak pasti dan terus beradaptasi.
+## Apa itu Robotika?
+
+Ketika mendengar kata **robot**, Anda mungkin membayangkan robot humanoid, lengan robot industri di pabrik mobil, robot pengantar barang di gudang, atau drone terbang.
+
+Robotika adalah disiplin ilmu multidisiplin yang berfokus pada perancangan dan pembangunan mesin cerdas yang mampu **mengamati (sense), memproses (compute), dan bertindak (act) di dunia fisik nyata**.
+
+Definisi inti yang berguna untuk dipahami:
+
+> Robot adalah mesin fisik yang menggabungkan penginderaan sensor, komputasi algoritma, dan aktuasi mekanik untuk menyelesaikan tugas di dunia nyata.
+
+Prinsip utamanya: robot bukan sekadar komputer dan bukan sekadar mesin mekanis biasa, melainkan sistem simpal tertutup (*closed-loop system*) yang menjembatani dunia fisik nyata dengan komputasi kecerdasan.
+
+---
 
 ## Siklus Sense-Plan-Act
 
-1. **SENSE (Sensor)**:
-   - Sensor Proprioseptif (status internal: enkoder roda, IMU, tegangan baterai).
-   - Sensor Eksteroseptif (lingkungan luar: LiDAR, Kamera Stereo, Sonar Ultrasonik).
-2. **PLAN (Otak / Komputasi)**:
-   - Estimasi Status (State Estimation), Pemetaan (Mapping), dan Perencanaan Jalur (Path Planning).
-3. **ACT (Aktuator & Gerak)**:
-   - Motor DC brushless, servo kemudi, dan aktuator roda diferensial untuk menggerakkan robot mengikuti rencana.
+Untuk beroperasi secara otonom di lingkungan nyata yang dinamis, robot menjalankan siklus **Sense $\to$ Plan $\to$ Act** secara terus-menerus:
 
-## Klasifikasi Robot
-- **Manipulator Terfiksasi**: Lengan robot industri terfiksasi di lantai dengan posisi presisi tinggi.
-- **Mobile Terestrial**: Robot beroda diferensial, kendaraan Ackermann, robot berkaki quadruped/humanoid.
-- **Aerial & Akuatik**: Drone quadrotor dan AUV bawah laut yang beroperasi dalam konfigurasi spasial 6-DOF.
+1. **SENSE (Penginderaan)**: Mengamati lingkungan melalui sensor eksteroseptif (LiDAR, Kamera, Sonar) dan sensor proprioseptif (enkoder roda, IMU).
+2. **ESTIMASI & PEMETAAN**: Menggabungkan data sensor mentah untuk mengestimasi status posisi robot $\mathbf{x}_k = (x, y, \theta)$ dan membangun peta grid okupansi lingkungan.
+3. **PLAN (Perencanaan)**: Menghitung jalur bebas tabrakan menggunakan algoritma pencarian graf seperti A* atau kurva polinomial kuintik.
+4. **ACT (Aktuasi)**: Mengirimkan sinyal kontrol motor (tegangan PWM, sudut servo kemudi) ke roda atau aktuator penggerak.
+5. **PENGAMATAN ULANG**: Mengulang siklus umpan balik secara kontinu pada frekuensi 10 Hz hingga 100 Hz.
+
+---
+
+## Apa Perbedaan Robot dengan Otomasi Biasa?
+
+Bayangkan mesin cuci standar:
+- Memiliki motor penggerak, pewaktu (timer), dan tombol operasi.
+- Namun mesin cuci mengeksekusi siklus putaran yang kaku dan tetap sama, terlepas dari apakah pakaian sudah bersih, tersangkut, atau berlebih beban.
+
+Sekarang bayangkan **robot pembersih lantai otonom (vacuum AMR)**:
+- Robot mendeteksi rintangan dinamis secara seketika, memetakan ruangan, merencanakan rute penyisiran optimal, dan mampu bermanuver membebaskan diri jika terjebak.
+- Robot menyesuaikan tindakannya berdasarkan persepsi fisik waktu nyata.
+
+---
+
+## Rujukan Video: Apa yang Mengkualifikasikan Sebuah Robot?
+
+Profesor Kagan Tumer (Oregon State University) mendiskusikan batasan definisi robotika serta mengapa wujud fisik (*embodiment*) dan pengambilan keputusan otonom merupakan fondasi esensial sebuah robot.
+
+<VideoEmbed
+  title="What is a robot?"
+  provider="youtube"
+  videoId="-nGlDsk1rS4"
+  sourceUrl="https://www.youtube.com/watch?v=-nGlDsk1rS4"
+/>
