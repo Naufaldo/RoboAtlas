@@ -23,54 +23,47 @@ export interface LessonContent {
 
 const CONTENT_ROOT = path.resolve(process.cwd(), 'content');
 
-const VALID_CATEGORIES = new Set([
-  'fundamentals',
-  'mathematics',
-  'geometry',
-  'kinematics',
-  'dynamics',
-  'sensors',
-  'algorithms',
-  'planning',
-  'estimation',
-  'perception',
-  'control',
-  'manipulation',
-  'mobile',
-  'aerial',
-  'marine',
-  'legged',
-  'advanced',
-]);
+// Canonical pre-registered lesson index mapping language/category/slug to relative path
+const LESSON_INDEX: Record<string, string> = {
+  // English Lessons
+  'en/fundamentals/intro-to-robotics': 'en/fundamentals/intro-to-robotics.mdx',
+  'en/mathematics/mathematical-foundations': 'en/mathematics/mathematical-foundations.mdx',
+  'en/geometry/2d-geometry': 'en/geometry/2d-geometry.mdx',
+  'en/geometry/3d-geometry': 'en/geometry/3d-geometry.mdx',
+  'en/kinematics/velocity-kinematics-2d': 'en/kinematics/velocity-kinematics-2d.mdx',
+  'en/planning/a-star': 'en/planning/a-star.mdx',
+  'en/control/pure-pursuit-and-stanley': 'en/control/pure-pursuit-and-stanley.mdx',
+  'en/estimation/mcl-particle-filter': 'en/estimation/mcl-particle-filter.mdx',
+  'en/perception/occupancy-grid-mapping': 'en/perception/occupancy-grid-mapping.mdx',
+  'en/advanced/icp-scan-matching': 'en/advanced/icp-scan-matching.mdx',
+  'en/advanced/laplacian-consensus': 'en/advanced/laplacian-consensus.mdx',
+
+  // Indonesian Lessons
+  'id/fundamentals/intro-to-robotics': 'id/fundamentals/intro-to-robotics.mdx',
+  'id/mathematics/mathematical-foundations': 'id/mathematics/mathematical-foundations.mdx',
+  'id/geometry/2d-geometry': 'id/geometry/2d-geometry.mdx',
+  'id/geometry/3d-geometry': 'id/geometry/3d-geometry.mdx',
+  'id/kinematics/velocity-kinematics-2d': 'id/kinematics/velocity-kinematics-2d.mdx',
+  'id/planning/a-star': 'id/planning/a-star.mdx',
+  'id/control/pure-pursuit-and-stanley': 'id/control/pure-pursuit-and-stanley.mdx',
+  'id/estimation/mcl-particle-filter': 'id/estimation/mcl-particle-filter.mdx',
+  'id/perception/occupancy-grid-mapping': 'id/perception/occupancy-grid-mapping.mdx',
+  'id/advanced/icp-scan-matching': 'id/advanced/icp-scan-matching.mdx',
+  'id/advanced/laplacian-consensus': 'id/advanced/laplacian-consensus.mdx',
+};
 
 function sanitizeParam(input: string): string {
   return (input || '').replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
-function isStrictlyInside(parentDir: string, targetPath: string): boolean {
-  const normalizedParent = path.normalize(parentDir) + path.sep;
-  const normalizedTarget = path.normalize(targetPath);
-  return normalizedTarget.startsWith(normalizedParent) || normalizedTarget === path.normalize(parentDir);
-}
-
 export function getLessonSlugs(language: 'en' | 'id', category: string): string[] {
   const safeLang = language === 'id' ? 'id' : 'en';
   const safeCategory = sanitizeParam(category);
+  const prefix = `${safeLang}/${safeCategory}/`;
 
-  if (!VALID_CATEGORIES.has(safeCategory)) {
-    return [];
-  }
-
-  const categoryDir = path.resolve(CONTENT_ROOT, safeLang, safeCategory);
-
-  if (!isStrictlyInside(CONTENT_ROOT, categoryDir) || !fs.existsSync(categoryDir)) {
-    return [];
-  }
-
-  return fs
-    .readdirSync(categoryDir)
-    .filter((file) => file.endsWith('.mdx') || file.endsWith('.md'))
-    .map((file) => file.replace(/\.(mdx|md)$/, ''));
+  return Object.keys(LESSON_INDEX)
+    .filter((key) => key.startsWith(prefix))
+    .map((key) => key.replace(prefix, ''));
 }
 
 export function getLesson(
@@ -82,23 +75,16 @@ export function getLesson(
   const safeCategory = sanitizeParam(category);
   const safeSlug = sanitizeParam(slug);
 
-  if (!VALID_CATEGORIES.has(safeCategory) || !safeSlug) {
+  const key = `${safeLang}/${safeCategory}/${safeSlug}`;
+  const relativePath = LESSON_INDEX[key];
+
+  if (!relativePath) {
     return null;
   }
 
-  const fullPath = path.resolve(CONTENT_ROOT, safeLang, safeCategory, `${safeSlug}.mdx`);
-  const fallbackPath = path.resolve(CONTENT_ROOT, safeLang, safeCategory, `${safeSlug}.md`);
+  const targetPath = path.resolve(CONTENT_ROOT, relativePath);
 
-  let targetPath = fullPath;
   if (!fs.existsSync(targetPath)) {
-    if (fs.existsSync(fallbackPath)) {
-      targetPath = fallbackPath;
-    } else {
-      return null;
-    }
-  }
-
-  if (!isStrictlyInside(CONTENT_ROOT, targetPath)) {
     return null;
   }
 
@@ -113,35 +99,22 @@ export function getLesson(
 
 export function getAllLessons(language: 'en' | 'id'): LessonContent[] {
   const safeLang = language === 'id' ? 'id' : 'en';
-  const langDir = path.resolve(CONTENT_ROOT, safeLang);
-
-  if (!isStrictlyInside(CONTENT_ROOT, langDir) || !fs.existsSync(langDir)) {
-    return [];
-  }
-
-  const categories = fs.readdirSync(langDir);
+  const prefix = `${safeLang}/`;
   const lessons: LessonContent[] = [];
 
-  for (const category of categories) {
-    const safeCategory = sanitizeParam(category);
-    if (!VALID_CATEGORIES.has(safeCategory)) continue;
+  const matchedKeys = Object.keys(LESSON_INDEX).filter((key) => key.startsWith(prefix));
 
-    const categoryPath = path.resolve(langDir, safeCategory);
+  for (const key of matchedKeys) {
+    const relativePath = LESSON_INDEX[key];
+    const targetPath = path.resolve(CONTENT_ROOT, relativePath);
 
-    if (
-      isStrictlyInside(CONTENT_ROOT, categoryPath) &&
-      fs.statSync(categoryPath).isDirectory()
-    ) {
-      const files = fs.readdirSync(categoryPath);
-      for (const file of files) {
-        if (file.endsWith('.mdx') || file.endsWith('.md')) {
-          const slug = file.replace(/\.(mdx|md)$/, '');
-          const lesson = getLesson(safeLang, safeCategory, slug);
-          if (lesson) {
-            lessons.push(lesson);
-          }
-        }
-      }
+    if (fs.existsSync(targetPath)) {
+      const fileContents = fs.readFileSync(targetPath, 'utf8');
+      const { data, content } = matter(fileContents);
+      lessons.push({
+        frontmatter: data as LessonFrontmatter,
+        content,
+      });
     }
   }
 

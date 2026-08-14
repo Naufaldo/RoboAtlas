@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import katex from 'katex';
+import { MathBlock, InlineMath } from '@/components/mathematics/MathBlock';
 import { CoordinateFrameExplorer } from '@/components/educational/CoordinateFrameExplorer';
 import { VectorVisualizer } from '@/components/educational/VectorVisualizer';
 import { DotProductExplorer } from '@/components/educational/DotProductExplorer';
@@ -29,19 +29,7 @@ interface MdxArticleProps {
   className?: string;
 }
 
-function renderKaTeX(latex: string, displayMode: boolean): string {
-  try {
-    return katex.renderToString(latex.trim(), {
-      displayMode,
-      throwOnError: false,
-    });
-  } catch (err) {
-    return latex;
-  }
-}
-
 function parseInlineFormatting(text: string): React.ReactNode[] {
-  // Regex to split on math $...$, bold **...**, inline code `...`, italic *...*
   const tokens: React.ReactNode[] = [];
   const regex = /(\$[^$]+\$|\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g;
   const parts = text.split(regex);
@@ -51,14 +39,7 @@ function parseInlineFormatting(text: string): React.ReactNode[] {
 
     if (part.startsWith('$') && part.endsWith('$') && part.length > 2) {
       const latex = part.slice(1, -1);
-      const html = renderKaTeX(latex, false);
-      tokens.push(
-        <span
-          key={`math-${index}`}
-          className="inline-math px-0.5"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      );
+      tokens.push(<InlineMath key={`math-${index}`} latex={latex} />);
     } else if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
       tokens.push(
         <strong key={`b-${index}`} className="font-bold text-slate-900 dark:text-slate-100">
@@ -103,97 +84,98 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
         continue;
       }
 
-      // Block LaTeX: $$ ... $$
+      // Display KaTeX Math ($$ ... $$)
       if (line.startsWith('$$')) {
-        let latex = line.slice(2);
-        if (latex.endsWith('$$') && latex.length >= 2) {
-          latex = latex.slice(0, -2);
+        let mathBlock = '';
+        if (line.length > 2 && line.endsWith('$$') && line !== '$$') {
+          mathBlock = line.slice(2, -2).trim();
           i++;
         } else {
           i++;
+          const mathLines: string[] = [];
           while (i < rawLines.length && !rawLines[i].trim().endsWith('$$')) {
-            latex += '\n' + rawLines[i];
+            mathLines.push(rawLines[i]);
             i++;
           }
           if (i < rawLines.length) {
-            latex += '\n' + rawLines[i].trim().replace(/\$\$$/, '');
+            const endLine = rawLines[i].trim().replace(/\$\$$/, '');
+            if (endLine) mathLines.push(endLine);
             i++;
           }
+          mathBlock = mathLines.join('\n').trim();
         }
-        const html = renderKaTeX(latex, true);
+
         nodes.push(
-          <div
-            key={`display-math-${i}`}
-            className="my-6 p-4 rounded-2xl bg-slate-900/90 text-cyan-300 border border-slate-800 overflow-x-auto scrollbar-thin shadow-lg flex justify-center text-sm sm:text-base"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+          <div key={`mathblock-${i}`} className="my-4">
+            <MathBlock latex={mathBlock} displayMode={true} />
+          </div>
         );
         continue;
       }
 
-      // Custom Interactive Components
+      // Interactive Simulator Components Mounts
       if (line.startsWith('<CoordinateFrameExplorer')) {
-        nodes.push(<CoordinateFrameExplorer key={`comp-coord-${i}`} />);
+        nodes.push(<CoordinateFrameExplorer key={`comp-cfe-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<VectorVisualizer')) {
-        nodes.push(<VectorVisualizer key={`comp-vector-${i}`} />);
+        nodes.push(<VectorVisualizer key={`comp-vv-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<DotProductExplorer')) {
-        nodes.push(<DotProductExplorer key={`comp-dot-${i}`} />);
+        nodes.push(<DotProductExplorer key={`comp-dpe-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<TransformSandbox')) {
-        nodes.push(<TransformSandbox key={`comp-transform-${i}`} />);
+        nodes.push(<TransformSandbox key={`comp-ts-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<SpatialRotation3D')) {
-        nodes.push(<SpatialRotation3D key={`comp-rotation3d-${i}`} />);
+        nodes.push(<SpatialRotation3D key={`comp-sr3d-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<KinematicsSimulator')) {
-        nodes.push(<KinematicsSimulator key={`comp-kinematics-${i}`} />);
+        nodes.push(<KinematicsSimulator key={`comp-ks-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<PathPlanningSimulator')) {
-        nodes.push(<PathPlanningSimulator key={`comp-pathplanning-${i}`} />);
+        nodes.push(<PathPlanningSimulator key={`comp-pps-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<ControlSimulator')) {
-        nodes.push(<ControlSimulator key={`comp-control-${i}`} />);
+        nodes.push(<ControlSimulator key={`comp-cs-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<LocalizationSimulator')) {
-        nodes.push(<LocalizationSimulator key={`comp-localization-${i}`} />);
+        nodes.push(<LocalizationSimulator key={`comp-ls-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<MappingSimulator')) {
-        nodes.push(<MappingSimulator key={`comp-mapping-${i}`} />);
+        nodes.push(<MappingSimulator key={`comp-ms-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<SlamSimulator')) {
-        nodes.push(<SlamSimulator key={`comp-slam-${i}`} />);
+        nodes.push(<SlamSimulator key={`comp-ss-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<MultiAgentSimulator')) {
-        nodes.push(<MultiAgentSimulator key={`comp-multiagent-${i}`} />);
+        nodes.push(<MultiAgentSimulator key={`comp-mas-${i}`} />);
         i++;
         continue;
       }
       if (line.startsWith('<SensePlanActExplorer')) {
-        nodes.push(<SensePlanActExplorer key={`comp-spa-${i}`} />);
+        nodes.push(<SensePlanActExplorer key={`comp-spae-${i}`} />);
         i++;
         continue;
       }
@@ -285,14 +267,17 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
         continue;
       }
 
-      // Unordered lists
+      // Bullet lists
       if (line.startsWith('- ') || line.startsWith('* ')) {
         const listItems: React.ReactNode[] = [];
-        while (i < rawLines.length && (rawLines[i].trim().startsWith('- ') || rawLines[i].trim().startsWith('* '))) {
+        while (
+          i < rawLines.length &&
+          (rawLines[i].trim().startsWith('- ') || rawLines[i].trim().startsWith('* '))
+        ) {
           const itemText = rawLines[i].trim().slice(2);
           listItems.push(
             <li key={`li-${i}`} className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-2 flex-shrink-0" />
+              <span className="text-cyan-500 font-bold">•</span>
               <span>{parseInlineFormatting(itemText)}</span>
             </li>
           );
@@ -326,9 +311,9 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
         continue;
       }
 
-      // Default Paragraph
+      // Default Paragraph with focused reading column width
       nodes.push(
-        <p key={`p-${i}`} className="my-3 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
+        <p key={`p-${i}`} className="my-3 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed font-sans reading-prose">
           {parseInlineFormatting(line)}
         </p>
       );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useRef, useEffect } from 'react';
 import katex from 'katex';
 import { Info } from 'lucide-react';
 
@@ -19,26 +19,29 @@ export function MathBlock({
   title,
   className = '',
 }: MathBlockProps) {
-  const html = useMemo(() => {
-    try {
-      // Render mathematical LaTeX string to sanitized KaTeX HTML/MathML
-      return katex.renderToString(latex, {
-        displayMode,
-        throwOnError: false,
-        output: 'htmlAndMathml',
-      });
-    } catch (err) {
-      console.error('KaTeX rendering error:', err);
-      return `<span class="text-rose-500 font-mono text-xs">[Math Render Error: ${latex}]</span>`;
+  const containerRef = useRef<HTMLDivElement | HTMLSpanElement | null>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      try {
+        katex.render(latex, containerRef.current, {
+          displayMode,
+          throwOnError: false,
+          output: 'htmlAndMathml',
+        });
+      } catch (err) {
+        if (containerRef.current) {
+          containerRef.current.textContent = `[Math Render Error: ${latex}]`;
+        }
+      }
     }
   }, [latex, displayMode]);
 
   if (!displayMode) {
     return (
       <span
+        ref={containerRef as React.RefObject<HTMLSpanElement>}
         className={`inline-block mx-1 font-mono text-cyan-600 dark:text-cyan-300 font-semibold ${className}`}
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: html }}
       />
     );
   }
@@ -59,9 +62,8 @@ export function MathBlock({
       {/* Touch-scrollable mathematical display container */}
       <div className="w-full overflow-x-auto scrollbar-thin py-2 text-slate-900 dark:text-slate-100 text-sm sm:text-base md:text-lg flex justify-start sm:justify-center px-1">
         <div
+          ref={containerRef as React.RefObject<HTMLDivElement>}
           className="inline-block min-w-max"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: html }}
         />
       </div>
 
