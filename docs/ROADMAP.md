@@ -2,7 +2,7 @@
 
 > **Roadmap Version:** 2.0  
 > **Status:** Active & Progressive  
-> **Canonical Reference:** [`docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md`](RoboAtlas_Master_Web_Curriculum_Spec_v2.md) & [`docs/RoboAtlas_Master_Curriculum_v1.md`](RoboAtlas_Master_Curriculum_v1.md)
+> **Canonical Reference:** [`docs/SPECIFICATION.md`](SPECIFICATION.md)
 
 ---
 

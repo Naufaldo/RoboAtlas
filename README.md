@@ -150,16 +150,11 @@ Explore platform-specific implementations at **[`/robots`](https://naufaldo.gith
 
 ## 📖 Comprehensive Documentation
 
-- 📚 **[Master Web & Curriculum Specification v2.0](docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md)** — The master vision for RoboAtlas as a general robotics learning platform.
-- 📚 **[Master Curriculum Hierarchy v1.0](docs/RoboAtlas_Master_Curriculum_v1.md)** — Complete 21-level syllabus, module, lesson, lab, and project breakdown.
-- 📋 **[System Specification](docs/SPECIFICATION.md)** — Architectural design, 5-layer hierarchy, KaTeX standards, and static export rules.
-- 🗺️ **[Feature Roadmap](docs/ROADMAP.md)** — 12-Milestone delivery hierarchy (M1 through M12).
+- 📋 **[System & Technical Specification v2.0](docs/SPECIFICATION.md)** — Architectural design, 21-Level Master Curriculum, MDX schemas, 7-Step Math standard, and Learner-First UI/UX framework.
 - 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 16 Core Agentic Rules and 8-Step Workflow Loop.
+- 🗺️ **[Feature Roadmap](docs/ROADMAP.md)** — 12-Milestone delivery hierarchy (M1 through M12).
 - 📜 **[Changelog](CHANGELOG.md)** — Detailed version release history adhering to Keep a Changelog and SemVer.
-- 📑 **[MDX Content Architecture](docs/RoboAtlas_MDX_Content_Architecture.md)** — MDX directory layout, frontmatter schemas, and authoring specifications.
-- 🎨 **[Learner-First UI/UX Specification](docs/RoboAtlas_UI_UX_Learner_First_Spec.md)** — Cognitive load reduction and design personality.
-- 📐 **[Mathematical Explanation Rules](docs/RoboAtlas_Mathematical_Explanation_Rules.md)** — 7-step pedagogical standard for robotics equations.
-- 🏗️ **[Architecture Overview](ARCHITECTURE.md)** — Modular 5-layer system overview.
+- 🏗️ **[Architecture Overview](ARCHITECTURE.md)** — Modular 5-layer client-side system overview.
 - 🤝 **[Contributing Guide](CONTRIBUTING.md)** — Development standards and pull request workflows.
 - 📜 **[Third-Party Notices](THIRD_PARTY_NOTICES.md)** — Attribution to PythonRobotics and academic citations.
 

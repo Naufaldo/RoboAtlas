@@ -2,7 +2,7 @@
 
 > **Version:** 2.0  
 > **Status:** Active & Mandatory  
-> **Canonical Reference:** [`docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md`](RoboAtlas_Master_Web_Curriculum_Spec_v2.md)
+> **Canonical Reference:** [`docs/SPECIFICATION.md`](SPECIFICATION.md)
 
 ---
 
@@ -74,7 +74,7 @@
   ```
 
 ### Rule 16: Master Curriculum Alignment
-- All educational modules, algorithm matrices, MDX lessons, and simulators must align with the **21-Level Master Robotics Curriculum** defined in [`docs/RoboAtlas_Master_Curriculum_v1.md`](RoboAtlas_Master_Curriculum_v1.md) and [`docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md`](RoboAtlas_Master_Web_Curriculum_Spec_v2.md).
+- All educational modules, algorithm matrices, MDX lessons, and simulators must align with the **21-Level Master Robotics Curriculum** defined in [`docs/SPECIFICATION.md`](SPECIFICATION.md).
 
 ---
 
