@@ -9,14 +9,15 @@ export interface LessonNavigationProps {
   prevLesson?: {
     title: string;
     href: string;
-    domain: string;
+    domain?: string;
   };
   nextLesson?: {
     title: string;
     href: string;
-    domain: string;
+    domain?: string;
   };
   suggestedExperiments?: string[];
+  simulationChallenge?: string;
 }
 
 export function LessonNavigation({
