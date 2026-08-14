@@ -21,11 +21,26 @@ export interface LessonContent {
   content: string;
 }
 
-const CONTENT_DIR = path.join(process.cwd(), 'content');
+const CONTENT_ROOT = path.resolve(process.cwd(), 'content');
+
+function sanitizeParam(input: string): string {
+  return input.replace(/[^a-zA-Z0-9_-]/g, '');
+}
+
+function isSafeSubpath(parentDir: string, targetPath: string): boolean {
+  const relative = path.relative(parentDir, targetPath);
+  return !relative.startsWith('..') && !path.isAbsolute(relative);
+}
 
 export function getLessonSlugs(language: 'en' | 'id', category: string): string[] {
-  const categoryDir = path.join(CONTENT_DIR, language, category);
-  if (!fs.existsSync(categoryDir)) return [];
+  const safeLang = language === 'id' ? 'id' : 'en';
+  const safeCategory = sanitizeParam(category);
+  const categoryDir = path.resolve(CONTENT_ROOT, safeLang, safeCategory);
+
+  if (!isSafeSubpath(CONTENT_ROOT, categoryDir) || !fs.existsSync(categoryDir)) {
+    return [];
+  }
+
   return fs
     .readdirSync(categoryDir)
     .filter((file) => file.endsWith('.mdx') || file.endsWith('.md'))
@@ -37,8 +52,12 @@ export function getLesson(
   category: string,
   slug: string
 ): LessonContent | null {
-  const fullPath = path.join(CONTENT_DIR, language, category, `${slug}.mdx`);
-  const fallbackPath = path.join(CONTENT_DIR, language, category, `${slug}.md`);
+  const safeLang = language === 'id' ? 'id' : 'en';
+  const safeCategory = sanitizeParam(category);
+  const safeSlug = sanitizeParam(slug);
+
+  const fullPath = path.resolve(CONTENT_ROOT, safeLang, safeCategory, `${safeSlug}.mdx`);
+  const fallbackPath = path.resolve(CONTENT_ROOT, safeLang, safeCategory, `${safeSlug}.md`);
 
   let targetPath = fullPath;
   if (!fs.existsSync(targetPath)) {
@@ -47,6 +66,10 @@ export function getLesson(
     } else {
       return null;
     }
+  }
+
+  if (!isSafeSubpath(CONTENT_ROOT, targetPath)) {
+    return null;
   }
 
   const fileContents = fs.readFileSync(targetPath, 'utf8');
@@ -59,24 +82,37 @@ export function getLesson(
 }
 
 export function getAllLessons(language: 'en' | 'id'): LessonContent[] {
-  const langDir = path.join(CONTENT_DIR, language);
-  if (!fs.existsSync(langDir)) return [];
+  const safeLang = language === 'id' ? 'id' : 'en';
+  const langDir = path.resolve(CONTENT_ROOT, safeLang);
+
+  if (!isSafeSubpath(CONTENT_ROOT, langDir) || !fs.existsSync(langDir)) {
+    return [];
+  }
 
   const categories = fs.readdirSync(langDir);
   const lessons: LessonContent[] = [];
 
   for (const category of categories) {
-    const categoryPath = path.join(langDir, category);
-    if (fs.statSync(categoryPath).isDirectory()) {
+    const safeCategory = sanitizeParam(category);
+    const categoryPath = path.resolve(langDir, safeCategory);
+
+    if (
+      isSafeSubpath(CONTENT_ROOT, categoryPath) &&
+      fs.existsSync(categoryPath) &&
+      fs.statSync(categoryPath).isDirectory()
+    ) {
       const files = fs.readdirSync(categoryPath);
       for (const file of files) {
         if (file.endsWith('.mdx') || file.endsWith('.md')) {
-          const fileContents = fs.readFileSync(path.join(categoryPath, file), 'utf8');
-          const { data, content } = matter(fileContents);
-          lessons.push({
-            frontmatter: data as LessonFrontmatter,
-            content,
-          });
+          const safeFilePath = path.resolve(categoryPath, file);
+          if (isSafeSubpath(CONTENT_ROOT, safeFilePath) && fs.existsSync(safeFilePath)) {
+            const fileContents = fs.readFileSync(safeFilePath, 'utf8');
+            const { data, content } = matter(fileContents);
+            lessons.push({
+              frontmatter: data as LessonFrontmatter,
+              content,
+            });
+          }
         }
       }
     }

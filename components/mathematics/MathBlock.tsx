@@ -21,6 +21,7 @@ export function MathBlock({
 }: MathBlockProps) {
   const html = useMemo(() => {
     try {
+      // Render mathematical LaTeX string to sanitized KaTeX HTML/MathML
       return katex.renderToString(latex, {
         displayMode,
         throwOnError: false,
@@ -36,6 +37,7 @@ export function MathBlock({
     return (
       <span
         className={`inline-block mx-1 font-mono text-cyan-600 dark:text-cyan-300 font-semibold ${className}`}
+        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );
@@ -58,6 +60,7 @@ export function MathBlock({
       <div className="w-full overflow-x-auto scrollbar-thin py-2 text-slate-900 dark:text-slate-100 text-sm sm:text-base md:text-lg flex justify-start sm:justify-center px-1">
         <div
           className="inline-block min-w-max"
+          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: html }}
         />
       </div>
