@@ -53,6 +53,14 @@ Visual plausibility is not enough. All algorithms and mathematical functions mus
 - All educational explanations and TypeScript implementations must be written from first principles.
 - Maintain [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) and cite classical academic papers whenever referencing an algorithm.
 
+### Rule 11: Continuous Semantic Versioning & CHANGELOG Maintenance
+- Every release, milestone completion, or major feature addition MUST update `package.json` version and document changes in [`CHANGELOG.md`](../CHANGELOG.md) using the Keep a Changelog standard.
+- Avoid unversioned commits for public releases.
+
+### Rule 12: Bilingual Parity Requirement (English & Indonesian)
+- All user-facing UI, documentation, educational explanations, mathematical breakdowns, and simulator tooltips MUST support both **Bahasa Indonesia (`id`)** and **English (`en`)**.
+- Maintain dictionary synchronization in [`lib/i18n/translations.ts`](../lib/i18n/translations.ts).
+
 ---
 
 ## 🔄 8-Step Agent Workflow Loop
