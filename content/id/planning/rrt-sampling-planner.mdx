@@ -1,0 +1,122 @@
+---
+id: rrt-sampling-planner
+title: "Rapidly-exploring Random Trees: Perencanaan Gerak RRT & RRT* (M17)"
+slug: rrt-sampling-planner
+category: planning
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - configuration-space-and-minkowski
+  - a-star
+references:
+  - Steven M. LaValle (1998). Rapidly-Exploring Random Trees: A New Tool for Path Planning. Technical Report (TR 98-11), Computer Science Dept, Iowa State University.
+  - Sertac Karaman & Emilio Frazzoli (2011). Sampling-based Algorithms for Optimal Motion Planning. International Journal of Robotics Research (IJRR).
+components:
+  - RrtExplorationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Rapidly-exploring Random Trees: Perencanaan Gerak RRT & RRT* (M17)
+
+> "Pada ruang konfigurasi kontinu berdimensi tinggi (seperti lengan robot 6-DOF atau manuver drone 3D), pendekatan grid mengalami ledakan eksponensial (Curse of Dimensionality). Bagaimana algoritma berbasis sampel acak mampu menemukan jalur bebas tabrakan dalam hitungan milidetik?"
+
+**Rapidly-exploring Random Trees (RRT)** dan varian optimalnya **RRT\*** mengeksplorasi ruang konfigurasi kontinu $\mathcal{C}$ dengan menumbuhkan pohon percabangan acak yang mengisi ruang (*space-filling tree*).
+
+---
+
+## 1. Alur 4-Langkah Inti Algoritma RRT
+
+Pada setiap iterasi $k = 1, 2, \dots, N$:
+
+### 1.1 Sampling Sampel Acak ($q_{\text{rand}}$)
+Buat sampel status acak seragam $q_{\text{rand}} \in \mathcal{C}$. Dengan peluang $p_{\text{bias}}$ (biasanya 5–15%), arahkan sampel ke target $q_{\text{goal}}$:
+
+$$
+q_{\text{rand}} = \begin{cases} q_{\text{goal}} & \text{dengan peluang } p_{\text{bias}} \\ \text{Uniform}(\mathcal{C}) & \text{dengan peluang } 1 - p_{\text{bias}} \end{cases}
+$$
+
+### 1.2 Pencarian Tetangga Terdekat ($q_{\text{near}}$)
+Cari simpul pohon yang telah ada yang memiliki jarak Euclidean terdekat ke $q_{\text{rand}}$:
+
+$$
+q_{\text{near}} = \arg\min_{v \in \mathcal{V}} \|v - q_{\text{rand}}\|
+$$
+
+### 1.3 Perpanjangan Langkah Kemudi (*Steer Step* $q_{\text{new}}$)
+Tumbuhkan cabang inkremental sepanjang $\Delta q$ dari $q_{\text{near}}$ menuju arah $q_{\text{rand}}$:
+
+$$
+q_{\text{new}} = q_{\text{near}} + \min(\Delta q, \|q_{\text{rand}} - q_{\text{near}}\|) \cdot \frac{q_{\text{rand}} - q_{\text{near}}}{\|q_{\text{rand}} - q_{\text{near}}\|}
+$$
+
+### 1.4 Pengecekan Tabrakan & Penambahan Simpul
+Jika segmen garis lurus $[q_{\text{near}}, q_{\text{new}}] \subset \mathcal{C}_{\text{free}}$, tambahkan $q_{\text{new}}$ ke himpunan simpul $\mathcal{V}$ dan sambungkan ke tepi $\mathcal{E}$.
+
+---
+
+## 2. Optimalitas Asimtotik RRT* & Rewiring Cabang
+
+Algoritma RRT standar bersifat **probabilistically complete** (pasti menemukan *suatu* solusi jika ada saat $N \to \infty$), namun jalur yang dihasilkan seringkali patah-patah dan sub-optimal.
+
+**RRT\*** (Karaman & Frazzoli, 2011) memperkenalkan dua mekanisme *rewiring*:
+
+1. **Memilih Induk Terbaik (*Choose Best Parent*)**: Alih-alih hanya terhubung ke $q_{\text{near}}$, evaluasi seluruh tetangga dalam radius $r_n$ untuk memilih induk yang meminimalkan total akumulasi biaya jalur:
+   $$
+   q_{\text{parent}} = \arg\min_{u \in \mathcal{B}} \left( \text{Cost}(u) + \|u - q_{\text{new}}\| \right)
+   $$
+2. **Penyambungan Ulang (*Rewire Neighboring Branches*)**: Jika melewati simpul baru $q_{\text{new}}$ memberikan jalur yang lebih murah bagi tetangga di sekitarnya, sambungkan ulang penunjuk induk tetangga tersebut ke $q_{\text{new}}$:
+   $$
+   \text{Jika } \text{Cost}(q_{\text{new}}) + \|q_{\text{new}} - u\| < \text{Cost}(u) \implies \text{Parent}(u) \leftarrow q_{\text{new}}
+   $$
+
+---
+
+## 3. Video Pembelajaran: Perencanaan Gerak RRT & RRT*
+
+<VideoEmbed
+  title="RRT and RRT* Sampling-Based Motion Planning"
+  videoId="Ob3BIJkQ9cg"
+/>
+
+---
+
+## 4. Simulator Interaktif Perencanaan Gerak RRT & RRT*
+
+Ganti mode antara RRT standar dan RRT\*. Atur nilai bias target (Goal Bias) dan panjang langkah $\Delta q$ untuk melihat dinamika pertumbuhan pohon cabang di sekitar rintangan:
+
+<RrtExplorationSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m17"
+  question="Mengapa algoritma RRT secara alami menumbuhkan cabang ke arah ruang terbuka yang belum dieksplorasi (Voronoi Bias)?"
+  options={[
+    {
+      id: "A",
+      text: "Karena area terbuka yang belum dijelajahi memiliki sel Voronoi yang luas, sehingga sampel acak seragam memiliki peluang jauh lebih tinggi untuk jatuh di dalam sel tersebut dan memilih simpul terluar.",
+      isCorrect: true,
+      explanation: "Tepat! Steven LaValle membuktikan secara matematis bahwa peluang suatu simpul untuk diekspansi berbanding lurus dengan volume sel Voronoi-nya."
+    },
+    {
+      id: "B",
+      text: "Karena pohon ditarik oleh medan magnet di ujung ruangan.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena rintangan menyerap sampel acak.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang luasan area kosong yang mengelilingi simpul terluar pohon."
+/>

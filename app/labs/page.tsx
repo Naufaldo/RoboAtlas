@@ -28,6 +28,10 @@ import { BayesianRoomSimulator } from '@/components/simulation/BayesianRoomSimul
 import { TrackingErrorGeometrySimulator } from '@/components/simulation/TrackingErrorGeometrySimulator';
 import { ArmForwardKinematicsSimulator } from '@/components/simulation/ArmForwardKinematicsSimulator';
 import { LidarRaycastSimulator } from '@/components/simulation/LidarRaycastSimulator';
+import { PurePursuitSimulator } from '@/components/simulation/PurePursuitSimulator';
+import { AStarVsDijkstraSimulator } from '@/components/simulation/AStarVsDijkstraSimulator';
+import { RrtExplorationSimulator } from '@/components/simulation/RrtExplorationSimulator';
+import { ArmInverseKinematicsSimulator } from '@/components/simulation/ArmInverseKinematicsSimulator';
 import {
   Compass,
   Cpu,
@@ -351,6 +355,54 @@ export default function LabsPage() {
       icon: '📡',
       lessonHref: '/learn/sensors/lidar-raycasting',
       component: <LidarRaycastSimulator />,
+    },
+    {
+      id: 'pure-pursuit',
+      category: 'control',
+      titleEn: 'Pure Pursuit Geometric Path Tracking Lab (M13)',
+      titleId: 'Laboratorium Pelacakan Jalur Pure Pursuit (M13)',
+      descEn: 'Tune lookahead distance L_d to balance aggressive heading tracking vs smooth cornering.',
+      descId: 'Atur jarak lookahead L_d untuk menyeimbangkan ketajaman pelacakan heading vs kehalusan manuver belok.',
+      levelBadge: 'Level 7',
+      icon: '🏎️',
+      lessonHref: '/learn/control/pure-pursuit-path-tracking',
+      component: <PurePursuitSimulator />,
+    },
+    {
+      id: 'astar-dijkstra',
+      category: 'planning',
+      titleEn: 'A* vs Dijkstra Search & Heuristics Lab (M15)',
+      titleId: 'Laboratorium Komparasi A* vs Dijkstra (M15)',
+      descEn: 'Compare Dijkstra uniform wavefronts against Euclidean and Manhattan goal-biased search cones.',
+      descId: 'Bandingkan gelombang buta seragam Dijkstra vs kerucut pencarian terarah A* Euclidean/Manhattan.',
+      levelBadge: 'Level 6',
+      icon: '⚡',
+      lessonHref: '/learn/planning/astar-vs-dijkstra-search',
+      component: <AStarVsDijkstraSimulator />,
+    },
+    {
+      id: 'rrt-sampling',
+      category: 'planning',
+      titleEn: 'RRT & RRT* Sampling Planner Lab (M17)',
+      titleId: 'Laboratorium Perencana Sampel RRT & RRT* (M17)',
+      descEn: 'Grow randomized space-filling trees and observe asymptotic rewiring optimality in C-space.',
+      descId: 'Tumbuhkan pohon acak di ruang konfigurasi dan amati rewiring optimalitas asimtotik RRT*.',
+      levelBadge: 'Level 6',
+      icon: '🌲',
+      lessonHref: '/learn/planning/rrt-sampling-planner',
+      component: <RrtExplorationSimulator />,
+    },
+    {
+      id: 'arm-2dof-ik',
+      category: 'manipulation',
+      titleEn: '2-DOF Planar Arm Inverse Kinematics Lab (M19)',
+      titleId: 'Laboratorium Kinematika Invers (IK) Lengan 2-DOF (M19)',
+      descEn: 'Drag target reticle to solve joint motor angles via Law of Cosines (Elbow-Up vs Elbow-Down).',
+      descId: 'Geser target crosshair untuk menghitung sudut motor dengan Hukum Kosinus (Siku-Atas vs Siku-Bawah).',
+      levelBadge: 'Level 14',
+      icon: '🎯',
+      lessonHref: '/learn/manipulation/2dof-inverse-kinematics',
+      component: <ArmInverseKinematicsSimulator />,
     },
   ];
 

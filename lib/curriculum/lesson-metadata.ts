@@ -332,6 +332,78 @@ export const LESSON_PEDAGOGY_MAP: Record<string, LessonPedagogyData> = {
     progressionStepsEn: ['Serial Link Geometry', 'FK Trigonometric Math', 'Interactive Arm Lab', 'Workspace Annulus'],
     progressionStepsId: ['Geometri Link Serial', 'Trigonometri Kinematika Maju', 'Lab Lengan Interaktif', 'Annulus Ruang Kerja'],
   },
+  '2dof-inverse-kinematics': {
+    learningObjectivesEn: [
+      'Solve analytical Inverse Kinematics (IK) for 2-DOF planar arms using the Law of Cosines.',
+      'Differentiate between valid Elbow-Up (+q2) and Elbow-Down (-q2) geometric branch configurations.',
+      'Formulate shoulder base orientation q1 = beta - psi using quadrant-safe atan2 functions.',
+      'Detect Cartesian reachability limits (|L1-L2| <= r <= L1+L2) and boundary singularities.',
+    ],
+    learningObjectivesId: [
+      'Menyelesaikan Kinematika Invers (IK) analitik untuk lengan 2-DOF planar menggunakan Hukum Kosinus.',
+      'Membedakan konfigurasi cabang geometris yang valid: Siku-Atas (+q2) vs Siku-Bawah (-q2).',
+      'Merumuskan orientasi pangkal bahu q1 = beta - psi menggunakan fungsi kuadran aman atan2.',
+      'Mendeteksi batas jangkauan Kartesius (|L1-L2| <= r <= L1+L2) dan singularitas batas.',
+    ],
+    whyItMattersEn: 'Inverse kinematics is essential for commanding robot arms to reach, manipulate, and weld precise Cartesian coordinates.',
+    whyItMattersId: 'Kinematika invers mutlak diperlukan untuk memerintahkan lengan robot menjangkau, mengambil, dan merakit komponen di titik koordinat yang presisi.',
+    progressionStepsEn: ['Law of Cosines IK', 'Branch Configurations', 'Interactive IK Reticle', 'Workspace Singularity'],
+    progressionStepsId: ['Hukum Kosinus IK', 'Konfigurasi Cabang', 'Lab Retikel IK', 'Singularitas Ruang Kerja'],
+  },
+  'astar-vs-dijkstra-search': {
+    learningObjectivesEn: [
+      'Evaluate mathematical cost f(n) = g(n) + h(n) and prove equivalence to Dijkstra when h(n) = 0.',
+      'Compare search wavefront expansions across Dijkstra, Manhattan, Euclidean, and Octile heuristics.',
+      'Analyze admissible heuristic conditions (h(n) <= h*(n)) to guarantee optimal shortest paths.',
+      'Measure performance trade-offs between expanded node count and execution time.',
+    ],
+    learningObjectivesId: [
+      'Mengevaluasi fungsi biaya f(n) = g(n) + h(n) dan membuktikan kesetaraannya dengan Dijkstra saat h(n) = 0.',
+      'Membandingkan ekspansi gelombang pencarian antara heuristik Dijkstra, Manhattan, Euclidean, dan Octile.',
+      'Menganalisis syarat heuristik admisibel (h(n) <= h*(n)) untuk menjamin rute terpendek yang optimal.',
+      'Mengukur trade-off performa antara jumlah simpul yang diekspansi dan kecepatan eksekusi.',
+    ],
+    whyItMattersEn: 'Choosing the right heuristic trims thousands of unnecessary search nodes in real-time robotic navigation systems.',
+    whyItMattersId: 'Memilih heuristik yang tepat memangkas ribuan simpul pencarian yang tidak perlu pada sistem navigasi robotika waktu-nyata.',
+    progressionStepsEn: ['f=g+h Formulation', 'Wavefront Comparison', 'Interactive Grid Lab', 'Heuristic Admissibility'],
+    progressionStepsId: ['Formulasi f=g+h', 'Komparasi Gelombang', 'Lab Grid Interaktif', 'Admisibilitas Heuristik'],
+  },
+  'rrt-sampling-planner': {
+    learningObjectivesEn: [
+      'Understand randomized sampling-based exploration for continuous high-dimensional C-spaces.',
+      'Execute the 4-step RRT cycle: Sample Uniformly -> Nearest Neighbor -> Steer Step -> Collision Check.',
+      'Implement RRT* asymptotic optimality through neighborhood radius rewiring.',
+      'Tune goal biasing probabilities (p_bias) to balance rapid target convergence with obstacle avoidance.',
+    ],
+    learningObjectivesId: [
+      'Memahami eksplorasi berbasis sampel acak untuk ruang konfigurasi kontinu berdimensi tinggi.',
+      'Mengeksekusi siklus 4-langkah RRT: Sample Seragam -> Tetangga Terdekat -> Steer Step -> Cek Tabrakan.',
+      'Mengimplementasikan optimalitas asimtotik RRT* melalui penyambungan ulang (rewiring) radius tetangga.',
+      'Melakukan tuning probabilitas bias target (p_bias) untuk menyeimbangkan konvergensi cepat vs rintangan.',
+    ],
+    whyItMattersEn: 'RRT and RRT* are the gold standard for high-DOF articulated robot arms and 3D drone trajectory planning.',
+    whyItMattersId: 'RRT dan RRT* adalah standar emas untuk perencanaan gerak lengan robot multi-sendi dan trajektori drone 3D.',
+    progressionStepsEn: ['4-Step RRT Loop', 'Voronoi Bias Theory', 'Interactive Tree Lab', 'RRT* Rewiring'],
+    progressionStepsId: ['Siklus 4-Langkah RRT', 'Teori Voronoi Bias', 'Lab Pohon Interaktif', 'Rewiring RRT*'],
+  },
+  'pure-pursuit-path-tracking': {
+    learningObjectivesEn: [
+      'Derive the Pure Pursuit circular arc curvature formula kappa = 2*sin(alpha) / Ld.',
+      'Formulate the lookahead circle intersection with continuous waypoint paths.',
+      'Compute Ackermann front-wheel steering angle delta = atan(kappa * L).',
+      'Analyze stability vs corner-cutting trade-offs when tuning lookahead distance Ld.',
+    ],
+    learningObjectivesId: [
+      'Menurunkan rumus kurvatur busur lingkaran Pure Pursuit kappa = 2*sin(alpha) / Ld.',
+      'Merumuskan perpotongan lingkaran lookahead terhadap jalur titik acuan waypoint kontinu.',
+      'Menghitung sudut kemudi roda depan Ackermann delta = atan(kappa * L).',
+      'Menganalisis trade-off stabilitas vs pemotongan sudut tikungan saat mengatur jarak lookahead Ld.',
+    ],
+    whyItMattersEn: 'Pure Pursuit powers geometric trajectory tracking in warehouse AGVs, self-driving shuttles, and agricultural robots.',
+    whyItMattersId: 'Pure Pursuit menjadi penggerak kendali kemudi geometris pada AGV gudang, shuttle otonom, dan robot pertanian.',
+    progressionStepsEn: ['Lookahead Geometry', 'Curvature Derivation', 'Interactive Tracking Lab', 'Ld Tuning Trade-offs'],
+    progressionStepsId: ['Geometri Lookahead', 'Penurunan Kurvatur', 'Lab Pelacakan Interaktif', 'Trade-off Tuning Ld'],
+  },
   'pure-pursuit-and-stanley': {
     learningObjectivesEn: [
       'Formulate Pure Pursuit geometric lookahead curvature steering: δ = atan2(2L sin α, Ld).',

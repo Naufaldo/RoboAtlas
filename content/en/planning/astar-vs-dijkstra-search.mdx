@@ -1,0 +1,115 @@
+---
+id: astar-vs-dijkstra-search
+title: "A* vs. Dijkstra Search: Heuristics & Exploration Wavefronts (M15)"
+slug: astar-vs-dijkstra-search
+category: planning
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - a-star
+  - vectors-and-coordinate-geometry
+references:
+  - Peter E. Hart, Nils J. Nilsson, Bertram Raphael (1968). A Formal Basis for the Heuristic Determination of Minimum Cost Paths. IEEE Transactions on Systems Science and Cybernetics.
+  - Steven M. LaValle (2006). Planning Algorithms (Chapter 2: Discrete Planning). Cambridge University Press.
+components:
+  - AStarVsDijkstraSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# A* vs. Dijkstra Search: Heuristics & Exploration Wavefronts (M15)
+
+> "Why does A* expand significantly fewer nodes than Dijkstra's algorithm while still guaranteeing the mathematically optimal shortest path?"
+
+Graph path planning algorithms find collision-free paths from a Start node $S$ to a Goal node $G$. The core difference between Dijkstra's algorithm and A* lies in the **cost evaluation function $f(n)$**.
+
+---
+
+## 1. Mathematical Cost Formulations: $f(n) = g(n) + h(n)$
+
+For any node $n$ on the grid:
+
+$$
+f(n) = g(n) + h(n)
+$$
+
+Where:
+- **$g(n)$ (Past Cost)**: The exact shortest path cost accumulated from the start node $S$ to node $n$.
+- **$h(n)$ (Heuristic Estimate)**: An admissible estimate of the remaining cost from node $n$ to the goal $G$.
+- **$f(n)$ (Estimated Total Cost)**: The priority key used to sort nodes in the open set Priority Queue.
+
+### The Fundamental Bridge Theorem
+$$
+\text{If } h(n) = 0 \quad \forall n \implies f(n) = g(n) \equiv \text{Dijkstra's Algorithm}
+$$
+
+Dijkstra expands nodes strictly in concentric circles of increasing distance $g(n)$, exploring blindly in all 360° directions. A* uses $h(n)$ to pull the search wavefront directly towards the goal.
+
+---
+
+## 2. Heuristic Taxonomy on 2D Grids
+
+| Heuristic | Formula | Connectivity | Properties |
+|---|---|---|---|
+| **Dijkstra** | $h(n) = 0$ | Any | Blind uniform expansion, guaranteed optimal |
+| **Manhattan** | $h(n) = 10 \cdot (|\Delta x| + |\Delta y|)$ | 4-Connected | Admissible for 4-way grid motions |
+| **Euclidean** | $h(n) = 10 \cdot \sqrt{\Delta x^2 + \Delta y^2}$ | Any / Continuous | Admissible for straight line-of-sight |
+| **Octile** | $h(n) = 10(\Delta x + \Delta y) - 6\min(\Delta x, \Delta y)$ | 8-Connected | Tightly admissible for 8-way diagonal grids |
+
+### Admissibility Condition
+A heuristic is **admissible** if it never overestimates the true remaining cost to the goal:
+
+$$
+h(n) \le h^*(n) \quad \forall n
+$$
+
+---
+
+## 3. Video Lecture: A* vs Dijkstra Graph Search
+
+<VideoEmbed
+  title="A* Pathfinding and Dijkstra Algorithm Comparison"
+  videoId="g0249TnlPso"
+/>
+
+---
+
+## 4. Interactive A* vs Dijkstra Comparison Laboratory
+
+Switch between Dijkstra ($h=0$), Euclidean, and Manhattan heuristics to observe how the explored node count drops dramatically while preserving the optimal path cost:
+
+<AStarVsDijkstraSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m15"
+  question="If an inadmissible heuristic is used (e.g. h(n) = 3 * h*(n)), what is the primary risk during path planning?"
+  options={[
+    {
+      id: "A",
+      text: "The search expands fewer nodes faster, but the final returned path may be sub-optimal (longer than the true shortest path).",
+      isCorrect: true,
+      explanation: "Exact! Overestimating cost breaks the admissibility guarantee, turning A* into a greedy weighted search that may overlook the true shortest route."
+    },
+    {
+      id: "B",
+      text: "The algorithm will enter an infinite loop and never terminate.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "The computer runs out of memory immediately.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about what happens when the priority queue trusts an exaggerated heuristic."
+/>

@@ -29,6 +29,10 @@ import { BayesianRoomSimulator } from '@/components/simulation/BayesianRoomSimul
 import { TrackingErrorGeometrySimulator } from '@/components/simulation/TrackingErrorGeometrySimulator';
 import { ArmForwardKinematicsSimulator } from '@/components/simulation/ArmForwardKinematicsSimulator';
 import { LidarRaycastSimulator } from '@/components/simulation/LidarRaycastSimulator';
+import { PurePursuitSimulator } from '@/components/simulation/PurePursuitSimulator';
+import { AStarVsDijkstraSimulator } from '@/components/simulation/AStarVsDijkstraSimulator';
+import { RrtExplorationSimulator } from '@/components/simulation/RrtExplorationSimulator';
+import { ArmInverseKinematicsSimulator } from '@/components/simulation/ArmInverseKinematicsSimulator';
 import { ConceptCheck } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
@@ -259,6 +263,26 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<LidarRaycastSimulator')) {
         nodes.push(<LidarRaycastSimulator key={`comp-lrs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<PurePursuitSimulator')) {
+        nodes.push(<PurePursuitSimulator key={`comp-pps-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<AStarVsDijkstraSimulator')) {
+        nodes.push(<AStarVsDijkstraSimulator key={`comp-asvds-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<RrtExplorationSimulator')) {
+        nodes.push(<RrtExplorationSimulator key={`comp-rrtes-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<ArmInverseKinematicsSimulator')) {
+        nodes.push(<ArmInverseKinematicsSimulator key={`comp-aiks-${i}`} />);
         i++;
         continue;
       }

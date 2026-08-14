@@ -1,0 +1,122 @@
+---
+id: rrt-sampling-planner
+title: "Rapidly-exploring Random Trees: RRT & RRT* Motion Planning (M17)"
+slug: rrt-sampling-planner
+category: planning
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - configuration-space-and-minkowski
+  - a-star
+references:
+  - Steven M. LaValle (1998). Rapidly-Exploring Random Trees: A New Tool for Path Planning. Technical Report (TR 98-11), Computer Science Dept, Iowa State University.
+  - Sertac Karaman & Emilio Frazzoli (2011). Sampling-based Algorithms for Optimal Motion Planning. International Journal of Robotics Research (IJRR).
+components:
+  - RrtExplorationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Rapidly-exploring Random Trees: RRT & RRT* Motion Planning (M17)
+
+> "In continuous 6-DOF robot arm spaces or 3D drone flight, grid search explodes exponentially due to the Curse of Dimensionality. How can randomized sampling find collision-free paths in milliseconds?"
+
+**Rapidly-exploring Random Trees (RRT)** and its asymptotically optimal variant **RRT\*** explore continuous configuration spaces $\mathcal{C}$ by growing a space-filling tree of valid motion segments.
+
+---
+
+## 1. The Core 4-Step RRT Algorithm Pipeline
+
+At each iteration $k = 1, 2, \dots, N$:
+
+### 1.1 Sample ($q_{\text{rand}}$)
+Generate a uniform random state $q_{\text{rand}} \in \mathcal{C}$. With probability $p_{\text{bias}}$ (typically 5–15%), set $q_{\text{rand}} = q_{\text{goal}}$ to pull the tree towards the target:
+
+$$
+q_{\text{rand}} = \begin{cases} q_{\text{goal}} & \text{with probability } p_{\text{bias}} \\ \text{Uniform}(\mathcal{C}) & \text{with probability } 1 - p_{\text{bias}} \end{cases}
+$$
+
+### 1.2 Nearest Neighbor Query ($q_{\text{near}}$)
+Find the existing tree vertex closest to $q_{\text{rand}}$ in Euclidean distance:
+
+$$
+q_{\text{near}} = \arg\min_{v \in \mathcal{V}} \|v - q_{\text{rand}}\|
+$$
+
+### 1.3 Steer Step ($q_{\text{new}}$)
+Extend an incremental branch of length $\Delta q$ from $q_{\text{near}}$ in the direction of $q_{\text{rand}}$:
+
+$$
+q_{\text{new}} = q_{\text{near}} + \min(\Delta q, \|q_{\text{rand}} - q_{\text{near}}\|) \cdot \frac{q_{\text{rand}} - q_{\text{near}}}{\|q_{\text{rand}} - q_{\text{near}}\|}
+$$
+
+### 1.4 Collision Check & Vertex Addition
+If the straight-line segment $[q_{\text{near}}, q_{\text{new}}] \subset \mathcal{C}_{\text{free}}$, add $q_{\text{new}}$ to vertices $\mathcal{V}$ and edge $(q_{\text{near}}, q_{\text{new}})$ to edges $\mathcal{E}$.
+
+---
+
+## 2. RRT* Asymptotic Optimality & Neighborhood Rewiring
+
+Standard RRT is **probabilistically complete** (it will find *a* solution if one exists as $N \to \infty$), but its returned path is sub-optimal and jagged.
+
+**RRT\*** (Karaman & Frazzoli, 2011) introduces two rewiring operations within a shrinking ball radius $r_n$:
+
+1. **Choose Best Parent**: Instead of connecting strictly to $q_{\text{near}}$, evaluate all neighbors $q_{\text{near}} \in \mathcal{B}(q_{\text{new}}, r_n)$ to find the parent that minimizes total accumulated path cost:
+   $$
+   q_{\text{parent}} = \arg\min_{u \in \mathcal{B}} \left( \text{Cost}(u) + \|u - q_{\text{new}}\| \right)
+   $$
+2. **Rewire Neighboring Tree Branches**: If routing through the new vertex $q_{\text{new}}$ gives any neighbor $u \in \mathcal{B}$ a lower cost than its existing parent, rewire $u$'s parent pointer to $q_{\text{new}}$:
+   $$
+   \text{If } \text{Cost}(q_{\text{new}}) + \|q_{\text{new}} - u\| < \text{Cost}(u) \implies \text{Parent}(u) \leftarrow q_{\text{new}}
+   $$
+
+---
+
+## 3. Video Lecture: RRT and RRT* Motion Planning
+
+<VideoEmbed
+  title="RRT and RRT* Sampling-Based Motion Planning"
+  videoId="Ob3BIJkQ9cg"
+/>
+
+---
+
+## 4. Interactive RRT & RRT* Motion Planning Laboratory
+
+Toggle between standard RRT and RRT\*. Adjust the goal bias and step size $\Delta q$ to see how the randomized tree navigates the obstacle field:
+
+<RrtExplorationSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m17"
+  question="Why does RRT naturally bias its growth towards unexplored open spaces in the environment (the Voronoi bias)?"
+  options={[
+    {
+      id: "A",
+      text: "Because large unvisited open regions have large Voronoi cells, making random uniform samples far more likely to land inside them and select the closest boundary vertex.",
+      isCorrect: true,
+      explanation: "Exact! Steven LaValle proved that the probability of expanding a vertex is directly proportional to the volume of its Voronoi cell in C-space."
+    },
+    {
+      id: "B",
+      text: "Because the tree is guided by magnetic forces.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because obstacles attract random samples.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the geometric area associated with each vertex in open space."
+/>

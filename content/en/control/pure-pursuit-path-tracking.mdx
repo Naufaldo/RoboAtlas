@@ -1,0 +1,141 @@
+---
+id: pure-pursuit-path-tracking
+title: "Pure Pursuit Geometric Path Tracking Control (M13)"
+slug: pure-pursuit-path-tracking
+category: control
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - path-tracking-error-geometry
+  - differential-drive-kinematics
+references:
+  - R. Craig Coulter (1992). Implementation of the Pure Pursuit Path Tracking Algorithm. Carnegie Mellon University Robotics Institute (CMU-RI-TR-92-01).
+  - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots (Chapter 4). MIT Press.
+components:
+  - PurePursuitSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Pure Pursuit Geometric Path Tracking Control (M13)
+
+> "How can a simple geometric lookahead circle guide an autonomous vehicle smoothly along complex sharp curves without heavy optimization solvers?"
+
+**Pure Pursuit** is one of the most widely implemented trajectory tracking algorithms in mobile robotics, planetary rovers, and autonomous racecars.
+
+---
+
+## 1. Geometric Lookahead & Arc Derivation
+
+Let the rear-axle of the vehicle be at position $\mathbf{p}_R = [x_R, y_R]^T$ with heading $\theta_R$.
+
+The algorithm places a **lookahead circle** of radius $L_d$ centered at the vehicle rear axle. It finds the intersection point $\mathbf{g} = [g_x, g_y]^T$ on the planned path at distance $L_d$:
+
+```text
+               Lookahead Target g(gx, gy)
+                     *
+                    / \
+                   /   \
+                  /  R  \
+                 /       \
+      Robot (x, y) ──────── Center of Arc (ICC)
+            \      alpha  /
+             \───────────/
+```
+
+### 1.1 Angle to Target ($\alpha$)
+The angle between vehicle heading $\theta_R$ and the vector pointing to target $\mathbf{g}$:
+
+$$
+\alpha = \text{atan2}(g_y - y_R, g_x - x_R) - \theta_R
+$$
+
+### 1.2 Arc Curvature Formula ($\kappa$)
+By the Law of Sines on the isosceles triangle formed by the circle arc radius $R$:
+
+$$
+\frac{L_d}{\sin(2\alpha)} = \frac{R}{\sin(90^\circ - \alpha)} = \frac{R}{\cos\alpha}
+$$
+
+Using $\sin(2\alpha) = 2\sin\alpha\cos\alpha$:
+
+$$
+\frac{L_d}{2\sin\alpha\cos\alpha} = \frac{R}{\cos\alpha} \implies R = \frac{L_d}{2\sin\alpha}
+$$
+
+Thus, the requested path curvature $\kappa$ is:
+
+$$
+\kappa = \frac{1}{R} = \frac{2\sin\alpha}{L_d}
+$$
+
+### 1.3 Front Wheel Steering Angle ($\delta$)
+For an Ackermann / bicycle vehicle with wheelbase $L$:
+
+$$
+\delta = \arctan(\kappa \cdot L) = \arctan\left( \frac{2L\sin\alpha}{L_d} \right)
+$$
+
+---
+
+## 2. Tuning Lookahead Distance $L_d$ Trade-Offs
+
+The lookahead distance $L_d$ governs the behavior of the controller:
+
+1. **Small $L_d$ ($L_d \to 0$)**: Highly aggressive tracking. Quickly corrects cross-track error but induces steering overshoots and high-frequency oscillations.
+2. **Large $L_d$**: Extremely stable, smooth steering. However, the vehicle "cuts corners" on tight turns and exhibits sluggish error correction.
+3. **Speed-Scaled Lookahead**: In practice, $L_d$ is scaled dynamically with forward velocity $v$:
+   $$
+   L_d(v) = k_{\text{gain}} \cdot v + L_{d,\min}
+   $$
+
+---
+
+## 3. Video Lecture: Pure Pursuit Geometric Tracking
+
+<VideoEmbed
+  title="Pure Pursuit Path Tracking Algorithm"
+  videoId="N4b_sK-jVd4"
+/>
+
+---
+
+## 4. Interactive Pure Pursuit Simulator
+
+Adjust lookahead distance $L_d$ and velocity $v$. Watch how the vehicle navigates the S-curve trajectory:
+
+<PurePursuitSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-m13"
+  question="What happens to the Pure Pursuit steering curvature κ when the lookahead point g lies directly in front of the vehicle (α = 0)?"
+  options={[
+    {
+      id: "A",
+      text: "Curvature κ = 2*sin(0)/Ld = 0 (steering angle δ = 0°, vehicle drives straight ahead).",
+      isCorrect: true,
+      explanation: "Exact! When α = 0, no lateral correction is needed and the vehicle moves in a straight line."
+    },
+    {
+      id: "B",
+      text: "The controller crashes due to division by zero.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "The vehicle performs a 360-degree spin in place.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Evaluate sin(0) in the formula κ = 2*sin(α) / Ld."
+/>

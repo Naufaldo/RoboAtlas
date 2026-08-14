@@ -1,0 +1,148 @@
+---
+id: 2dof-inverse-kinematics
+title: "Kinematika Invers Analitik Lengan Robot 2-DOF (M19)"
+slug: 2dof-inverse-kinematics
+category: manipulation
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2dof-forward-kinematics
+  - dot-product-and-projection
+references:
+  - "John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 4: Inverse Manipulator Kinematics). Pearson."
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Chapter 6). Cambridge University Press."
+components:
+  - ArmInverseKinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Kinematika Invers Analitik Lengan Robot 2-DOF (M19)
+
+> "Pada Kinematika Maju, sudut motor menentukan posisi ujung gripper. Pada Kinematika Invers, kita memecahkan masalah sebaliknya: Diberikan koordinat objek target (x, y), berapa derajat sudut motor (q1, q2) yang harus digerakkan?"
+
+**Kinematika Invers (*Inverse Kinematics / IK*)** adalah fondasi utama bagi robot perakitan industri, operasi pemindahan objek (*pick-and-place*), dan pengelasan otomatis.
+
+---
+
+## 1. Penurunan Geometris Menggunakan Hukum Kosinus
+
+Tinjau lengan robot 2-sendi dengan panjang segmen $L_1, L_2$ yang ingin menjangkau titik target $(x, y)$:
+
+```text
+               Target (x, y)
+                     o
+                    / \
+                   /   \
+              L2  /     \
+                 /  q2   \  r = sqrt(x^2 + y^2)
+     Sendi Siku  o        \
+                /          \
+            L1 /     psi    \
+              /              \
+             o────────────────o Pangkal Base (0, 0)
+            beta
+```
+
+### 1.1 Jarak Euclidean ke Target ($r$)
+$$
+r^2 = x^2 + y^2
+$$
+
+### 1.2 Penurunan Sudut Siku ($q_2$)
+Menerapkan Hukum Kosinus pada segitiga yang dibentuk oleh pangkal base, siku, dan target:
+
+$$
+r^2 = L_1^2 + L_2^2 - 2 L_1 L_2 \cos(180^\circ - q_2) = L_1^2 + L_2^2 + 2 L_1 L_2 \cos(q_2)
+$$
+
+Menghitung nilai $\cos(q_2)$:
+
+$$
+\cos(q_2) = \frac{x^2 + y^2 - L_1^2 - L_2^2}{2 L_1 L_2}
+$$
+
+Karena nilai $\sin(q_2) = \pm \sqrt{1 - \cos^2(q_2)}$, terdapat **dua konfigurasi cabang solusi yang valid**:
+
+$$
+q_2 = \text{atan2}\left(\pm \sqrt{1 - \cos^2(q_2)}, \, \cos(q_2)\right)
+$$
+
+- **$+q_2$**: Konfigurasi cabang **Siku-Atas (*Elbow-Up*)**.
+- **$-q_2$**: Konfigurasi cabang **Siku-Bawah (*Elbow-Down*)**.
+
+### 1.3 Penurunan Sudut Pangkal Bahu ($q_1$)
+Menguraikan sudut arah target $\beta = \text{atan2}(y, x)$ dan sudut dalam segitiga $\psi$:
+
+$$
+\begin{aligned}
+\beta &= \text{atan2}(y, x) \\
+\psi &= \text{atan2}(L_2 \sin q_2, \, L_1 + L_2 \cos q_2) \\
+q_1 &= \beta - \psi
+\end{aligned}
+$$
+
+---
+
+## 2. Batas Jangkauan Ruang Kerja & Singularitas
+
+Solusi analitik closed-form hanya ada jika nilai $\cos(q_2)$ berada di dalam rentang $[-1, +1]$:
+
+$$
+|L_1 - L_2| \le \sqrt{x^2 + y^2} \le L_1 + L_2
+$$
+
+- **Di Luar Jangkauan (*Out-of-Reach*)**: Jika $r > L_1 + L_2$.
+- **Lubang Tengah (*Inner Hole*)**: Jika $r < |L_1 - L_2|$.
+- **Singularitas Kinematik**: Saat $q_2 = 0^\circ$ atau $180^\circ$, di mana kedua cabang solusi menyatu dan lengan kehilangan derajat kebebasan gerak sesaat pada arah radial.
+
+---
+
+## 3. Video Pembelajaran: Kinematika Invers Lengan Robot 2-DOF
+
+<VideoEmbed
+  title="Inverse Kinematics of 2-Link Robot Manipulator"
+  videoId="IKOGwoJ2oiE"
+/>
+
+---
+
+## 4. Simulator Interaktif Kinematika Invers Lengan 2-DOF
+
+Geser retikel target crosshair $(x, y)$ di dalam kanvas. Ganti cabang antara **Siku-Atas (*Elbow-Up*)** dan **Siku-Bawah (*Elbow-Down*)**:
+
+<ArmInverseKinematicsSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m19"
+  question="Mengapa umumnya terdapat dua solusi matematis berbeda (Elbow-Up vs Elbow-Down) bagi lengan 2-DOF untuk mencapai suatu titik koordinat fisik (x, y) yang sama?"
+  options={[
+    {
+      id: "A",
+      text: "Karena sendi siku dapat menekuk ke arah atas maupun ke arah bawah dengan tetap menjaga posisi pangkal dan posisi ujung gripper pada koordinat spasial yang persis sama.",
+      isCorrect: true,
+      explanation: "Tepat! Segitiga yang dibentuk oleh kedua segmen lengan dapat dicerminkan terhadap garis lurus yang menghubungkan titik origin base ke titik target."
+    },
+    {
+      id: "B",
+      text: "Karena motor membutuhkan dua kabel daya listrik.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena gravitasi bumi menarik lengan pada dua arah berlawanan.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang pencerminan posisi sendi siku terhadap garis lurus dari base ke target."
+/>

@@ -1,0 +1,141 @@
+---
+id: pure-pursuit-path-tracking
+title: "Kendali Pelacakan Jalur Geometris Pure Pursuit (M13)"
+slug: pure-pursuit-path-tracking
+category: control
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - path-tracking-error-geometry
+  - differential-drive-kinematics
+references:
+  - R. Craig Coulter (1992). Implementation of the Pure Pursuit Path Tracking Algorithm. Carnegie Mellon University Robotics Institute (CMU-RI-TR-92-01).
+  - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots (Chapter 4). MIT Press.
+components:
+  - PurePursuitSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Kendali Pelacakan Jalur Geometris Pure Pursuit (M13)
+
+> "Bagaimana lingkaran lookahead geometris sederhana mampu memandu kendaraan otonom melintasi tikungan tajam secara mulus tanpa pemecah optimasi komputasi berat?"
+
+**Pure Pursuit** adalah salah satu algoritma pelacakan trajektori paling populer yang digunakan secara luas pada AGV industri, rover penjelajah planet, hingga mobil balap otonom.
+
+---
+
+## 1. Lingkaran Lookahead & Penurunan Geometris Busur
+
+Misalkan titik pusat as roda belakang robot berada pada koordinat $\mathbf{p}_R = [x_R, y_R]^T$ dengan sudut heading $\theta_R$.
+
+Algoritma meletakkan **lingkaran pandang depan (*lookahead circle*)** dengan radius $L_d$ berpusat di as belakang. Titik potong pada jalur referensi berjarak $L_d$ dinamai titik target $\mathbf{g} = [g_x, g_y]^T$:
+
+```text
+               Target Pandang Depan g(gx, gy)
+                     *
+                    / \
+                   /   \
+                  /  R  \
+                 /       \
+      Robot (x, y) ──────── Pusat Busur Putar (ICC)
+            \      alpha  /
+             \───────────/
+```
+
+### 1.1 Sudut Arah ke Target ($\alpha$)
+Sudut antara arah hadap kendaraan $\theta_R$ dan vektor ke titik target $\mathbf{g}$:
+
+$$
+\alpha = \text{atan2}(g_y - y_R, g_x - x_R) - \theta_R
+$$
+
+### 1.2 Penurunan Rumus Kurvatur Belok ($\kappa$)
+Melalui Aturan Sinus pada segitiga sama kaki berbusur kurvatur radius $R$:
+
+$$
+\frac{L_d}{\sin(2\alpha)} = \frac{R}{\sin(90^\circ - \alpha)} = \frac{R}{\cos\alpha}
+$$
+
+Mengingat identitas trigonometri $\sin(2\alpha) = 2\sin\alpha\cos\alpha$:
+
+$$
+\frac{L_d}{2\sin\alpha\cos\alpha} = \frac{R}{\cos\alpha} \implies R = \frac{L_d}{2\sin\alpha}
+$$
+
+Sehingga kurvatur kemudi $\kappa$ yang diperintahkan adalah:
+
+$$
+\kappa = \frac{1}{R} = \frac{2\sin\alpha}{L_d}
+$$
+
+### 1.3 Sudut Kemudi Roda Depan ($\delta$)
+Untuk kendaraan berjarak sumbu roda (*wheelbase*) $L$:
+
+$$
+\delta = \arctan(\kappa \cdot L) = \arctan\left( \frac{2L\sin\alpha}{L_d} \right)
+$$
+
+---
+
+## 2. Karakteristik & Trade-off Jarak Lookahead $L_d$
+
+Nilai $L_d$ menentukan stabilitas dan ketajaman kemudi robot:
+
+1. **$L_d$ Kecil**: Pelacakan sangat agresif. Cepat mengoreksi galat posisi lateral namun rawan memicu osilasi zig-zag frekuensi tinggi.
+2. **$L_d$ Besar**: Kemudi sangat mulus dan stabil. Namun robot cenderung "memotong sudut" (*corner cutting*) pada tikungan tajam.
+3. **Lookahead Adaptif Berbasis Kecepatan**:
+   $$
+   L_d(v) = k_{\text{gain}} \cdot v + L_{d,\min}
+   $$
+
+---
+
+## 3. Video Pembelajaran: Algoritma Pelacakan Geometris Pure Pursuit
+
+<VideoEmbed
+  title="Pure Pursuit Path Tracking Algorithm"
+  videoId="N4b_sK-jVd4"
+/>
+
+---
+
+## 4. Simulator Interaktif Kendali Pure Pursuit
+
+Atur jarak lookahead $L_d$ dan kecepatan $v$. Amati dinamika manuver robot melintasi lintasan tikungan kurva S:
+
+<PurePursuitSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m13"
+  question="Berapakah nilai kurvatur kemudi Pure Pursuit κ ketika target lookahead tepat berada lurus di depan moncong robot (α = 0)?"
+  options={[
+    {
+      id: "A",
+      text: "Kurvatur κ = 2*sin(0)/Ld = 0 (sudut kemudi δ = 0°, kendaraan melaju lurus ke depan).",
+      isCorrect: true,
+      explanation: "Tepat! Saat target lurus di depan (α = 0), tidak ada galat belok sehingga robot berjalan lurus."
+    },
+    {
+      id: "B",
+      text: "Terjadi error pembagian dengan nol.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Kendaraan langsung berputar 360 derajat di tempat.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Hitung nilai sin(0) pada persamaan κ = 2*sin(α)/Ld."
+/>

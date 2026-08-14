@@ -1,0 +1,115 @@
+---
+id: astar-vs-dijkstra-search
+title: "Komparasi Pencarian Jalur: A* vs. Dijkstra & Heuristik (M15)"
+slug: astar-vs-dijkstra-search
+category: planning
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - a-star
+  - vectors-and-coordinate-geometry
+references:
+  - Peter E. Hart, Nils J. Nilsson, Bertram Raphael (1968). A Formal Basis for the Heuristic Determination of Minimum Cost Paths. IEEE Transactions on Systems Science and Cybernetics.
+  - Steven M. LaValle (2006). Planning Algorithms (Chapter 2: Discrete Planning). Cambridge University Press.
+components:
+  - AStarVsDijkstraSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Komparasi Pencarian Jalur: A* vs. Dijkstra & Heuristik (M15)
+
+> "Mengapa algoritma A* mampu mengeksplorasi simpul jauh lebih sedikit dibandingkan algoritma Dijkstra namun tetap menjamin jalur terpendek optimal secara matematis?"
+
+Algoritma perencana graf bertugas menemukan lintasan bebas tabrakan dari simpul awal $S$ ke simpul tujuan $G$. Perbedaan fundamental antara Dijkstra dan A* terletak pada **fungsi evaluasi biaya $f(n)$**.
+
+---
+
+## 1. Formulasi Matematika Fungsi Biaya: $f(n) = g(n) + h(n)$
+
+Untuk setiap simpul $n$ pada grid navigasi:
+
+$$
+f(n) = g(n) + h(n)
+$$
+
+Di mana:
+- **$g(n)$ (Biaya Akumulasi Lampau)**: Biaya terpendek eksak dari simpul awal $S$ ke simpul $n$.
+- **$h(n)$ (Estimasi Heuristik Sisa)**: Estimasi biaya perkiraan dari simpul $n$ menuju target tujuan $G$.
+- **$f(n)$ (Total Estimasi Biaya)**: Kunci prioritas antrean *Priority Queue* untuk menentukan simpul berikutnya yang akan diekspansi.
+
+### Teorema Kesetaraan Fundamental
+$$
+\text{Jika } h(n) = 0 \quad \forall n \implies f(n) = g(n) \equiv \text{Algoritma Dijkstra}
+$$
+
+Dijkstra mengekspansi simpul secara membabi buta ke segala arah (lingkaran 360°) berbasis nilai $g(n)$. Sebaliknya, A* menggunakan nilai $h(n)$ untuk mengarahkan fokus pencarian langsung ke arah target tujuan.
+
+---
+
+## 2. Taksonomi Fungsi Heuristik pada Grid 2D
+
+| Heuristik | Rumus Formulasi | Konektivitas | Sifat Matematis |
+|---|---|---|---|
+| **Dijkstra** | $h(n) = 0$ | Sembarang | Ekspansi seragam buta, jaminan optimal |
+| **Manhattan** | $h(n) = 10 \cdot (|\Delta x| + |\Delta y|)$ | Grid 4-Arah | Admisibel untuk pergerakan non-diagonal |
+| **Euclidean** | $h(n) = 10 \cdot \sqrt{\Delta x^2 + \Delta y^2}$ | Kontinu / Sembarang | Admisibel jarak garis lurus terpendek |
+| **Octile** | $h(n) = 10(\Delta x + \Delta y) - 6\min(\Delta x, \Delta y)$ | Grid 8-Arah | Admisibel ketat untuk pergerakan diagonal |
+
+### Syarat Admisibilitas Heuristik
+Sebuah fungsi heuristik dikatakan **admisibel** jika estimasinya tidak pernah melebihi biaya sisa yang sebenarnya:
+
+$$
+h(n) \le h^*(n) \quad \forall n
+$$
+
+---
+
+## 3. Video Pembelajaran: Perbandingan Pencarian A* vs Dijkstra
+
+<VideoEmbed
+  title="A* Pathfinding and Dijkstra Algorithm Comparison"
+  videoId="g0249TnlPso"
+/>
+
+---
+
+## 4. Simulator Interaktif Komparasi A* vs Dijkstra
+
+Ganti pilihan heuristik antara Dijkstra ($h=0$), Euclidean, dan Manhattan untuk menyaksikan pemangkasan drastis jumlah simpul yang dieksplorasi tanpa merusak nilai optimalitas biaya jalur:
+
+<AStarVsDijkstraSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-m15"
+  question="Jika kita menggunakan fungsi heuristik yang tidak admisibel (misal h(n) = 3 * h*(n)), apa risiko utama yang terjadi pada hasil perencanaan jalur?"
+  options={[
+    {
+      id: "A",
+      text: "Jumlah simpul yang dieksplorasi berkurang lebih cepat, namun jalur akhir yang dihasilkan bisa menjadi sub-optimal (lebih panjang dari jalur terpendek sebenarnya).",
+      isCorrect: true,
+      explanation: "Tepat! Melebih-lebihkan nilai heuristik merusak jaminan admisibilitas, mengubah A* menjadi pencarian serakah (greedy) yang mengabaikan rute terpendek sesungguhnya."
+    },
+    {
+      id: "B",
+      text: "Algoritma akan mengalami infinite loop dan tidak pernah selesai.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Memori komputer langsung habis seketika.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi saat antrean prioritas mempercayai estimasi heuristik yang terlalu dibesar-besarkan."
+/>
