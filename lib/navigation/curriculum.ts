@@ -44,19 +44,49 @@ export const DOMAINS: DomainMeta[] = [
     status: 'Foundation Ready',
     topics: [
       {
-        title: 'Coordinate Frames & Rigid Body Transforms',
-        description: 'Representing positions, orientations, and frame rotations in SE(2) and SE(3).',
-        algorithms: ['Rigid 2D Transform', 'Frame Projections'],
+        title: '1. Introduction to Robotics',
+        description: 'Autonomy definitions, Sense-Plan-Act loops, robot classification (fixed vs mobile).',
+        algorithms: ['Braitenberg Vehicles', 'Reactive State Controller'],
       },
       {
-        title: 'Mobile Robot Kinematics',
-        description: 'Differential-drive, Ackermann steering, and omnidirectional kinematic models.',
-        algorithms: ['Unicycle Model', 'Bicycle Kinematics'],
+        title: '2. 2D Geometry & Planar Transforms',
+        description: 'Cartesian and polar coordinates, vector rotations in SO(2), triangulation sensors.',
+        algorithms: ['2D Rigid Transform', 'Triangulation Localization'],
       },
       {
-        title: 'Sensor Principles & Noise',
-        description: 'LiDAR rangefinders, encoders, IMU, and Gaussian sensor uncertainty models.',
-        algorithms: ['Gaussian Noise Injection', 'Raycasting Simulator'],
+        title: '3. 3D Spatial Geometry & Euler Angles',
+        description: 'Right-hand rule, SO(3) 3D rotation matrices, roll-pitch-yaw, and quaternions.',
+        algorithms: ['Euler ZYX Rotations', 'Quaternion Slerp'],
+      },
+      {
+        title: '4. Path & Trajectory Generation',
+        description: 'Distinction between geometric path and time-parameterized trajectory with quintic splines.',
+        algorithms: ['Quintic Polynomial Spline', 'Velocity Profiler'],
+      },
+      {
+        title: '5. Velocity Kinematics in 2D',
+        description: 'Differential-drive unicycle velocity mappings, ICC radius, and no-slip non-holonomic constraints.',
+        algorithms: ['Unicycle Integrator', 'Instantaneous Center of Curvature'],
+      },
+      {
+        title: '6. Velocity Kinematics in 3D',
+        description: 'Spatial twist, angular velocity skew-symmetric matrix, and manipulator Geometric Jacobians.',
+        algorithms: ['Geometric Jacobian Mapping', 'Skew-Symmetric Operator'],
+      },
+      {
+        title: '7. Matrix Foundations for Robotics',
+        description: '4x4 SE(3) homogeneous transforms, matrix inverses, sensor covariance matrices, and SVD.',
+        algorithms: ['SE(3) Homogeneous Transform', 'Covariance Estimator'],
+      },
+      {
+        title: '8. Mathematical Modeling & Automata',
+        description: 'Non-linear state-space continuous/discrete formulations, Bayes filters, and Finite State Machines.',
+        algorithms: ['Discrete State-Space Model', 'Finite State Machine (FSM)'],
+      },
+      {
+        title: '9. Robot Dynamics, Forces & Torques',
+        description: 'Newton-Euler translative/rotative motion equations, Euler-Lagrange manipulator dynamics.',
+        algorithms: ['Newton-Euler Integrator', 'Euler-Lagrange Equation'],
       },
     ],
     primaryEquations: [
