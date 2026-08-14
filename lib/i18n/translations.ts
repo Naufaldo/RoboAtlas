@@ -4,14 +4,19 @@ export const translations = {
   en: {
     // Navigation
     nav: {
+      learn: 'Learn',
       curriculum: 'Curriculum',
+      algorithms: 'Algorithms',
       robots: 'Robot Platforms',
-      algorithms: 'Algorithm Lab',
+      labs: 'Labs',
+      projects: 'Projects',
+      resources: 'Resources',
+      about: 'About',
       pathPlanning: 'Path Planning',
       kinematics: 'Kinematics',
       reference: 'Ref: PythonRobotics',
       github: 'GitHub Repository',
-      domains: '7 Domains',
+      domains: 'Domains',
       activeFoundation: 'Foundation Active',
     },
     // Hero
@@ -134,14 +139,19 @@ export const translations = {
   id: {
     // Navigation
     nav: {
+      learn: 'Belajar',
       curriculum: 'Kurikulum',
+      algorithms: 'Algoritma',
       robots: 'Platform Robot',
-      algorithms: 'Lab Algoritma',
+      labs: 'Lab',
+      projects: 'Proyek',
+      resources: 'Sumber Daya',
+      about: 'Tentang',
       pathPlanning: 'Perencanaan Jalur',
       kinematics: 'Kinematika',
       reference: 'Ref: PythonRobotics',
       github: 'Repositori GitHub',
-      domains: '7 Domain',
+      domains: 'Domain',
       activeFoundation: 'Fondasi Aktif',
     },
     // Hero

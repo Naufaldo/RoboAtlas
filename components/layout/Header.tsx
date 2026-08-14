@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   Globe,
+  Users,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -28,10 +29,13 @@ export function Header() {
   const { locale, setLocale, toggleLocale, t } = useLanguage();
 
   const navLinks = [
-    { name: t.nav.curriculum, href: '/learn', icon: BookOpen },
-    { name: t.nav.robots, href: '/robots', icon: Bot },
+    { name: t.nav.learn, href: '/learn', icon: BookOpen },
     { name: t.nav.algorithms, href: '/algorithms', icon: Cpu },
-    { name: t.nav.kinematics, href: '/learn/fundamentals', icon: Compass },
+    { name: t.nav.robots, href: '/robots', icon: Bot },
+    { name: t.nav.labs, href: '/labs', icon: Compass },
+    { name: t.nav.projects, href: '/projects', icon: Sparkles },
+    { name: t.nav.resources, href: '/resources', icon: ExternalLink },
+    { name: t.nav.about, href: '/about', icon: Users },
   ];
 
   return (
