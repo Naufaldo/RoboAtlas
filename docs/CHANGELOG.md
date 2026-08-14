@@ -2,12 +2,12 @@
 
 All notable changes to the **RoboAtlas** project are tracked in the root [`CHANGELOG.md`](../CHANGELOG.md).
 
-## Current Version: [v0.3.1] - 2026-08-14
+## Current Version: [v0.4.0] - 2026-08-14
 
 ### Key Highlights
-- **9-Chapter Robotics Foundations Curriculum** (`/learn/fundamentals`): Comprehensive syllabus derived from *Elements of Robotics*, *Foundations of Robotics*, and *Planning Algorithms*.
-- **Interactive 3D Spatial Rotation Sandbox** (`SpatialRotation3D.tsx`): 3D SO(3) Euler angle Roll-Pitch-Yaw visualizer with live matrix inspect.
-- **Mobile Responsive & Touch Optimized**: Touch drawing/drag support across all 7 domain simulators and touch-scrollable KaTeX math.
-- **Bilingual Internationalization (EN / ID)**: 1-click header switcher with full parity.
-- **Dark & Light Mode Themes**: Dual theme engine with local storage persistence.
-- **Official Emblem Logo**: Mascot emblem in Header, Hero, and Footer.
+- **Canonical MDX Content Architecture** (`content/en/` & `content/id/`): Structured MDX content layer with standardized YAML frontmatter, dynamic loader (`lib/mdx/content.ts`), and automated validation test suite.
+- **Learner-First UI/UX Framework**: `LessonOrientation.tsx`, `LessonNavigation.tsx`, `MathCodeBridge.tsx` (Section 38), and `AcademicReferences.tsx` (Section 39).
+- **Mathematical Explanation Standard**: `FormulaExplainer.tsx` with intuitive meaning, physical reasoning ("Why?"), variable glossary tables, step-by-step derivations, and interactive live parameter calculators.
+- **9-Chapter Robotics Foundations Curriculum**: Complete syllabus covering 2D/3D geometry, kinematics, matrices, state-space modeling, and dynamics.
+- **7 Bespoke 60 FPS Simulators with Mobile Touch Support**: Touch-friendly canvas simulations across all robotics domains.
+- **Bilingual & Dual Theme**: English/Indonesian toggle and Dark/Light mode.

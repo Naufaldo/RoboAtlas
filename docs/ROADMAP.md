@@ -39,25 +39,18 @@ This roadmap defines the implementation schedule for RoboAtlas, organized by inc
 
 ---
 
-### 🚀 Milestone 2 — First Path Planning Algorithm: Dijkstra
+### ✅ Milestone 2 — Path Planning: Dijkstra & A* Heuristic Search (Completed)
 - **Topic Coverage**:
   - Graph representation of planar grid worlds (4-connectivity vs. 8-connectivity).
   - Priority Queue (Min-Heap) frontier expansion.
-  - Guaranteed shortest path optimality proof.
-- **Simulation**:
-  - Interactive grid canvas: draw custom walls/obstacles, drag start & goal pins.
-  - Step-by-step frontier expansion animation (open set in cyan, closed set in slate, final path in emerald).
-  - Telemetry: Explored node count, computation time, total path cost.
-
----
-
-### 🚀 Milestone 3 — A* Heuristic Search & Comparison
-- **Topic Coverage**:
+  - Guaranteed shortest path optimality proof and admissibility ($h(n) \le h^*(n)$).
   - Heuristic function design: Euclidean, Manhattan, and Octile distances.
-  - Heuristic admissibility and consistency ($h(n) \le c(n, a, n') + h(n')$).
-  - Dijkstra vs. A* comparative benchmark.
-- **Simulation**:
-  - Side-by-side or split visualizer comparing Dijkstra vs. A* node explorations on identical obstacle layouts.
+- **Simulations & Components**:
+  - `PathPlanningSimulator.tsx`: Interactive grid canvas with custom obstacle wall drawing, A* (Octile, Euclidean, Manhattan), and Dijkstra.
+  - `FormulaExplainer.tsx`: Interactive cost evaluation $f(n) = g(n) + h(n)$ calculator.
+  - `MathCodeBridge.tsx`: Direct math-to-code mapping between evaluation formulas and TypeScript priority queues.
+  - `LessonOrientation.tsx` & `AcademicReferences.tsx`: Citations for Hart, Nilsson, & Raphael (1968) and LaValle (2006).
+- **MDX Content**: `content/en/planning/a-star.mdx` & `content/id/planning/a-star.mdx`.
   - Heuristic weight multiplier slider ($f(n) = g(n) + \epsilon \cdot h(n)$ for Weighted A*).
 
 ---

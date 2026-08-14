@@ -4,7 +4,7 @@ This document outlines the operational rules, quality standards, and development
 
 ---
 
-## 🤖 10 Core Agentic Rules
+## 🤖 15 Core Agentic Rules
 
 ### Rule 1: Inspect Before Modifying
 Before modifying or creating files:
@@ -20,7 +20,7 @@ Before modifying or creating files:
 ### Rule 3: One Feature at a Time
 Every feature or algorithm pull request / commit must contain:
 1. Pure algorithm implementation (`lib/` or `algorithms/`).
-2. Mathematical model documentation with KaTeX equations (`app/learn/`).
+2. Mathematical model documentation with KaTeX equations (`app/learn/` or `content/`).
 3. Unit tests verifying mathematical and edge-case correctness (`tests/`).
 4. Interactive simulation canvas with step execution (`components/simulation/`).
 
@@ -61,6 +61,20 @@ Visual plausibility is not enough. All algorithms and mathematical functions mus
 - All user-facing UI, documentation, educational explanations, mathematical breakdowns, and simulator tooltips MUST support both **Bahasa Indonesia (`id`)** and **English (`en`)**.
 - Maintain dictionary synchronization in [`lib/i18n/translations.ts`](../lib/i18n/translations.ts).
 
+### Rule 13: Canonical MDX Content Architecture & Frontmatter Parity
+- Follow [`docs/RoboAtlas_MDX_Content_Architecture.md`](RoboAtlas_MDX_Content_Architecture.md).
+- Lessons written in MDX must reside in `content/en/` and `content/id/` with matching stable `id` fields.
+- Frontmatter must include `title`, `slug`, `category`, `difficulty`, `language`, `interactive`, `estimatedMinutes`, `prerequisites`, `references`, and `components`.
+
+### Rule 14: Learner-First Cognitive Load & Math-to-Code Bridges
+- Follow [`docs/RoboAtlas_UI_UX_Learner_First_Spec.md`](RoboAtlas_UI_UX_Learner_First_Spec.md) and [`docs/RoboAtlas_Mathematical_Explanation_Rules.md`](RoboAtlas_Mathematical_Explanation_Rules.md).
+- Include `LessonOrientation` ("Where am I? What am I learning? Why does it matter?"), `MathCodeBridge` (Section 38), `AcademicReferences` (Section 39), and `LessonNavigation` on all core learning modules.
+- Ensure every equation explains its intuitive meaning, physical reasoning ("Why?"), variable units, derivations, and numerical examples.
+
+### Rule 15: Content Quality Over Content Volume
+- Never generate large amounts of shallow, low-quality material merely to fill folders.
+- Prioritize deeply explained, rigorously verified, interactive lessons over surface-level content volume.
+
 ---
 
 ## 🔄 8-Step Agent Workflow Loop
@@ -98,4 +112,5 @@ A milestone or feature is complete only when:
 - [ ] **Algorithm Separation**: Algorithm logic is separated from UI/Canvas rendering.
 - [ ] **Educational Documentation**: The topic page explains problem motivation, mathematical equations (KaTeX), and complexity.
 - [ ] **Academic Citations**: Classical paper citations are included.
-- [ ] **Reduced-Motion Support**: Animations respect user preference.
+- [ ] **Bilingual Parity**: English and Indonesian representations are in sync.
+- [ ] **Changelog & Versioning**: Version is bumped and recorded in `CHANGELOG.md`.

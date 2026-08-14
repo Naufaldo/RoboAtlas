@@ -11,10 +11,11 @@
 
 <p align="center">
   <a href="https://naufaldo.github.io/RoboAtlas/"><img src="https://img.shields.io/badge/Live_Demo-GitHub_Pages-06b6d4?style=for-the-badge&logo=githubpages&logoColor=white" alt="Live Demo" /></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-v0.3.1-10b981?style=for-the-badge" alt="Version 0.3.1" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-v0.4.0-10b981?style=for-the-badge" alt="Version 0.4.0" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License MIT" /></a>
   <img src="https://img.shields.io/badge/Bilingual-EN%20%7C%20ID-8b5cf6?style=for-the-badge" alt="Bilingual EN | ID" />
   <img src="https://img.shields.io/badge/Theme-Dark%20%2F%20Light-f59e0b?style=for-the-badge" alt="Dual Theme" />
+  <img src="https://img.shields.io/badge/Content-MDX_Canonical-3b82f6?style=for-the-badge" alt="MDX Canonical" />
   <img src="https://img.shields.io/badge/Mobile-Touch_Optimized-ec4899?style=for-the-badge" alt="Mobile Touch Optimized" />
 </p>
 
@@ -35,6 +36,14 @@ RoboAtlas re-imagines robotics education as an original **TypeScript-native inte
 
 ## ✨ Key Platform Features
 
+- 📑 **Canonical MDX Content Layer (`content/`)**: All lessons are authored in structured bilingual MDX (`content/en/` and `content/id/`) with Gray-Matter frontmatter schemas and cross-language stable ID tracking.
+- 🎓 **Learner-First UI/UX Framework**:
+  - `LessonOrientation.tsx`: Answers "Where am I? What am I learning? Why does it matter?" with estimated study time.
+  - `MathCodeBridge.tsx`: Direct 1-to-1 visual and conceptual mapping from mathematical formulas to TypeScript code.
+  - `AcademicReferences.tsx`: Structured literature cards citing authoritative papers with DOIs and chapter coverage.
+  - `LessonNavigation.tsx`: Lesson progression links with suggested interactive simulation challenges.
+- 📐 **7-Step Mathematical Explanation Standard (`FormulaExplainer.tsx`)**:
+  - KaTeX rendering $\to$ Intuitive Meaning $\to$ Physical Reasoning ("Why?") $\to$ Dimensional Unit Tables $\to$ Collapsible Step-by-Step Derivations $\to$ Interactive Live Parameter Calculators.
 - 🌓 **Dual-Theme Engine (Dark & Light Mode)**: Seamlessly toggle between a futuristic deep-void robotics laboratory (`#040711`) and a clean clinical light mode (`#f8fafc`) with persistent `localStorage`.
 - 🌐 **Full Bilingual Parity (Bahasa Indonesia & English)**: 1-click language switcher (`ID` / `EN`) in Header covering all navigation, hero sections, interactive simulators, KaTeX math breakdowns, and algorithm matrices.
 - 📱 **Mobile-Adaptive & Touch-First**:
@@ -50,7 +59,6 @@ RoboAtlas re-imagines robotics education as an original **TypeScript-native inte
   - **`MappingSimulator.tsx`**: 360° LiDAR Raycaster with Log-Odds Bayesian Occupancy Grid probability updates.
   - **`SlamSimulator.tsx`**: Step-by-step Iterative Closest Point (ICP) scan matching with closed-form SVD rigid alignment.
   - **`MultiAgentSimulator.tsx`**: Swarm coordination with Graph Laplacian consensus, leader-follower formations (V-shape, Circle, Line), and Boids flocking.
-- 📐 **Rigorous KaTeX Formulations**: Complete mathematical models with defined variables, derivations, and complexity analysis.
 - ⚡ **100% Client-Side Architecture**: Pure TypeScript and HTML5 Canvas 2D engine. Zero server latency, zero database overhead, and instant load times.
 
 ---
@@ -77,8 +85,11 @@ Located at **[`/learn/fundamentals`](https://naufaldo.github.io/RoboAtlas/learn/
 
 - 📋 **[System Specification](docs/SPECIFICATION.md)** — Architectural design, 5-layer hierarchy, KaTeX standards, and static export rules.
 - 🗺️ **[Feature Roadmap](docs/ROADMAP.md)** — Detailed breakdown of Milestones 1 through 8 and future Phase 2/3 capabilities.
-- 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 12 Core Agentic Rules, 8-Step Workflow Loop, and bilingual/changelog guidelines.
+- 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 15 Core Agentic Rules, 8-Step Workflow Loop, and bilingual/changelog guidelines.
 - 📜 **[Changelog](CHANGELOG.md)** — Detailed version release history adhering to Keep a Changelog and SemVer.
+- 📑 **[MDX Content Architecture](docs/RoboAtlas_MDX_Content_Architecture.md)** — MDX directory layout, frontmatter schemas, and authoring specifications.
+- 🎨 **[Learner-First UI/UX Specification](docs/RoboAtlas_UI_UX_Learner_First_Spec.md)** — Cognitive load reduction, design personality, Math-Code bridge, and reference guidelines.
+- 📐 **[Mathematical Explanation Rules](docs/RoboAtlas_Mathematical_Explanation_Rules.md)** — 7-step pedagogical standard for robotics equations.
 - 📚 **[Content Specification](book/RoboAtlas_Agentic_Content_Spec.md)** — Pedagogical framework, textbook reference mapping, and agent instructions.
 - 🏗️ **[Architecture Overview](ARCHITECTURE.md)** — Modular 5-layer system overview.
 - 🤝 **[Contributing Guide](CONTRIBUTING.md)** — Development standards and pull request workflows.

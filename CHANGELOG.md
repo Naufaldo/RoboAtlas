@@ -7,60 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2026-08-14
+
+### Added
+- **Canonical MDX Content Architecture** (`docs/RoboAtlas_MDX_Content_Architecture.md`):
+  - Structured content directory layout (`content/en/` and `content/id/`) across learning domains (Fundamentals, Planning, Control, Localization, Mapping, SLAM, Multi-Agent).
+  - Standardized YAML frontmatter schema with stable cross-language lesson IDs (`id`, `title`, `slug`, `category`, `difficulty`, `language`, `interactive`, `estimatedMinutes`, `prerequisites`, `references`, `components`).
+  - Dynamic MDX loader library (`lib/mdx/content.ts`) with Gray-Matter parsing for fast client-side and static export builds.
+  - Automated unit test suite (`tests/mdx/content.test.ts`) validating frontmatter integrity and English-Indonesian ID parity (**21 / 21 tests passing**).
+- **Learner-First UI/UX Framework** (`docs/RoboAtlas_UI_UX_Learner_First_Spec.md`):
+  - **`LessonOrientation.tsx`**: Orienting card answering "Where am I? What am I learning? Why does it matter?" with estimated study duration.
+  - **`LessonNavigation.tsx`**: Progressive next-steps toolbar with previous/next lesson links and suggested interactive simulation experiments.
+  - **`MathCodeBridge.tsx`** (Section 38): Visual and conceptual side-by-side mapping between KaTeX mathematical formulations and TypeScript code execution with symbol-to-identifier lookup tables.
+  - **`AcademicReferences.tsx`** (Section 39): Standard academic literature reference cards with author citations, publisher, publication year, chapter coverage, and direct DOI links.
+- **Mathematical Explanation Standard** (`docs/RoboAtlas_Mathematical_Explanation_Rules.md`):
+  - **`FormulaExplainer.tsx`**: 7-step pedagogical standard with intuitive meaning, physical reasoning ("Why?"), variable tables with SI units, collapsible step-by-step derivations, and interactive live parameter calculators.
+
+---
+
 ## [0.3.1] - 2026-08-14
 
 ### Added
 - **Academic 9-Chapter Foundations Curriculum** (`/learn/fundamentals`):
   - Synthesized foundational content from *Elements of Robotics* (Ben-Ari & Mondada), *Foundations of Robotics* (Herath & St-Onge), and *Planning Algorithms* (LaValle).
-  - **Chapter 1**: Introduction to Robotics (Sense-Plan-Act loops, robot classifications, reactive Braitenberg vehicles).
-  - **Chapter 2**: 2D Geometry (Cartesian vs. Polar, vector rotation in $SO(2)$, triangulation distance sensors).
-  - **Chapter 3**: 3D Spatial Geometry (Right-hand rule, principal axis rotations, Euler angles Roll-Pitch-Yaw, unit quaternions $\mathbf{q} \in \mathbb{H}$).
-  - **Chapter 4**: Path vs. Trajectory (Geometric path $s(\sigma)$ vs. time-parameterized trajectory $\mathbf{x}(t)$, $C^2$-continuous quintic polynomial splines).
-  - **Chapter 5**: Velocity Kinematics in 2D (Differential-drive unicycle kinematics, instantaneous center of curvature $R_{ICC}$, no-slip Pfaffian non-holonomic constraint $-\dot{x}\sin\theta + \dot{y}\cos\theta = 0$).
-  - **Chapter 6**: Velocity Kinematics in 3D (Spatial twist $\mathbf{V}_e \in se(3)$, skew-symmetric cross-product matrix $[\boldsymbol{\omega}]_\times$, and Geometric Jacobian $J(\mathbf{q})\dot{\mathbf{q}}$).
-  - **Chapter 7**: Matrix Foundations for Robotics ($4\times 4$ $SE(3)$ homogeneous transforms, matrix inverse, covariance matrix $\boldsymbol{\Sigma}$, SVD decomposition).
-  - **Chapter 8**: Mathematical Modeling & Automata (Discrete state-space models $\mathbf{x}_k = f(\mathbf{x}_{k-1}, \mathbf{u}_k) + \mathbf{w}_k$, observation models, and Finite State Machines).
-  - **Chapter 9**: Robot Dynamics, Forces & Torques (Newton-Euler translative/rotative motion, Euler-Lagrange manipulator dynamics $M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q}) = \boldsymbol{\tau}$).
-- **Interactive 3D Spatial Rotation Sandbox** (`SpatialRotation3D.tsx`): 3D isometric canvas allowing live adjustment of Roll ($\phi$), Pitch ($\theta$), and Yaw ($\psi$) with real-time $3\times 3$ $SO(3)$ matrix updates and orthogonal properties verification ($R^T R = I_3, \det(R) = +1$).
-- **Full Mobile Touch & Responsive Enhancements**:
-  - Touch event listeners (`onTouchStart`, `onTouchMove`) added across all 7 interactive simulator canvases for mobile phone and tablet interaction.
-  - Horizontal touch-scroll containers (`overflow-x-auto scrollbar-thin`) for all KaTeX mathematical equations, preventing layout overflow on narrow mobile screens (320px–414px).
-  - Responsive control grids (`grid-cols-1 sm:grid-cols-2`) and touch-friendly button targets ($\ge 44\text{px}$).
+  - Chapters 1–9 covering autonomy loops, 2D/3D geometry, path vs. trajectory splines, velocity kinematics, matrices, state-space modeling, and robot dynamics.
+- **Interactive 3D Spatial Rotation Sandbox** (`SpatialRotation3D.tsx`): 3D isometric canvas for live Roll ($\phi$), Pitch ($\theta$), and Yaw ($\psi$) angle tuning and real-time $SO(3)$ matrix inspection.
+- **Full Mobile Touch & Responsive Enhancements**: Touch drag support (`onTouchStart`, `onTouchMove`) across all 7 simulator canvases and touch-scrollable KaTeX equations.
 
 ---
 
 ## [0.3.0] - 2026-08-14
 
 ### Added
-- **Official RoboAtlas Mascot Logo**: Integrated official logo emblem (`public/images/logo.png`) into navigation Header, landing hero, and Footer.
-- **Dark & Light Mode Theme Engine**: Full support for instant switching between deep void dark theme (`#040711`) and clinical engineering light theme (`#f8fafc`) with automatic preference persistence in `localStorage`.
-- **Bilingual Internationalization (i18n)**: Seamless English (`en`) and Bahasa Indonesia (`id`) language toggle (`ID` / `EN`) in Header covering all navigation, hero text, domain curriculum, algorithm matrix, simulator controls, and mathematical breakdowns.
-- **Interactive Transform Sandbox** (`TransformSandbox.tsx`): Interactive coordinate frame gizmo showing live $3\times 3$ homogeneous transformation matrix $T_R^W$ and world point projections $\mathbf{p}^W = T_R^W \mathbf{p}^R$.
-- **Bilingual Parity Across All 7 Domains**: Upgraded all learning domain pages (`/learn/planning`, `/learn/localization`, `/learn/control`, `/learn/mapping`, `/learn/slam`, `/learn/multi-agent`) with dynamic bilingual rendering.
+- **Official RoboAtlas Mascot Logo**: Integrated official mascot logo (`public/images/logo.png`) into navigation Header, Hero, and Footer.
+- **Dark & Light Mode Theme Engine**: Full support for instant switching between deep void dark theme (`#040711`) and clinical light theme (`#f8fafc`) with `localStorage` persistence.
+- **Bilingual Internationalization (i18n)**: 1-click language switcher (`ID` / `EN`) in Header covering all components, simulators, KaTeX math, and algorithm matrices.
 
 ---
 
 ## [0.2.0] - 2026-08-14
 
 ### Added
-- **7 Bespoke Interactive Simulators**:
-  - `KinematicsSimulator.tsx`: Forward/inverse kinematics sandbox with wheel velocity sliders $(v_L, v_R)$ and ICC center.
-  - `PathPlanningSimulator.tsx`: Interactive grid search sandbox with custom obstacle wall drawing, A* (Octile/Euclidean/Manhattan) and Dijkstra engines.
-  - `LocalizationSimulator.tsx`: Monte Carlo Particle Filter (MCL) with landmark beacon triangulation and dead-reckoning drift.
-  - `ControlSimulator.tsx`: Pure Pursuit lookahead geometry vs. Stanley cross-track steering controller with real-time error telemetry.
-  - `MappingSimulator.tsx`: Log-Odds Occupancy Grid Mapping with 360° LiDAR raycaster.
-  - `SlamSimulator.tsx`: Iterative Closest Point (ICP) scan matching with SVD rigid transformation alignment.
-  - `MultiAgentSimulator.tsx`: Swarm coordination with Graph Laplacian consensus, leader-follower formations, and Boids flocking.
-- **Bespoke Laboratory UI Aesthetic**: Elevated typography with *Plus Jakarta Sans* and *JetBrains Mono*, glassmorphic instrument panels, and live telemetry HUD gauges.
-- **Hero Simulation Map Presets**: Added 1-click map scenario switcher (*Arena*, *Corridor*, *Slalom*) and variable speed controls ($1\times, 1.5\times, 2\times$).
+- **7 Dedicated 60 FPS Interactive Simulators**:
+  - `KinematicsSimulator.tsx`: Forward/inverse differential-drive kinematics with ICC.
+  - `PathPlanningSimulator.tsx`: Grid wall drawing with A* and Dijkstra.
+  - `LocalizationSimulator.tsx`: Monte Carlo Particle Filter (MCL).
+  - `ControlSimulator.tsx`: Pure Pursuit vs. Stanley steering.
+  - `MappingSimulator.tsx`: Log-Odds Bayesian Occupancy Grid Mapping.
+  - `SlamSimulator.tsx`: Iterative Closest Point (ICP) scan matching.
+  - `MultiAgentSimulator.tsx`: Graph Laplacian consensus & swarm coordination.
 
 ---
 
 ## [0.1.0] - 2026-08-14
 
 ### Added
-- **Core Architecture Foundation**: Next.js 14 App Router configured for static export (`output: 'export'`).
-- **KaTeX Mathematical Engine**: Dark-mode compatible LaTeX equation rendering with variable tooltips.
-- **Pure TypeScript Kinematics Math Library**: Vector math (`vector2d.ts`) and rigid 2D coordinate transforms (`transforms.ts`).
-- **Initial 7 Robotics Curriculum Modules**: Fundamentals, Path Planning, Localization, Control, Mapping, SLAM, and Multi-Agent.
-- **Automated CI/CD Workflow**: GitHub Actions pipeline for linting, testing with Vitest (`17 / 17` passing), and deploying to GitHub Pages via Node.js 24.
+- Initial platform release with Next.js 14 static export architecture, KaTeX rendering, pure TypeScript 2D vector kinematics library, and automated GitHub Actions CI/CD.
