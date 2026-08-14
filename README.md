@@ -59,7 +59,7 @@ Interactive UI (Controls, Sliders, Telemetry HUD)
 ## 🚀 Quick Start
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18+ or v20+)
+- [Node.js](https://nodejs.org/) (v24 LTS or v20+)
 - `npm`
 
 ### Installation & Local Development
