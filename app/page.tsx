@@ -248,7 +248,7 @@ export default function HomePage() {
                 </p>
               </div>
               <Link
-                href="/learn/fundamentals/mathematical-foundations"
+                href="/learn/mathematics/mathematical-foundations"
                 className="mt-5 inline-flex items-center justify-between text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400 pt-3 border-t border-slate-200 dark:border-slate-800"
               >
                 <span>{isId ? 'Buka Fondasi' : 'Explore Math'}</span>

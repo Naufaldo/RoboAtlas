@@ -1,0 +1,103 @@
+---
+id: mathematical-foundations
+title: Mathematical & Geometric Foundations for Robotics
+slug: mathematical-foundations
+category: mathematics
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - intro-to-robotics
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 2). Springer Open.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 1). Springer.
+components:
+  - CoordinateFrameExplorer
+  - VectorVisualizer
+  - DotProductExplorer
+  - ConceptCheck
+---
+
+# Mathematical & Geometric Foundations for Robotics
+
+> "Why is linear algebra, trigonometry, and coordinate geometry the universal language spoken by every autonomous robot?"
+
+To navigate physical space, manipulate tools, or stabilize flight, every autonomous robot must represent continuous geometry through discrete numbers.
+
+---
+
+## 1. Physical Position Vectors & Cartesian Frames
+
+In planar 2D robotics, the position of a robot landmark or sensor detection relative to origin $\{O\}$ is represented by a 2D Euclidean column vector:
+
+$$
+\mathbf{p} = \begin{bmatrix} x \\ y \end{bmatrix} \in \mathbb{R}^2
+$$
+
+### Vector Magnitude (Euclidean $L_2$ Distance):
+By the Pythagorean theorem:
+
+$$
+\|\mathbf{p}\| = \sqrt{x^2 + y^2}
+$$
+
+### Unit Direction Vector:
+$$
+\mathbf{\hat{u}} = \frac{\mathbf{p}}{\|\mathbf{p}\|} = \begin{bmatrix} \frac{x}{\sqrt{x^2 + y^2}} \\ \frac{y}{\sqrt{x^2 + y^2}} \end{bmatrix} = \begin{bmatrix} \cos\theta \\ \sin\theta \end{bmatrix}
+$$
+
+---
+
+## 2. Interactive Coordinate Frame & Vector Visualizer
+
+Drag the vector point $(x, y)$ on the interactive grid below to observe real-time vector projections and Pythagorean calculations:
+
+<VectorVisualizer />
+
+---
+
+## 3. The Dot Product & Directional Alignment
+
+When a robot tracks a path or computes sensor projections, it calculates the **inner dot product** between velocity vector $\mathbf{v}$ and target path vector $\mathbf{d}$:
+
+$$
+\mathbf{a} \cdot \mathbf{b} = a_x b_x + a_y b_y = \|\mathbf{a}\| \|\mathbf{b}\| \cos\theta
+$$
+
+### Geometric Interpretations:
+1. **$\mathbf{a} \cdot \mathbf{b} > 0$** ($\theta < 90^\circ$): Moving towards target direction.
+2. **$\mathbf{a} \cdot \mathbf{b} = 0$** ($\theta = 90^\circ$): Strictly orthogonal / perpendicular.
+3. **$\mathbf{a} \cdot \mathbf{b} < 0$** ($\theta > 90^\circ$): Moving away from target direction.
+
+<DotProductExplorer />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-math-foundations"
+  question="If vector a = [3, 4] and vector b = [4, -3], what is their dot product a . b?"
+  options={[
+    {
+      id: "A",
+      text: "0 (They are mutually perpendicular / orthogonal).",
+      isCorrect: true,
+      explanation: "Exact! a . b = (3 * 4) + (4 * -3) = 12 - 12 = 0."
+    },
+    {
+      id: "B",
+      text: "25",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "7",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Calculate a_x * b_x + a_y * b_y."
+/>

@@ -1,0 +1,103 @@
+---
+id: mathematical-foundations
+title: Fundamental Matematika & Geometri untuk Robotika
+slug: mathematical-foundations
+category: mathematics
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - intro-to-robotics
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 2). Springer Open.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 1). Springer.
+components:
+  - CoordinateFrameExplorer
+  - VectorVisualizer
+  - DotProductExplorer
+  - ConceptCheck
+---
+
+# Fundamental Matematika & Geometri untuk Robotika
+
+> "Mengapa aljabar linier, trigonometri, dan geometri koordinat menjadi bahasa universal yang digunakan oleh setiap robot otonom di dunia?"
+
+Untuk dapat bernavigasi di dunia fisik, menggerakkan lengan mekanik, atau menjaga kestabilan terbang drone, robot harus merepresentasikan geometri ruang kontinu ke dalam angka-angka diskrit numerik.
+
+---
+
+## 1. Vektor Posisi Fisik & Kerangka Kartesius
+
+Pada robotika planar 2D, posisi titik rintangan atau target relatif terhadap titik acuan $\{O\}$ dinyatakan melalui vektor kolom Euklides 2D:
+
+$$
+\mathbf{p} = \begin{bmatrix} x \\ y \end{bmatrix} \in \mathbb{R}^2
+$$
+
+### Magnitudo Vektor (Jarak Euklides $L_2$):
+Berdasarkan teorema Pythagoras:
+
+$$
+\|\mathbf{p}\| = \sqrt{x^2 + y^2}
+$$
+
+### Vektor Satuan Penunjuk Arah:
+$$
+\mathbf{\hat{u}} = \frac{\mathbf{p}}{\|\mathbf{p}\|} = \begin{bmatrix} \frac{x}{\sqrt{x^2 + y^2}} \\ \frac{y}{\sqrt{x^2 + y^2}} \end{bmatrix} = \begin{bmatrix} \cos\theta \\ \sin\theta \end{bmatrix}
+$$
+
+---
+
+## 2. Visualizer Vektor & Kerangka Koordinat Interaktif
+
+Geser titik koordinat $(x, y)$ pada kanvas interaktif di bawah ini untuk melihat proyeksi trigonometri dan perhitungan Pythagoras secara *real-time*:
+
+<VectorVisualizer />
+
+---
+
+## 3. Perkalian Titik (Dot Product) & Penyelarasan Arah
+
+Ketika robot melacak jalur lintasan atau menghitung proyeksi sensor jarak, sistem menghitung **perkalian titik (*dot product*)** antara vektor kecepatan $\mathbf{v}$ dan vektor target $\mathbf{d}$:
+
+$$
+\mathbf{a} \cdot \mathbf{b} = a_x b_x + a_y b_y = \|\mathbf{a}\| \|\mathbf{b}\| \cos\theta
+$$
+
+### Interpretasi Geometris:
+1. **$\mathbf{a} \cdot \mathbf{b} > 0$** ($\theta < 90^\circ$): Robot bergerak mendekat ke arah target.
+2. **$\mathbf{a} \cdot \mathbf{b} = 0$** ($\theta = 90^\circ$): Posisi tepat tegak lurus (*ortogonal*).
+3. **$\mathbf{a} \cdot \mathbf{b} < 0$** ($\theta > 90^\circ$): Robot bergerak menjauh dari arah target.
+
+<DotProductExplorer />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-math-foundations"
+  question="Jika vektor a = [3, 4] dan vektor b = [4, -3], berapakah hasil perkalian titik (dot product) a . b?"
+  options={[
+    {
+      id: "A",
+      text: "0 (Kedua vektor saling tegak lurus / ortogonal).",
+      isCorrect: true,
+      explanation: "Tepat! a . b = (3 * 4) + (4 * -3) = 12 - 12 = 0."
+    },
+    {
+      id: "B",
+      text: "25",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "7",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Hitung a_x * b_x + a_y * b_y."
+/>
