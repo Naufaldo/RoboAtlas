@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import 'katex/dist/katex.min.css';
 
 @tailwind base;
@@ -5,9 +6,9 @@
 @tailwind utilities;
 
 :root {
-  --background: #090d16;
+  --background: #070a13;
   --foreground: #f8fafc;
-  --card: #0f172a;
+  --card: #0d1322;
   --card-foreground: #f8fafc;
   --border: #1e293b;
 }
@@ -15,8 +16,12 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.15), transparent 70%),
+    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.08), transparent 50%);
+  background-attachment: fixed;
 }
 
 /* Custom technical scrollbar */
@@ -26,7 +31,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b1120;
+  background: #070a13;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -38,19 +43,53 @@ body {
   background: #334155;
 }
 
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.025em;
+}
+
+pre, code, .font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* Glassmorphic card & subtle glow effects */
+.glass-panel {
+  background: rgba(13, 19, 34, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+}
+
+.glass-panel-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(17, 24, 43, 0.9);
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Tech dot grid background */
+.tech-grid {
+  background-size: 24px 24px;
+  background-image: radial-gradient(rgba(56, 189, 248, 0.12) 1px, transparent 1px);
+}
+
 /* KaTeX tweaks for dark engineering aesthetic */
 .katex {
   font-size: 1.1em;
-  color: #e2e8f0;
+  color: #f1f5f9;
 }
 
 .katex-display {
-  margin: 0.5em 0 !important;
+  margin: 0.75em 0 !important;
 }
 
-/* Code styling */
-pre, code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+.katex .mord.mathnormal {
+  color: #38bdf8;
 }
 
 /* Reduced motion accessibility */
