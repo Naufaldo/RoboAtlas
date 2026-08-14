@@ -14,9 +14,16 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Col 1: Brand & Mission */}
           <div className="space-y-3 md:col-span-2">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500 text-slate-950">
-                <Bot className="h-4 w-4 stroke-[2.5]" />
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden border border-cyan-500/30 bg-slate-900 shadow-sm">
+                <img
+                  src="/RoboAtlas/images/logo.png"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/images/logo.png';
+                  }}
+                  alt="RoboAtlas Emblem"
+                  className="h-full w-full object-cover"
+                />
               </div>
               <span className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
                 RoboAtlas

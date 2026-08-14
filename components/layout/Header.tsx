@@ -39,8 +39,16 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-cyan-500 to-blue-600 shadow-md shadow-cyan-500/20 text-slate-950 group-hover:scale-105 transition-all">
-            <Bot className="h-5 w-5 text-slate-950 stroke-[2.4]" />
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-all bg-slate-900 border border-cyan-500/30">
+            <img
+              src="/RoboAtlas/images/logo.png"
+              onError={(e) => {
+                // Fallback for local development if not using /RoboAtlas basePath
+                (e.target as HTMLImageElement).src = '/images/logo.png';
+              }}
+              alt="RoboAtlas Logo"
+              className="h-full w-full object-cover"
+            />
           </div>
           <div className="flex flex-col">
             <span className="font-mono text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
