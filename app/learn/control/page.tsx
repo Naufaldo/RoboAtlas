@@ -5,8 +5,11 @@ import { ControlSimulator } from '@/components/simulation/ControlSimulator';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
 import { LessonOrientation } from '@/components/layout/LessonOrientation';
 import { LessonNavigation } from '@/components/layout/LessonNavigation';
+import { MathCodeBridge } from '@/components/educational/MathCodeBridge';
+import { AcademicReferences } from '@/components/educational/AcademicReferences';
+import { ConceptCheck } from '@/components/educational/ConceptCheck';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { Cpu, Sparkles, BookOpen } from 'lucide-react';
+import { Cpu, Sparkles } from 'lucide-react';
 
 export default function ControlPage() {
   const { locale } = useLanguage();
@@ -23,7 +26,7 @@ export default function ControlPage() {
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
           {isId ? 'Kendali Umpan Balik & Pelacakan Jalur Robot' : 'Robot Feedback Control & Path Tracking'}
         </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 max-w-3xl leading-relaxed">
+        <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 max-w-3xl leading-relaxed font-sans">
           {isId
             ? 'Eksekusi hukum kendali pelacakan trajektori geometris dan kinematik. Bandingkan geometri titik pandang depan Pure Pursuit dengan umpan balik kesalahan cross-track kemudi Stanley.'
             : 'Execute geometric and kinematic trajectory tracking control laws. Compare the lookahead geometry of Pure Pursuit against Stanley steering cross-track error feedback.'}
@@ -54,7 +57,7 @@ export default function ControlPage() {
             <Sparkles className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
             <span>{isId ? 'Simulator Kemudi Pelacak Jalur Interaktif' : 'Interactive Path Tracking Steering Sandbox'}</span>
           </h2>
-          <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/20">
+          <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/20 font-semibold">
             Pure Pursuit & Stanley
           </span>
         </div>
@@ -77,15 +80,35 @@ export default function ControlPage() {
             : 'Pure Pursuit fits a circular arc from rear axle to lookahead target. Larger alpha produces sharper turns. Increasing lookahead distance L_f stabilizes the steering response but introduces corner cutting.'
         }
         variables={[
-          { symbol: 'delta (δ)', name: 'Steering Angle', unit: 'rad', meaning: isId ? 'Sudut kemudi yang diberikan ke roda depan' : 'Commanded front wheel steering angle' },
-          { symbol: 'L', name: 'Wheelbase', unit: 'm', meaning: isId ? 'Jarak antara sumbu roda depan dan belakang' : 'Distance between front and rear axle centers' },
-          { symbol: 'L_f', name: 'Lookahead Distance', unit: 'm', meaning: isId ? 'Jarak pandang ke titik target pada jalur referensi' : 'Forward lookahead search distance along reference path' },
-          { symbol: 'alpha (α)', name: 'Relative Target Angle', unit: 'rad', meaning: isId ? 'Sudut antara orientasi hadap robot dan arah titik lookahead' : 'Angle between vehicle heading vector and lookahead point' },
+          {
+            symbol: 'delta (δ)',
+            name: isId ? 'Sudut Kemudi Roda Depan' : 'Steering Angle',
+            unit: 'rad',
+            meaning: isId ? 'Sudut kemudi yang diberikan ke roda depan' : 'Commanded front wheel steering angle',
+          },
+          {
+            symbol: 'L',
+            name: isId ? 'Panjang Sumbu Roda' : 'Wheelbase',
+            unit: 'm',
+            meaning: isId ? 'Jarak antara sumbu roda depan dan belakang' : 'Distance between front and rear axle centers',
+          },
+          {
+            symbol: 'L_f',
+            name: isId ? 'Jarak Titik Pandang Depan' : 'Lookahead Distance',
+            unit: 'm',
+            meaning: isId ? 'Jarak pandang ke titik target pada jalur referensi' : 'Forward lookahead search distance along reference path',
+          },
+          {
+            symbol: 'alpha (α)',
+            name: isId ? 'Sudut Relatif Titik Target' : 'Relative Target Angle',
+            unit: 'rad',
+            meaning: isId ? 'Sudut antara orientasi hadap robot dan arah titik lookahead' : 'Angle between vehicle heading vector and lookahead point',
+          },
         ]}
         derivationSteps={[
           {
             step: isId ? 'Geometri Busur Lingkaran (Hukum Sinus)' : 'Circular Arc Geometry',
-            latex: '\\frac{L_f}{\\sin(2\\alpha)} = \\frac{R}{\\sin(90^\\circ - \\alpha)} = \\frac{R}{\\cos\\alpha} \\implies R = \\frac{L_f}{2\\sin\\alpha}',
+            latex: '\\frac{L_f}{\\sin(2\\alpha)} = \\frac{R}{\\cos\\alpha} \\implies R = \\frac{L_f}{2\\sin\\alpha}',
             explanation: isId ? 'Menghitung jari-jari kelengkungan lingkaran R dari segitiga isosceles.' : 'Solving for turning radius R from the chord geometry.',
           },
           {
@@ -98,7 +121,7 @@ export default function ControlPage() {
           inputs: { 'L (wheelbase)': 1.5, 'L_f (lookahead)': 3.0, 'alpha (rad)': 0.35 },
           calculationSteps: [
             'sin(0.35) = 0.3429',
-            'tan(delta) = (2 * 1.5 * 0.3429) / 3.0 = 1.0287 / 3.0 = 0.3429',
+            'tan(delta) = (2 * 1.5 * 0.3429) / 3.0 = 0.3429',
             'delta = atan(0.3429) = 0.3303 rad (18.9°)',
           ],
           result: 'δ = 0.330 rad (18.9°)',
@@ -110,17 +133,18 @@ export default function ControlPage() {
         }
         calculator={{
           params: [
-            { key: 'L', label: 'Wheelbase (L)', unit: 'm', default: 1.2, min: 0.5, max: 3.0, step: 0.1 },
-            { key: 'Lf', label: 'Lookahead (L_f)', unit: 'm', default: 2.5, min: 1.0, max: 6.0, step: 0.2 },
-            { key: 'alpha', label: 'Relative Angle (α)', unit: 'rad', default: 0.4, min: -1.2, max: 1.2, step: 0.05 },
+            { key: 'L', label: 'Wheelbase (L)', unit: 'm', default: 1.5, min: 0.5, max: 3.0, step: 0.1 },
+            { key: 'Lf', label: 'Lookahead (L_f)', unit: 'm', default: 3.0, min: 1.0, max: 6.0, step: 0.2 },
+            { key: 'alpha_deg', label: 'Relative Angle (deg)', unit: 'deg', default: 20, min: -45, max: 45, step: 1 },
           ],
-          calculate: (inputs) => {
-            const { L, Lf, alpha } = inputs;
-            const delta = Math.atan((2 * L * Math.sin(alpha)) / Lf);
+          calculate: (inputs: Record<string, number>) => {
+            const { L, Lf, alpha_deg } = inputs;
+            const alphaRad = (alpha_deg * Math.PI) / 180;
+            const delta = Math.atan((2 * L * Math.sin(alphaRad)) / Lf);
             const deg = (delta * 180) / Math.PI;
             return {
               steps: [
-                `tan(δ) = (2 * ${L} * sin(${alpha})) / ${Lf} = ${Math.tan(delta).toFixed(3)}`,
+                `tan(δ) = (2 * ${L} * sin(${alpha_deg}°)) / ${Lf} = ${Math.tan(delta).toFixed(3)}`,
                 `δ = atan(${Math.tan(delta).toFixed(3)}) = ${delta.toFixed(3)} rad (${deg.toFixed(1)}°)`,
               ],
               result: `δ = ${delta.toFixed(3)} rad (${deg.toFixed(1)}°)`,
@@ -129,50 +153,133 @@ export default function ControlPage() {
         }}
       />
 
-      {/* 3. Stanley Controller Formula Explainer */}
-      <FormulaExplainer
-        id="formula-stanley-controller"
-        title={isId ? 'Kendali Sumbu Roda Depan Stanley' : 'Stanley Cross-Track Steering Controller'}
-        latex="\delta(t) = \theta_e(t) + \arctan\left( \frac{k \cdot e(t)}{v(t)} \right)"
-        meaning={
+      {/* 3. Math to Code Bridge */}
+      <MathCodeBridge
+        title="Pure Pursuit & Stanley Path Tracking Control"
+        mathLatex="\delta_{PP} = \arctan\left(\frac{2L\sin\alpha}{L_f}\right), \quad \delta_{Stanley} = \theta_e + \arctan\left(\frac{k \cdot e}{v}\right)"
+        explanation={
           isId
-            ? 'Hukum kendali umpan balik non-linear yang mengoreksi kesalahan arah hadap (theta_e) dan kesalahan posisi melenceng samping (cross-track error e) secara proporsional terhadap kecepatan kendaraan.'
-            : 'Non-linear feedback control law eliminating heading error (theta_e) and lateral cross-track error (e) scaled inversely with vehicle velocity.'
+            ? 'Implementasi penentuan sudut kemudi Pure Pursuit dan koreksi Stanley pada TypeScript.'
+            : 'Pure Pursuit and Stanley steering computation in TypeScript.'
         }
-        whyExplanation={
-          isId
-            ? 'Ketika robot melaju kencang, koreksi kemudi harus lebih kecil/halus agar tidak tergelincir (oleh karena itu dibagi v(t)). Ketika robot melaju lambat, kemudi boleh berbelok tajam untuk segera kembali ke jalur.'
-            : 'At higher speeds, aggressive steering causes spinout; dividing by v(t) dampens lateral feedback. At low speeds, sharper steering angles rapidly eliminate tracking errors.'
-        }
-        variables={[
-          { symbol: 'theta_e (θ_e)', name: 'Heading Error', unit: 'rad', meaning: isId ? 'Selisih antara sudut hadap robot dan arah tangensial jalur' : 'Difference between vehicle heading and path tangent angle' },
-          { symbol: 'e(t)', name: 'Cross-Track Error', unit: 'm', meaning: isId ? 'Jarak tegak lurus dari sumbu roda depan ke titik terdekat di jalur' : 'Lateral distance from front axle center to nearest path point' },
-          { symbol: 'k', name: 'Gain Parameter', unit: 's^-1', meaning: isId ? 'Konstanta proporsional sensitivitas kesalahan samping' : 'Proportional cross-track correction gain' },
-          { symbol: 'v(t)', name: 'Forward Velocity', unit: 'm/s', meaning: isId ? 'Kecepatan maju kendaraan saat ini' : 'Instantaneous forward vehicle velocity' },
+        codeSnippet={`// TypeScript: Pure Pursuit Steering Angle Computation
+export function computePurePursuitSteering(
+  robotPose: { x: number; y: number; yaw: number },
+  lookaheadPoint: { x: number; y: number },
+  wheelbase: number,
+  lookaheadDist: number
+): number {
+  const dx = lookaheadPoint.x - robotPose.x;
+  const dy = lookaheadPoint.y - robotPose.y;
+  
+  // Angle to lookahead point in global frame
+  const targetAngle = Math.atan2(dy, dx);
+  
+  // Relative angle alpha in vehicle frame
+  let alpha = targetAngle - robotPose.yaw;
+  while (alpha > Math.PI) alpha -= 2 * Math.PI;
+  while (alpha < -Math.PI) alpha += 2 * Math.PI;
+
+  // Pure Pursuit curvature steering
+  const delta = Math.atan2(2 * wheelbase * Math.sin(alpha), lookaheadDist);
+  return delta;
+}`}
+        mappings={[
+          {
+            mathSymbol: '\\delta',
+            codeIdentifier: 'delta',
+            explanation: isId ? 'Sudut belok kemudi yang diperintahkan ke servo roda depan' : 'Commanded steering angle for front wheels',
+          },
+          {
+            mathSymbol: 'L',
+            codeIdentifier: 'wheelbase',
+            explanation: isId ? 'Panjang jarak antara sumbu roda depan dan belakang' : 'Vehicle axle wheelbase',
+          },
+          {
+            mathSymbol: 'L_f',
+            codeIdentifier: 'lookaheadDist',
+            explanation: isId ? 'Jarak pencarian titik pandang depan pada jalur' : 'Forward lookahead path distance',
+          },
+          {
+            mathSymbol: '\\alpha',
+            codeIdentifier: 'alpha',
+            explanation: isId ? 'Sudut antara hadap bodi robot dan target' : 'Relative heading angle error',
+          },
         ]}
-        roboticsApplication={
-          isId
-            ? 'Juara kompetisi DARPA Grand Challenge (Stanford Racing Team - Robot "Stanley"). Standar emas kendali kemudi mobil otonom di jalan raya.'
-            : 'Winner of the DARPA Grand Challenge (Stanford "Stanley" vehicle); industry standard for road autonomous vehicle lane tracking.'
-        }
       />
 
-      {/* Next Steps Navigation */}
+      {/* 4. Concept Check Quiz */}
+      <ConceptCheck
+        id="quiz-control"
+        question={
+          isId
+            ? 'Apa dampak memperbesar nilai jarak lookahead (L_f) pada algoritma Pure Pursuit?'
+            : 'What is the physical effect of increasing the lookahead distance (L_f) in Pure Pursuit?'
+        }
+        options={[
+          {
+            id: 'A',
+            text: isId ? 'Pergerakan menjadi lebih halus dan stabil, namun memotong tikungan (corner-cutting).' : 'Tracking becomes smoother and stable, but cuts sharp corners.',
+            isCorrect: true,
+            explanation: isId
+              ? 'Tepat! L_f yang panjang meredam osilasi kemudi namun memperpendek radius putar di tikungan.'
+              : 'Correct! Longer lookahead dampens oscillations but causes the vehicle to cut corners.',
+          },
+          {
+            id: 'B',
+            text: isId ? 'Robot akan melaju mundur dengan kecepatan tinggi.' : 'The robot begins driving backwards.',
+            isCorrect: false,
+            explanation: isId ? 'Salah.' : 'Incorrect.',
+          },
+          {
+            id: 'C',
+            text: isId ? 'Motor robot akan berhenti secara permanen.' : 'Motors shut down permanently.',
+            isCorrect: false,
+            explanation: isId ? 'Salah.' : 'Incorrect.',
+          },
+        ]}
+        hint={isId ? 'Pikirkan tentang kompromi antara kestabilan dan akurasi lintasan.' : 'Think about trade-offs between stability and tracking fidelity.'}
+      />
+
+      {/* 5. Academic References */}
+      <AcademicReferences
+        references={[
+          {
+            id: 1,
+            authors: 'R. Craig Coulter',
+            year: 1992,
+            title: 'Implementation of the Pure Pursuit Path Tracking Algorithm',
+            publisher: 'Carnegie Mellon University Robotics Institute (CMU-RI-TR-92-01)',
+            chapterCoverage: 'Seminal technical report establishing geometric pure pursuit control.',
+            doiOrUrl: 'https://www.ri.cmu.edu/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf',
+          },
+          {
+            id: 2,
+            authors: 'Sebastian Thrun et al.',
+            year: 2006,
+            title: 'Stanley: The Robot that Won the DARPA Grand Challenge',
+            publisher: 'Journal of Field Robotics',
+            chapterCoverage: 'Section 4: Trajectory Tracking with Nonlinear Cross-Track Steering Control',
+            doiOrUrl: 'https://doi.org/10.1002/rob.20147',
+          },
+        ]}
+      />
+
+      {/* 6. Lesson Navigation */}
       <LessonNavigation
         prevLesson={{
-          domain: isId ? 'Lokalisasi Robot' : 'Robot Localization',
-          title: isId ? 'Filter Partikel Monte Carlo' : 'Monte Carlo Particle Filter',
-          href: '/learn/localization',
+          domain: isId ? 'Perencanaan Jalur' : 'Path Planning',
+          title: isId ? 'Perencanaan Jalur (A* & Heuristik)' : 'Path Planning (A* & Heuristics)',
+          href: '/learn/planning',
         }}
         nextLesson={{
-          domain: isId ? 'Pemetaan Robot' : 'Occupancy Mapping',
-          title: isId ? 'Pemetaan Grid Okupansi Log-Odds' : 'Log-Odds Occupancy Grid Mapping',
-          href: '/learn/mapping',
+          domain: isId ? 'Lokalisasi Robot' : 'Robot Localization',
+          title: isId ? 'Lokalisasi & Filter Partikel MCL' : 'Localization & MCL Particle Filter',
+          href: '/learn/localization',
         }}
         suggestedExperiments={[
-          isId ? 'Tingkatkan kecepatan kendaraan di simulator kendali dan amati fenomena overshoot pada tikungan tajam' : 'Increase vehicle target speed to observe tracking overshoot on sharp track curves',
-          isId ? 'Bandingkan kestabilan kemudi antara Pure Pursuit dan Stanley pada lintasan angka 8' : 'Compare steering oscillation between Pure Pursuit and Stanley on figure-8 tracks',
-          isId ? 'Ubah parameter lookahead distance L_f di kalkulator Pure Pursuit untuk melihat efek pemotongan tikungan' : 'Adjust lookahead parameter L_f in the calculator to evaluate corner-cutting vs stability',
+          isId ? 'Tingkatkan kecepatan kendaraan di simulator kendali dan amati fenomena overshoot pada tikungan tajam.' : 'Increase vehicle target speed to observe tracking overshoot on sharp track curves.',
+          isId ? 'Bandingkan kestabilan kemudi antara Pure Pursuit dan Stanley pada lintasan angka 8.' : 'Compare steering oscillation between Pure Pursuit and Stanley on figure-8 tracks.',
         ]}
       />
     </div>
