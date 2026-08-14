@@ -23,21 +23,47 @@ export interface LessonContent {
 
 const CONTENT_ROOT = path.resolve(process.cwd(), 'content');
 
+const VALID_CATEGORIES = new Set([
+  'fundamentals',
+  'mathematics',
+  'geometry',
+  'kinematics',
+  'dynamics',
+  'sensors',
+  'algorithms',
+  'planning',
+  'estimation',
+  'perception',
+  'control',
+  'manipulation',
+  'mobile',
+  'aerial',
+  'marine',
+  'legged',
+  'advanced',
+]);
+
 function sanitizeParam(input: string): string {
-  return input.replace(/[^a-zA-Z0-9_-]/g, '');
+  return (input || '').replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
-function isSafeSubpath(parentDir: string, targetPath: string): boolean {
-  const relative = path.relative(parentDir, targetPath);
-  return !relative.startsWith('..') && !path.isAbsolute(relative);
+function isStrictlyInside(parentDir: string, targetPath: string): boolean {
+  const normalizedParent = path.normalize(parentDir) + path.sep;
+  const normalizedTarget = path.normalize(targetPath);
+  return normalizedTarget.startsWith(normalizedParent) || normalizedTarget === path.normalize(parentDir);
 }
 
 export function getLessonSlugs(language: 'en' | 'id', category: string): string[] {
   const safeLang = language === 'id' ? 'id' : 'en';
   const safeCategory = sanitizeParam(category);
+
+  if (!VALID_CATEGORIES.has(safeCategory)) {
+    return [];
+  }
+
   const categoryDir = path.resolve(CONTENT_ROOT, safeLang, safeCategory);
 
-  if (!isSafeSubpath(CONTENT_ROOT, categoryDir) || !fs.existsSync(categoryDir)) {
+  if (!isStrictlyInside(CONTENT_ROOT, categoryDir) || !fs.existsSync(categoryDir)) {
     return [];
   }
 
@@ -56,6 +82,10 @@ export function getLesson(
   const safeCategory = sanitizeParam(category);
   const safeSlug = sanitizeParam(slug);
 
+  if (!VALID_CATEGORIES.has(safeCategory) || !safeSlug) {
+    return null;
+  }
+
   const fullPath = path.resolve(CONTENT_ROOT, safeLang, safeCategory, `${safeSlug}.mdx`);
   const fallbackPath = path.resolve(CONTENT_ROOT, safeLang, safeCategory, `${safeSlug}.md`);
 
@@ -68,7 +98,7 @@ export function getLesson(
     }
   }
 
-  if (!isSafeSubpath(CONTENT_ROOT, targetPath)) {
+  if (!isStrictlyInside(CONTENT_ROOT, targetPath)) {
     return null;
   }
 
@@ -85,7 +115,7 @@ export function getAllLessons(language: 'en' | 'id'): LessonContent[] {
   const safeLang = language === 'id' ? 'id' : 'en';
   const langDir = path.resolve(CONTENT_ROOT, safeLang);
 
-  if (!isSafeSubpath(CONTENT_ROOT, langDir) || !fs.existsSync(langDir)) {
+  if (!isStrictlyInside(CONTENT_ROOT, langDir) || !fs.existsSync(langDir)) {
     return [];
   }
 
@@ -94,24 +124,21 @@ export function getAllLessons(language: 'en' | 'id'): LessonContent[] {
 
   for (const category of categories) {
     const safeCategory = sanitizeParam(category);
+    if (!VALID_CATEGORIES.has(safeCategory)) continue;
+
     const categoryPath = path.resolve(langDir, safeCategory);
 
     if (
-      isSafeSubpath(CONTENT_ROOT, categoryPath) &&
-      fs.existsSync(categoryPath) &&
+      isStrictlyInside(CONTENT_ROOT, categoryPath) &&
       fs.statSync(categoryPath).isDirectory()
     ) {
       const files = fs.readdirSync(categoryPath);
       for (const file of files) {
         if (file.endsWith('.mdx') || file.endsWith('.md')) {
-          const safeFilePath = path.resolve(categoryPath, file);
-          if (isSafeSubpath(CONTENT_ROOT, safeFilePath) && fs.existsSync(safeFilePath)) {
-            const fileContents = fs.readFileSync(safeFilePath, 'utf8');
-            const { data, content } = matter(fileContents);
-            lessons.push({
-              frontmatter: data as LessonFrontmatter,
-              content,
-            });
+          const slug = file.replace(/\.(mdx|md)$/, '');
+          const lesson = getLesson(safeLang, safeCategory, slug);
+          if (lesson) {
+            lessons.push(lesson);
           }
         }
       }
