@@ -15,6 +15,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License MIT" /></a>
   <img src="https://img.shields.io/badge/Bilingual-EN%20%7C%20ID-8b5cf6?style=for-the-badge" alt="Bilingual EN | ID" />
   <img src="https://img.shields.io/badge/Theme-Dark%20%2F%20Light-f59e0b?style=for-the-badge" alt="Dual Theme" />
+  <img src="https://img.shields.io/badge/Curriculum-10_Levels_(0--9)-cyan?style=for-the-badge" alt="10-Level Master Curriculum" />
   <img src="https://img.shields.io/badge/Content-MDX_Canonical-3b82f6?style=for-the-badge" alt="MDX Canonical" />
   <img src="https://img.shields.io/badge/Mobile-Touch_Optimized-ec4899?style=for-the-badge" alt="Mobile Touch Optimized" />
 </p>
@@ -34,6 +35,49 @@ RoboAtlas re-imagines robotics education as an original **TypeScript-native inte
 
 ---
 
+## 🎓 10-Level Master Robotics Curriculum Hierarchy
+
+Organized at **[`/learn`](https://naufaldo.github.io/RoboAtlas/learn/)** as a progressive dependency graph from physical intuition to full swarm autonomy:
+
+```text
+LEVEL 0: Robotics Orientation (Sense-Plan-Act & Robot Anatomy)
+   ↓
+LEVEL 1: Mathematical Foundations (Vectors, SE(2)/SE(3), Quaternions, Probability)
+   ↓
+LEVEL 2: Computational Foundations (Numerical Errors, Graph Search, Priority Queues)
+   ↓
+LEVEL 3: Robot Kinematics & Modeling (Unicycle, Non-Holonomic Constraints, Jacobians)
+   ↓
+LEVEL 4: Sensing & Perception (Encoders, IMU, LiDAR Raycasting, Noise Distributions)
+   ↓
+LEVEL 5: Localization & Mapping (Monte Carlo MCL, Log-Odds Occupancy Grids)
+   ↓
+LEVEL 6: Path Planning & Navigation (Dijkstra, A*, Admissible Heuristics, Splines)
+   ↓
+LEVEL 7: Control & Dynamic Robotics (Pure Pursuit, Stanley Feedback, Newton-Euler)
+   ↓
+LEVEL 8: SLAM & Spatial Autonomy (ICP Scan Matching, Closed-Form SVD)
+   ↓
+LEVEL 9: Multi-Agent & Swarm Intelligence (Graph Laplacian Consensus, Formations)
+```
+
+### Detailed Level Overview
+
+| Level | Name | Core Focus | Interactive Laboratory |
+|---|---|---|---|
+| **Level 0** | **Orientation** | Cyber-physical autonomy, Sense-Plan-Act, hardware/software anatomy, taxonomy. | `SensePlanActExplorer.tsx` |
+| **Level 1** | **Mathematics** | $SE(2)$ planar transforms, $SO(3)$ Euler angles, matrix decompositions, probability. | `TransformSandbox.tsx` |
+| **Level 2** | **Computation** | Floating-point stability, graph structures, priority queues, algorithmic complexity. | Min-Heap Visualizer |
+| **Level 3** | **Kinematics** | Differential-drive unicycle kinematics, ICC, Pfaffian non-holonomic constraints. | `KinematicsSimulator.tsx` |
+| **Level 4** | **Perception** | LiDAR raycasting, Gaussian rangefinder noise models, odometry drift. | Raycast LiDAR Visualizer |
+| **Level 5** | **Localization & Mapping** | Recursive Bayesian filters, Monte Carlo MCL particle filters, Log-Odds occupancy grids. | `LocalizationSimulator.tsx` & `MappingSimulator.tsx` |
+| **Level 6** | **Planning & Navigation** | $A^*$ heuristic search, Dijkstra, Octile/Euclidean heuristics, Quintic polynomial splines. | `PathPlanningSimulator.tsx` |
+| **Level 7** | **Control & Dynamics** | Pure Pursuit lookahead geometry, Stanley cross-track steering feedback, Newton-Euler dynamics. | `ControlSimulator.tsx` |
+| **Level 8** | **SLAM** | Chicken-and-egg spatial dilemma, Iterative Closest Point (ICP), closed-form SVD alignment. | `SlamSimulator.tsx` |
+| **Level 9** | **Multi-Agent & Swarm** | Communication graph topologies, Graph Laplacian consensus $\dot{\mathbf{x}} = -\mathcal{L}\mathbf{x}$, leader-follower formations. | `MultiAgentSimulator.tsx` |
+
+---
+
 ## ✨ Key Platform Features
 
 - 📑 **Canonical MDX Content Layer (`content/`)**: All lessons are authored in structured bilingual MDX (`content/en/` and `content/id/`) with Gray-Matter frontmatter schemas and cross-language stable ID tracking.
@@ -41,6 +85,7 @@ RoboAtlas re-imagines robotics education as an original **TypeScript-native inte
   - `LessonOrientation.tsx`: Answers "Where am I? What am I learning? Why does it matter?" with estimated study time.
   - `MathCodeBridge.tsx`: Direct 1-to-1 visual and conceptual mapping from mathematical formulas to TypeScript code.
   - `AcademicReferences.tsx`: Structured literature cards citing authoritative papers with DOIs and chapter coverage.
+  - `ConceptCheck.tsx`: Interactive checkpoint quizzes with instantaneous feedback and pedagogical reasoning.
   - `LessonNavigation.tsx`: Lesson progression links with suggested interactive simulation challenges.
 - 📐 **7-Step Mathematical Explanation Standard (`FormulaExplainer.tsx`)**:
   - KaTeX rendering $\to$ Intuitive Meaning $\to$ Physical Reasoning ("Why?") $\to$ Dimensional Unit Tables $\to$ Collapsible Step-by-Step Derivations $\to$ Interactive Live Parameter Calculators.
@@ -63,26 +108,9 @@ RoboAtlas re-imagines robotics education as an original **TypeScript-native inte
 
 ---
 
-## 📚 9-Chapter Robotics Foundations Master Curriculum
-
-Located at **[`/learn/fundamentals`](https://naufaldo.github.io/RoboAtlas/learn/fundamentals/)**:
-
-| No | Chapter | Core Topics | Interactive Simulator |
-|---|---|---|---|
-| **1** | **Introduction to Robotics** | Sense-Plan-Act loops, Robot classification (Fixed, Mobile, Aerial), Reactive Braitenberg vehicles. | Sense-Plan-Act Explorer |
-| **2** | **2D Geometry** | Cartesian $(x, y)$ vs. Polar $(r, \phi)$, $SO(2)$ vector rotation, Triangulation distance sensors. | `TransformSandbox.tsx` |
-| **3** | **3D Spatial Geometry** | Right-hand rule, principal rotations $R_x, R_y, R_z$, Euler angles Roll-Pitch-Yaw, Unit Quaternions. | `SpatialRotation3D.tsx` |
-| **4** | **Path & Trajectory** | Geometric path $s(\sigma)$ vs. time-parameterized trajectory $\mathbf{x}(t)$, $C^2$-continuous quintic splines. | Trajectory Profiler |
-| **5** | **Velocity Kinematics 2D** | Differential-drive unicycle kinematics, ICC radius, no-slip Pfaffian non-holonomic constraint $-\dot{x}\sin\theta + \dot{y}\cos\theta = 0$. | `KinematicsSimulator.tsx` |
-| **6** | **Velocity Kinematics 3D** | Spatial twist $\mathbf{V}_e \in se(3)$, skew-symmetric matrix $[\boldsymbol{\omega}]_\times$, Geometric Jacobian $J(\mathbf{q})\dot{\mathbf{q}}$. | Jacobian Inspector |
-| **7** | **Matrix Foundations** | $4\times 4$ $SE(3)$ homogeneous transforms, matrix inverse, sensor covariance matrix $\boldsymbol{\Sigma}$, SVD. | Matrix Inspector |
-| **8** | **Mathematical Modeling** | Discrete state-space models $\mathbf{x}_k = f(\mathbf{x}_{k-1}, \mathbf{u}_k) + \mathbf{w}_k$, observation models, and Finite State Machines (FSM). | Automata Simulator |
-| **9** | **Robot Dynamics** | Newton-Euler translative/rotative equations, Euler-Lagrange manipulator dynamics $M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q}) = \boldsymbol{\tau}$. | Dynamic Engine |
-
----
-
 ## 📖 Comprehensive Documentation
 
+- 📚 **[Master Curriculum Specification](docs/RoboAtlas_Master_Curriculum.md)** — Comprehensive 10-level robotics curriculum graph and module breakdown.
 - 📋 **[System Specification](docs/SPECIFICATION.md)** — Architectural design, 5-layer hierarchy, KaTeX standards, and static export rules.
 - 🗺️ **[Feature Roadmap](docs/ROADMAP.md)** — Detailed breakdown of Milestones 1 through 8 and future Phase 2/3 capabilities.
 - 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 15 Core Agentic Rules, 8-Step Workflow Loop, and bilingual/changelog guidelines.

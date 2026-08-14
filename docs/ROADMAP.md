@@ -1,10 +1,10 @@
 # RoboAtlas Feature Roadmap & Milestones
 
-This roadmap defines the implementation schedule for RoboAtlas, organized by incremental milestones to maintain high code quality and test coverage.
+This roadmap defines the implementation schedule for RoboAtlas, organized by incremental milestones mapped directly to the **10-Level Master Robotics Curriculum** (`docs/RoboAtlas_Master_Curriculum.md`).
 
 ---
 
-## 📍 Phase 1: Core Educational Curriculum & Simulators
+## 📍 Phase 1: 10-Level Master Curriculum & Domain Laboratories
 
 ### ✅ Milestone 0 — Platform Foundation (Completed)
 - [x] Next.js 14 App Router + TypeScript + Tailwind CSS setup.
@@ -13,33 +13,28 @@ This roadmap defines the implementation schedule for RoboAtlas, organized by inc
 - [x] 2D vector geometry and $SE(2)$ kinematics transform engine.
 - [x] Interactive Hero simulator with active LiDAR and real-time telemetry HUD.
 - [x] Curriculum explorer and algorithm matrix with search & filtering.
-- [x] Unit test suite with Vitest (17 passing tests).
+- [x] Unit test suite with Vitest (21 passing tests).
 - [x] GitHub Actions CI/CD pipeline for automated testing, build, and deployment.
 - [x] Full initial documentation suite (`README.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, `LICENSE`, `THIRD_PARTY_NOTICES.md`).
 
 ---
 
-### ✅ Milestone 1 — Robotics Fundamentals & Kinematics (Completed)
+### ✅ Milestone 1 — Level 0, 1 & 3: Robotics Fundamentals & Kinematics (Completed)
 - **Topic Coverage**:
-  - **9 Foundational Chapters**:
-    1. Introduction to Robotics & Sense-Plan-Act Loops
-    2. 2D Planar Geometry & Vector Rotation in $SO(2)$
-    3. 3D Spatial Geometry, Euler Angles & Quaternions
-    4. Path vs. Trajectory & Quintic Polynomial Splines
-    5. Velocity Kinematics in 2D (Unicycle & Non-Holonomic Constraints)
-    6. Velocity Kinematics in 3D (Twists & Geometric Jacobians)
-    7. Matrix Foundations ($4\times 4$ $SE(3)$, Covariance & SVD)
-    8. Mathematical Modeling (State-Space & FSM)
-    9. Robot Dynamics (Newton-Euler & Euler-Lagrange)
+  - **Level 0 (Orientation)**: Introduction to Robotics, Sense-Plan-Act Loops, Robot Classifications (Fixed, Mobile, Legged, Aerial).
+  - **Level 1 (Mathematics)**: 2D/3D Geometry, $SE(2)$ Homogeneous Transforms, $SO(3)$ Euler Angles, Matrix Decompositions.
+  - **Level 3 (Kinematics)**: Differential-drive unicycle kinematics, ICC radius, no-slip Pfaffian constraint $-\dot{x}\sin\theta + \dot{y}\cos\theta = 0$.
 - **Interactive Simulators**:
-  - `TransformSandbox.tsx`: $SE(2)$ Homogeneous Transformation Matrix Inspector.
+  - `SensePlanActExplorer.tsx`: Step-by-step pipeline inspector.
+  - `RobotClassificationExplorer.tsx`: Morphology taxonomy matrix.
+  - `TransformSandbox.tsx`: $SE(2)$ Homogeneous Matrix Gizmo.
   - `SpatialRotation3D.tsx`: 3D $SO(3)$ Euler Angle Roll-Pitch-Yaw Simulator.
   - `KinematicsSimulator.tsx`: 60 FPS Differential-Drive Velocity Integrator.
-- **Mobile & Bilingual**: Full touch interaction (`onTouchStart`/`onTouchMove`) and English/Indonesian support.
+- **Academic Video Integration**: Prof. Kagan Tumer (*Oregon State University*).
 
 ---
 
-### ✅ Milestone 2 — Path Planning: Dijkstra & A* Heuristic Search (Completed)
+### ✅ Milestone 2 — Level 2 & 6: Path Planning (A* & Dijkstra) (Completed)
 - **Topic Coverage**:
   - Graph representation of planar grid worlds (4-connectivity vs. 8-connectivity).
   - Priority Queue (Min-Heap) frontier expansion.
@@ -50,60 +45,65 @@ This roadmap defines the implementation schedule for RoboAtlas, organized by inc
   - `FormulaExplainer.tsx`: Interactive cost evaluation $f(n) = g(n) + h(n)$ calculator.
   - `MathCodeBridge.tsx`: Direct math-to-code mapping between evaluation formulas and TypeScript priority queues.
   - `LessonOrientation.tsx` & `AcademicReferences.tsx`: Citations for Hart, Nilsson, & Raphael (1968) and LaValle (2006).
-- **MDX Content**: `content/en/planning/a-star.mdx` & `content/id/planning/a-star.mdx`.
-  - Heuristic weight multiplier slider ($f(n) = g(n) + \epsilon \cdot h(n)$ for Weighted A*).
 
 ---
 
-### 🚀 Milestone 4 — Advanced Path Planning
-- **Algorithms**:
-  - **Artificial Potential Field (APF)**: Attractive goal well, repulsive obstacle barriers, local minima handling.
-  - **Rapidly-exploring Random Tree (RRT)**: Random sampling in continuous $C$-space, nearest neighbor search, collision stepping.
-  - **RRT\***: Asymptotic optimality via near-neighbor rewiring with shrinking ball radius.
-  - **D\* Lite**: Incremental heuristic replanning for dynamic environments with moving obstacles.
-- **Simulations**:
-  - Continuous 2D vector field visualization for Potential Fields.
-  - Live tree growth animation with branch rewiring for RRT and RRT*.
+### ✅ Milestone 3 — Level 5: Probabilistic Localization (Completed)
+- **Topic Coverage**:
+  - Recursive Bayesian Filtering and Chapman-Kolmogorov prediction.
+  - Monte Carlo Localization (MCL) Particle Filters with landmark beacon triangulation.
+  - Gaussian measurement likelihood weighting and low-variance resampling.
+- **Simulations & Components**:
+  - `LocalizationSimulator.tsx`: Interactive particle cloud sandbox with dead-reckoning odometry drift and beacon sensing.
+  - `FormulaExplainer.tsx`: Live Gaussian likelihood weight calculator $w_t^{[i]} = p(z_t \mid x_t^{[i]})$.
+  - `MathCodeBridge.tsx`: TypeScript particle array iteration and weight normalization.
 
 ---
 
-### 🚀 Milestone 5 — Localization & State Estimation
-- **Algorithms**:
-  - **Monte Carlo Localization (Particle Filter)**: Importance sampling, motion update, sensor weight update, resampling (low-variance sampler).
-  - **Extended Kalman Filter (EKF)**: Nonlinear state transition and observation models, Jacobian linearization, covariance ellipses.
-- **Simulation**:
-  - Robot navigating in a landmark map with noisy odometry and range-bearing sensor readings.
-  - Visualizing true robot pose vs. estimated pose vs. particle cloud / 95% confidence covariance ellipse.
+### ✅ Milestone 4 — Level 5: Occupancy Grid Mapping (Completed)
+- **Topic Coverage**:
+  - 2D continuous space discretization into probabilistic grid cells.
+  - Log-Odds representation $l_t(m_i) = l_{t-1}(m_i) + \Delta l_{\text{sensor}} - l_0$ for numerical stability and zero-underflow immunity.
+  - Inverse sensor models for free pass-through rays vs. obstacle reflections.
+- **Simulations & Components**:
+  - `MappingSimulator.tsx`: 360° LiDAR raycasting grid mapper with real-time log-odds updates.
+  - `FormulaExplainer.tsx`: Additive log-odds update & logistic sigmoid probability recovery calculator.
+  - `MathCodeBridge.tsx`: TypeScript 2D grid matrix raycasting updates.
 
 ---
 
-### 🚀 Milestone 6 — Robot Control & Path Tracking
-- **Algorithms**:
-  - **Pure Pursuit Controller**: Lookahead distance tuning, curvature command generation.
-  - **Stanley Cross-Track Controller**: Front-axle steering error feedback, velocity-scaled error compensation.
-  - **PID Feedback**: Proportional, Integral, Derivative gains with anti-windup.
-- **Simulation**:
-  - High-speed path tracking along arbitrary curves (splines, racetracks, Dubins paths) showing cross-track error graphs in real time.
+### ✅ Milestone 5 — Level 7: Feedback Control & Path Tracking (Completed)
+- **Topic Coverage**:
+  - Pure Pursuit geometric lookahead curvature steering $\delta = \arctan(2L\sin\alpha / L_f)$.
+  - Stanley cross-track non-linear feedback controller $\delta(t) = \theta_e(t) + \arctan(ke(t)/v(t))$.
+- **Simulations & Components**:
+  - `ControlSimulator.tsx`: Pure Pursuit vs. Stanley on racetrack and figure-8 tracks.
+  - `FormulaExplainer.tsx`: Live steering angle calculator with vehicle wheelbase and speed parameters.
+  - `MathCodeBridge.tsx`: TypeScript steering angle command execution.
 
 ---
 
-### 🚀 Milestone 7 — Mapping & SLAM
-- **Algorithms**:
-  - **Occupancy Grid Mapping**: Log-odds inverse sensor model, raycasting updates.
-  - **Iterative Closest Point (ICP)**: 2D LiDAR scan matching using Singular Value Decomposition (SVD).
-  - **FastSLAM 1.0**: Rao-Blackwellized particle filter maintaining landmark Kalman filters per particle.
-- **Simulation**:
-  - Robot driving in an unknown maze, mapping walls with simulated LiDAR rays, resolving drift via scan matching.
+### ✅ Milestone 6 — Level 8: SLAM & ICP Scan Registration (Completed)
+- **Topic Coverage**:
+  - Solving the chicken-and-egg spatial dilemma.
+  - Point-to-point Iterative Closest Point (ICP) scan matching.
+  - Singular Value Decomposition (SVD) closed-form optimal 2D rotation $R^* = VU^T$.
+- **Simulations & Components**:
+  - `SlamSimulator.tsx`: Step-by-step ICP point cloud registration workstation.
+  - `FormulaExplainer.tsx`: Least-squares residual cost $E(R, \mathbf{t})$ and RMS calculator.
+  - `MathCodeBridge.tsx`: TypeScript 2D cross-covariance matrix accumulator.
 
 ---
 
-### 🚀 Milestone 8 — Multi-Agent Robotics & Swarms
-- **Algorithms**:
-  - **Graph Laplacian Consensus**: Decentralized average consensus over dynamic communication graphs.
-  - **Leader-Follower Virtual Structure**: Relative formation geometry preservation during obstacle negotiation.
-  - **Flocking & Swarm Dynamics**: Reynolds rules (Separation, Alignment, Cohesion).
-- **Simulation**:
-  - 10–50 autonomous mobile agents navigating towards a common goal while avoiding mutual collisions and maintaining geometric formations (V-shape, circle, line).
+### ✅ Milestone 7 — Level 9: Multi-Agent & Swarm Intelligence (Completed)
+- **Topic Coverage**:
+  - Decentralized communication graph topologies $G=(V, E)$.
+  - Graph Laplacian consensus protocol $\dot{\mathbf{x}}(t) = -\mathcal{L}\mathbf{x}(t)$.
+  - Geometric formation keeping (V-shape, Circle, Line) and Reynolds flocking dynamics.
+- **Simulations & Components**:
+  - `MultiAgentSimulator.tsx`: Interactive swarm coordination workstation.
+  - `FormulaExplainer.tsx`: Distributed consensus and rendezvous point calculator.
+  - `MathCodeBridge.tsx`: TypeScript peer-to-peer velocity consensus loop.
 
 ---
 
@@ -119,5 +119,5 @@ This roadmap defines the implementation schedule for RoboAtlas, organized by inc
 
 - **Three.js Visualizations**:
   - 3D Robotic Manipulator (Forward & Inverse Kinematics for 6-DOF arms).
-  - 3D Quadrotor Drone Trajectory Tracking (SE(3) geometric control).
+  - 3D Quadrotor Drone Trajectory Tracking ($SE(3)$ geometric control).
   - 3D Point Cloud LiDAR visualization.

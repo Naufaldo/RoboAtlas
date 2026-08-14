@@ -112,9 +112,14 @@ export default function AlgorithmsPage() {
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <span className="text-xs font-mono px-2.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/25 font-semibold">
-                  {algo.category}
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-mono px-2.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/25 font-semibold">
+                    {algo.category}
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                    {algo.levelTitle}
+                  </span>
+                </div>
                 <div className="flex items-center gap-2">
                   <span
                     className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-semibold ${

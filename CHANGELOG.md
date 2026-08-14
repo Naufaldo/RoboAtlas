@@ -10,18 +10,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-08-14
 
 ### Added
+- **10-Level Master Robotics Curriculum Hierarchy** (`docs/RoboAtlas_Master_Curriculum.md`):
+  - Progressive learning dependency graph organized into 10 structured levels:
+    - **Level 0**: Robotics Orientation (Sense-Plan-Act & Taxonomy)
+    - **Level 1**: Mathematical Foundations ($SE(2)$, $SO(3)$, Quaternions, Probability)
+    - **Level 2**: Computational Foundations & Graph Theory
+    - **Level 3**: Robot Kinematics & Velocity Modeling (Unicycle, Jacobians)
+    - **Level 4**: Sensing, Perception & LiDAR Raycasting
+    - **Level 5**: Probabilistic Localization & Occupancy Grid Mapping
+    - **Level 6**: Path Planning & Trajectory Generation ($A^*$, Dijkstra, Splines)
+    - **Level 7**: Feedback Control & Dynamic Robotics (Pure Pursuit, Stanley)
+    - **Level 8**: SLAM & Spatial Autonomy (ICP Scan Registration, SVD)
+    - **Level 9**: Multi-Agent & Swarm Intelligence (Laplacian Consensus)
+  - Interactive dual-view dashboard in `/learn` (Progressive 10-Level Pathway vs. Domain Laboratories).
 - **Canonical MDX Content Architecture** (`docs/RoboAtlas_MDX_Content_Architecture.md`):
-  - Structured content directory layout (`content/en/` and `content/id/`) across learning domains (Fundamentals, Planning, Control, Localization, Mapping, SLAM, Multi-Agent).
-  - Standardized YAML frontmatter schema with stable cross-language lesson IDs (`id`, `title`, `slug`, `category`, `difficulty`, `language`, `interactive`, `estimatedMinutes`, `prerequisites`, `references`, `components`).
-  - Dynamic MDX loader library (`lib/mdx/content.ts`) with Gray-Matter parsing for fast client-side and static export builds.
-  - Automated unit test suite (`tests/mdx/content.test.ts`) validating frontmatter integrity and English-Indonesian ID parity (**21 / 21 tests passing**).
+  - Structured content directory layout (`content/en/` and `content/id/`) across learning domains.
+  - Standardized YAML frontmatter schema with stable cross-language lesson IDs.
+  - Dynamic MDX loader library (`lib/mdx/content.ts`) with Gray-Matter parsing.
+  - Automated unit test suite (`tests/mdx/content.test.ts`) validating frontmatter integrity (**21 / 21 tests passing**).
 - **Learner-First UI/UX Framework** (`docs/RoboAtlas_UI_UX_Learner_First_Spec.md`):
-  - **`LessonOrientation.tsx`**: Orienting card answering "Where am I? What am I learning? Why does it matter?" with estimated study duration.
-  - **`LessonNavigation.tsx`**: Progressive next-steps toolbar with previous/next lesson links and suggested interactive simulation experiments.
-  - **`MathCodeBridge.tsx`** (Section 38): Visual and conceptual side-by-side mapping between KaTeX mathematical formulations and TypeScript code execution with symbol-to-identifier lookup tables.
-  - **`AcademicReferences.tsx`** (Section 39): Standard academic literature reference cards with author citations, publisher, publication year, chapter coverage, and direct DOI links.
+  - **`LessonOrientation.tsx`**: "Where am I? What am I learning? Why does it matter?".
+  - **`ConceptCheck.tsx`**: Checkpoint quiz with instant pedagogical feedback.
+  - **`MathCodeBridge.tsx`**: KaTeX math formula to TypeScript code execution mapping.
+  - **`AcademicReferences.tsx`**: Structured academic literature citations with DOIs.
+  - **`LessonNavigation.tsx`**: Progression toolbar with previous/next lesson links and interactive simulation challenges.
 - **Mathematical Explanation Standard** (`docs/RoboAtlas_Mathematical_Explanation_Rules.md`):
-  - **`FormulaExplainer.tsx`**: 7-step pedagogical standard with intuitive meaning, physical reasoning ("Why?"), variable tables with SI units, collapsible step-by-step derivations, and interactive live parameter calculators.
+  - **`FormulaExplainer.tsx`**: 7-step pedagogical standard with intuitive meaning, physical reasoning ("Why?"), variable unit tables, collapsible derivations, and live calculators.
 
 ---
 

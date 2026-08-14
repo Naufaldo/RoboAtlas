@@ -75,6 +75,10 @@ Visual plausibility is not enough. All algorithms and mathematical functions mus
 - Never generate large amounts of shallow, low-quality material merely to fill folders.
 - Prioritize deeply explained, rigorously verified, interactive lessons over surface-level content volume.
 
+### Rule 16: Master Curriculum Alignment
+- All educational modules, algorithm matrices, MDX lessons, and simulators must align with the **10-Level Master Robotics Curriculum** defined in [`docs/RoboAtlas_Master_Curriculum.md`](RoboAtlas_Master_Curriculum.md).
+- Ensure explicit level mappings (Level 0 through Level 9), prerequisite tracking, and smooth cognitive progression across all learning domains.
+
 ---
 
 ## 🔄 8-Step Agent Workflow Loop

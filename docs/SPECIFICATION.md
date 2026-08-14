@@ -14,6 +14,7 @@ The platform is designed to be:
 5. **Bilingual & Dual-Theme**: 1-click toggling between English/Indonesian and Dark/Light mode.
 6. **100% Client-Side**: Static export architecture (`output: 'export'`) without server-side runtimes or database overhead for Phase 1.
 7. **Canonical MDX Content Layer**: All educational lessons authored in structured MDX (`content/en/` and `content/id/`) with Gray-Matter frontmatter parsing.
+8. **Master Curriculum Hierarchy**: Structured 10-level progressive dependency graph (Levels 0–9) ensuring seamless learning from zero to multi-agent autonomy.
 
 ---
 
@@ -30,9 +31,37 @@ RoboAtlas is an **original educational platform** structured around three founda
 
 ---
 
-## 3. 5-Layer System Architecture
+## 3. 10-Level Master Robotics Curriculum Hierarchy
 
+Organized at [`/learn`](../app/learn/page.tsx) and [`docs/RoboAtlas_Master_Curriculum.md`](RoboAtlas_Master_Curriculum.md):
+
+```text
+LEVEL 0: Robotics Orientation (Sense-Plan-Act & Robot Anatomy)
+   ↓
+LEVEL 1: Mathematical Foundations (Vectors, SE(2)/SE(3), Quaternions, Probability)
+   ↓
+LEVEL 2: Computational Foundations (Numerical Errors, Graph Search, Priority Queues)
+   ↓
+LEVEL 3: Robot Kinematics & Modeling (Unicycle, Non-Holonomic Constraints, Jacobians)
+   ↓
+LEVEL 4: Sensing & Perception (Encoders, IMU, LiDAR Raycasting, Noise Distributions)
+   ↓
+LEVEL 5: Localization & Mapping (Monte Carlo MCL, Log-Odds Occupancy Grids)
+   ↓
+LEVEL 6: Path Planning & Navigation (Dijkstra, A*, Admissible Heuristics, Splines)
+   ↓
+LEVEL 7: Control & Dynamic Robotics (Pure Pursuit, Stanley Feedback, Newton-Euler)
+   ↓
+LEVEL 8: SLAM & Spatial Autonomy (ICP Scan Matching, Closed-Form SVD)
+   ↓
+LEVEL 9: Multi-Agent & Swarm Intelligence (Graph Laplacian Consensus, Formations)
 ```
+
+---
+
+## 4. 5-Layer System Architecture
+
+```text
 Layer 1: Canonical MDX Content Layer (Frontmatter, KaTeX, Bilingual Lessons)
                      ↓
 Layer 2: Pure Algorithm Layer (Framework-Agnostic Pure TypeScript)
@@ -43,22 +72,6 @@ Layer 4: Visualization Layer (2D Canvas, Isometric 3D Projection, High-DPI)
                      ↓
 Layer 5: Interactive UI Layer (FormulaExplainer, MathCodeBridge, LearnerGuide)
 ```
-
----
-
-## 4. 9-Chapter Robotics Foundations Master Curriculum
-
-Located at [`/learn/fundamentals`](../app/learn/fundamentals/page.tsx) and [`content/{lang}/fundamentals/`](../content/):
-
-1. **Chapter 1: Introduction to Robotics** — Sense-Plan-Act paradigm, State Space $\mathcal{X}$, Action Space $\mathcal{U}$, and robot classifications.
-2. **Chapter 2: 2D Geometry & Planar Transforms** — Cartesian vs. Polar coordinates, $SO(2)$ vector rotations, triangulation sensors, and the interactive `TransformSandbox`.
-3. **Chapter 3: 3D Spatial Geometry & Euler Angles** — Right-hand rule, principal axis rotations, Roll-Pitch-Yaw $SO(3)$ matrix, unit quaternions, and the interactive `SpatialRotation3D` gizmo.
-4. **Chapter 4: Path & Trajectory Generation** — Geometric path $s(\sigma)$ vs. time-parameterized trajectory $\mathbf{x}(t)$, $C^2$-continuous quintic polynomial splines.
-5. **Chapter 5: Velocity Kinematics in 2D** — Differential-drive unicycle velocity mappings, ICC radius, no-slip Pfaffian constraint $-\dot{x}\sin\theta + \dot{y}\cos\theta = 0$, and `KinematicsSimulator`.
-6. **Chapter 6: Velocity Kinematics in 3D** — Spatial twist $\mathbf{V}_e \in se(3)$, skew-symmetric cross-product matrix $[\boldsymbol{\omega}]_\times$, and Geometric Jacobian $J(\mathbf{q})\dot{\mathbf{q}}$.
-7. **Chapter 7: Matrix Foundations for Robotics** — $4\times 4$ $SE(3)$ homogeneous transforms, matrix inverse, covariance matrix $\boldsymbol{\Sigma}$, and SVD decomposition.
-8. **Chapter 8: Mathematical Modeling & Automata** — Discrete state-space models $\mathbf{x}_k = f(\mathbf{x}_{k-1}, \mathbf{u}_k) + \mathbf{w}_k$, observation models, and Finite State Machines.
-9. **Chapter 9: Robot Dynamics, Forces & Torques** — Newton-Euler translative/rotative motion, Euler-Lagrange manipulator dynamics $M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q}) = \boldsymbol{\tau}$.
 
 ---
 
@@ -76,5 +89,6 @@ Located at [`/learn/fundamentals`](../app/learn/fundamentals/page.tsx) and [`con
 - **`LessonOrientation.tsx`**: Orienting card answering "Where am I? What am I learning? Why does it matter?" with estimated study duration.
 - **`FormulaExplainer.tsx`**: 7-step pedagogical standard with intuitive meaning, physical reasoning ("Why?"), variable glossary tables with SI units, collapsible step-by-step derivations, and interactive live parameter calculators.
 - **`MathCodeBridge.tsx`** (Section 38): Side-by-side mapping between KaTeX mathematical formulations and TypeScript code execution with symbol-to-identifier lookup tables.
+- **`ConceptCheck.tsx`**: Checkpoint quiz with instant pedagogical reasoning feedback.
 - **`AcademicReferences.tsx`** (Section 39): Standard academic literature reference cards with author citations, publisher, publication year, chapter coverage, and direct DOI links.
 - **`LessonNavigation.tsx`**: Next-steps toolbar with previous/next lesson links and suggested interactive simulation experiments.
