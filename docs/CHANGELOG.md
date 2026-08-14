@@ -1,12 +1,13 @@
 # Changelog
 
-All notable changes to the **RoboAtlas** project are tracked in the root [`CHANGELOG.md`](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/CHANGELOG.md).
+All notable changes to the **RoboAtlas** project are tracked in the root [`CHANGELOG.md`](../CHANGELOG.md).
 
-For full release notes, please refer to the primary changelog document.
+## Current Version: [v0.3.1] - 2026-08-14
 
-## Latest Release: [0.3.0] - 2026-08-14
-- **Official Mascot Logo**: Added official emblem in Header and Footer.
-- **Dark/Light Mode**: Full dual-theme styling with persistence in `localStorage`.
-- **Bilingual i18n**: English (`en`) and Indonesian (`id`) language toggle (`ID`/`EN`).
-- **5-Chapter Robotics Foundations Course**: Introduction to robotics, essential mathematics ($SE(2)$ transforms, angle wrapping, calculus, probability), unicycle/bicycle modeling, algorithm taxonomy, and interactive `TransformSandbox`.
-- **7 Interactive Domain Simulators**: Kinematics, Planning, Localization, Control, Mapping, SLAM, and Multi-Agent.
+### Key Highlights
+- **9-Chapter Robotics Foundations Curriculum** (`/learn/fundamentals`): Comprehensive syllabus derived from *Elements of Robotics*, *Foundations of Robotics*, and *Planning Algorithms*.
+- **Interactive 3D Spatial Rotation Sandbox** (`SpatialRotation3D.tsx`): 3D SO(3) Euler angle Roll-Pitch-Yaw visualizer with live matrix inspect.
+- **Mobile Responsive & Touch Optimized**: Touch drawing/drag support across all 7 domain simulators and touch-scrollable KaTeX math.
+- **Bilingual Internationalization (EN / ID)**: 1-click header switcher with full parity.
+- **Dark & Light Mode Themes**: Dual theme engine with local storage persistence.
+- **Official Emblem Logo**: Mascot emblem in Header, Hero, and Footer.

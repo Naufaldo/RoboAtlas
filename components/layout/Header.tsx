@@ -54,7 +54,7 @@ export function Header() {
             <span className="font-mono text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
               RoboAtlas
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 border border-cyan-500/30 font-mono font-normal">
-                v0.3.0
+                v0.3.1
               </span>
             </span>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono hidden sm:inline -mt-0.5">

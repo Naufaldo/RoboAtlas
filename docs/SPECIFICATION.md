@@ -7,16 +7,29 @@
 $$\text{Concept} \longrightarrow \text{Mathematics} \longrightarrow \text{Algorithm} \longrightarrow \text{Visualization} \longrightarrow \text{Simulation} \longrightarrow \text{Code} \longrightarrow \text{Experiment}$$
 
 The platform is designed to be:
-1. **Visual-First**: 2D animated kinematic models, sensor raycasting, and state space graphs communicate concepts dynamically.
-2. **Mathematically Rigorous**: Mathematical equations are rendered clearly via KaTeX, with every variable defined and explained progressively.
-3. **Interactive & Deterministic**: Browser simulations run at 60 FPS, with step-by-step iteration controls, replayability, and seedable randomness.
-4. **100% Client-Side**: Static export architecture without server-side runtimes, databases, or external compute backends for Phase 1.
+1. **Visual-First**: 2D/3D animated kinematic models, sensor raycasting, and state space graphs communicate concepts dynamically.
+2. **Mathematically Rigorous**: Equations are rendered clearly via KaTeX with progressive variable disclosure.
+3. **Interactive & Deterministic**: Browser simulations run at 60 FPS with step-by-step iteration controls, replayability, and seedable randomness.
+4. **Mobile-Adaptive & Touch-First**: Full touch interaction (`onTouchStart`, `onTouchMove`), responsive slider grids, and touch-scrollable KaTeX formulas.
+5. **Bilingual & Dual-Theme**: 1-click toggling between English/Indonesian and Dark/Light mode.
+6. **100% Client-Side**: Static export architecture (`output: 'export'`) without server-side runtimes or database overhead for Phase 1.
 
 ---
 
-## 2. 5-Layer System Architecture
+## 2. Academic Reference Hierarchy
 
-RoboAtlas is partitioned into five distinct layers to enforce separation of concerns and ensure algorithm portability:
+RoboAtlas is an **original educational platform** structured around three foundational textbooks:
+
+1. **Elements of Robotics** — Marco Ben-Ari & Francesco Mondada (Springer Open, 2018)
+   - *Primary usage*: Introduction to robotics, reactive Braitenberg vehicles, sensors, wheel odometry, finite state machines, obstacle avoidance, and collective swarm behavior.
+2. **Foundations of Robotics: A Multidisciplinary Approach with Python and ROS** — Deepak Herath & David St-Onge (Springer, 2022)
+   - *Primary usage*: Mathematical foundations, 2D/3D coordinate transformations, Euler angles, unit quaternions, Geometric Jacobians, and manipulator dynamics.
+3. **Planning Algorithms** — Steven M. LaValle (Cambridge University Press, 2006)
+   - *Primary usage*: Discrete graph search (Dijkstra, A*), configuration spaces $\mathcal{C}$-space, continuous sampling (RRT, RRT*, PRM), and kinodynamic trajectory generation.
+
+---
+
+## 3. 5-Layer System Architecture
 
 ```
 Layer 1: Educational Content Layer (KaTeX, Markdown, Conceptual Explanations)
@@ -25,86 +38,31 @@ Layer 2: Pure Algorithm Layer (Framework-Agnostic Pure TypeScript)
                      ↓
 Layer 3: Simulation Engine (Kinematics, Timesteps, Raycasting, Physics)
                      ↓
-Layer 4: Visualization Layer (2D Canvas, High-DPI Renderers)
+Layer 4: Visualization Layer (2D Canvas, Isometric 3D Projection, High-DPI)
                      ↓
-Layer 5: Interactive UI Layer (Controls, Sliders, HUD Telemetry)
-```
-
-### Layer 1: Educational Content
-- Explains the **Why**, **Intuition**, **Assumptions**, and **Tradeoffs** before showing code.
-- Progressive disclosure: Intuition → KaTeX Equation → Variable Table → Step-by-Step Pseudocode.
-
-### Layer 2: Pure Algorithm Layer (`lib/` / `algorithms/`)
-- Written in **pure TypeScript** with zero React or DOM dependencies.
-- Returns structured execution state (`exploredNodes`, `openSet`, `path`, `cost`, `covariance`).
-- Independent of JSX, DOM, and Canvas contexts for easy unit testing and portability.
-
-### Layer 3: Simulation Engine (`simulation/`)
-- Manages continuous-time physics integration, robot kinematics ($SE(2)$ forward/inverse models), obstacle collision detection, and LiDAR sensor raycasting.
-- Maintains serializable simulation state supporting step execution, pause, reset, and state restoration.
-
-### Layer 4: Visualization Layer (`components/simulation/`)
-- Canvas 2D render loops executing via `requestAnimationFrame`.
-- Avoids excessive React DOM nodes for grid cells to maintain high frame rates on both mobile and desktop.
-
-### Layer 5: Interactive UI Layer (`components/` & `app/`)
-- Built with React 18 / Next.js 14 App Router and Tailwind CSS.
-- Sleek engineering dark-mode design system with responsive layouts and accessibility support (`prefers-reduced-motion`).
-
----
-
-## 3. Educational Page Template
-
-Every algorithm page must follow a uniform educational structure:
-
-```markdown
-# [Algorithm Name]
-
-## 1. What problem does it solve?
-Explain motivation, difficulty, and physical context.
-
-## 2. Intuition & Visual Explanation
-Physical metaphor or spatial intuition.
-
-## 3. Mathematical Model & Variables
-KaTeX equations with comprehensive variable descriptions.
-
-## 4. Step-by-Step Algorithmic Logic
-How state transitions occur at each iteration.
-
-## 5. Interactive Simulation Laboratory
-Interactive 2D Canvas with playback and parameter controls.
-
-## 6. Pseudocode
-Language-independent execution logic.
-
-## 7. TypeScript Implementation
-Clean, pure TypeScript code matching the algorithm.
-
-## 8. Complexity & Tradeoffs
-Time complexity, space complexity, optimality, and edge cases.
-
-## 9. Real Robotics Applications
-Industrial, autonomous vehicle, or aerospace use cases.
-
-## 10. References & Classical Citations
-Academic papers and foundational textbooks.
+Layer 5: Interactive UI Layer (Controls, Sliders, HUD Telemetry, Mobile Touch)
 ```
 
 ---
 
-## 4. GitHub Pages Static Export Constraints
+## 4. 9-Chapter Robotics Foundations Master Curriculum
 
-For Phase 1, the platform strictly targets static hosting on GitHub Pages:
-- `output: 'export'` with `trailingSlash: true` in `next.config.mjs`.
-- Base path configuration using `process.env.NEXT_PUBLIC_BASE_PATH` to support repository subpaths (`https://<username>.github.io/<repo>/`).
-- No server actions, runtime databases, or server-side API routes.
-- Images configured with `unoptimized: true`.
+Located at [`/learn/fundamentals`](../app/learn/fundamentals/page.tsx):
+
+1. **Chapter 1: Introduction to Robotics** — Sense-Plan-Act paradigm, State Space $\mathcal{X}$, Action Space $\mathcal{U}$, and robot classifications.
+2. **Chapter 2: 2D Geometry & Planar Transforms** — Cartesian vs. Polar coordinates, $SO(2)$ vector rotations, triangulation sensors, and the interactive `TransformSandbox`.
+3. **Chapter 3: 3D Spatial Geometry & Euler Angles** — Right-hand rule, principal axis rotations, Roll-Pitch-Yaw $SO(3)$ matrix, unit quaternions, and the interactive `SpatialRotation3D` gizmo.
+4. **Chapter 4: Path & Trajectory Generation** — Geometric path $s(\sigma)$ vs. time-parameterized trajectory $\mathbf{x}(t)$, $C^2$-continuous quintic polynomial splines.
+5. **Chapter 5: Velocity Kinematics in 2D** — Differential-drive unicycle velocity mappings, ICC radius, no-slip Pfaffian constraint $-\dot{x}\sin\theta + \dot{y}\cos\theta = 0$, and `KinematicsSimulator`.
+6. **Chapter 6: Velocity Kinematics in 3D** — Spatial twist $\mathbf{V}_e \in se(3)$, skew-symmetric cross-product matrix $[\boldsymbol{\omega}]_\times$, and Geometric Jacobian $J(\mathbf{q})\dot{\mathbf{q}}$.
+7. **Chapter 7: Matrix Foundations for Robotics** — $4\times 4$ $SE(3)$ homogeneous transforms, matrix inverse, covariance matrix $\boldsymbol{\Sigma}$, and SVD decomposition.
+8. **Chapter 8: Mathematical Modeling & Automata** — Discrete state-space models $\mathbf{x}_k = f(\mathbf{x}_{k-1}, \mathbf{u}_k) + \mathbf{w}_k$, observation models, and Finite State Machines.
+9. **Chapter 9: Robot Dynamics, Forces & Torques** — Newton-Euler translative/rotative motion, Euler-Lagrange manipulator dynamics $M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q}) = \boldsymbol{\tau}$.
 
 ---
 
-## 5. Performance & Quality Standards
+## 5. Mobile & Touch Interaction Guidelines
 
-- **Strict TypeScript**: `compilerOptions.strict: true` with zero `any` usage in algorithm cores.
-- **Canvas Rendering**: High-DPI scaling (`window.devicePixelRatio`), avoiding large graphics engines where Canvas 2D suffices.
-- **Accessibility**: Keyboard navigation, readable fonts, and reduced-motion fallbacks for all animated simulations.
+- **Simulator Canvases**: All interactive canvases must bind both mouse and touch event listeners (`onTouchStart`, `onTouchMove`) with coordinate normalization relative to canvas bounding box.
+- **KaTeX Formulas**: Every equation block must be wrapped in `overflow-x-auto scrollbar-thin` with touch momentum scrolling.
+- **Controls & Buttons**: All buttons must maintain a minimum touch target of $44\times 44\text{px}$ on viewports $< 640\text{px}$.

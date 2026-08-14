@@ -19,16 +19,23 @@ This roadmap defines the implementation schedule for RoboAtlas, organized by inc
 
 ---
 
-### 🚀 Milestone 1 — Robotics Fundamentals & Kinematics
+### ✅ Milestone 1 — Robotics Fundamentals & Kinematics (Completed)
 - **Topic Coverage**:
-  - What is Robotics & Autonomous Systems?
-  - Robot Anatomy: Actuators, Microcontrollers, Proprioceptive vs. Exteroceptive Sensors.
-  - Coordinate Frames, Homogeneous Transformations in $SE(2)$ and $SE(3)$.
-  - Degrees of Freedom (DOF), Holonomic vs. Non-Holonomic constraints.
-  - Mobile Robot Kinematic Models: Unicycle, Differential-Drive, Ackermann Steering (Bicycle Model), Omnidirectional.
-- **Simulations**:
-  - Interactive 2D coordinate frame rotation/translation playground.
-  - Differential drive forward/inverse kinematics simulator with wheel speed sliders.
+  - **9 Foundational Chapters**:
+    1. Introduction to Robotics & Sense-Plan-Act Loops
+    2. 2D Planar Geometry & Vector Rotation in $SO(2)$
+    3. 3D Spatial Geometry, Euler Angles & Quaternions
+    4. Path vs. Trajectory & Quintic Polynomial Splines
+    5. Velocity Kinematics in 2D (Unicycle & Non-Holonomic Constraints)
+    6. Velocity Kinematics in 3D (Twists & Geometric Jacobians)
+    7. Matrix Foundations ($4\times 4$ $SE(3)$, Covariance & SVD)
+    8. Mathematical Modeling (State-Space & FSM)
+    9. Robot Dynamics (Newton-Euler & Euler-Lagrange)
+- **Interactive Simulators**:
+  - `TransformSandbox.tsx`: $SE(2)$ Homogeneous Transformation Matrix Inspector.
+  - `SpatialRotation3D.tsx`: 3D $SO(3)$ Euler Angle Roll-Pitch-Yaw Simulator.
+  - `KinematicsSimulator.tsx`: 60 FPS Differential-Drive Velocity Integrator.
+- **Mobile & Bilingual**: Full touch interaction (`onTouchStart`/`onTouchMove`) and English/Indonesian support.
 
 ---
 
