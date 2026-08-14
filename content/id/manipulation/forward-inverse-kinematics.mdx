@@ -1,0 +1,107 @@
+---
+id: forward-inverse-kinematics
+title: Kinematika Manipulator Serial & Kinematika Invers Analitik
+slug: forward-inverse-kinematics
+category: manipulation
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - mathematical-foundations
+references:
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 4). Springer.
+  - John J. Craig (2005). Introduction to Robotics: Mechanics and Control. Pearson.
+components:
+  - ArmKinematicsSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Kinematika Manipulator Serial & Kinematika Invers Analitik
+
+> "Diberikan posisi target alat di ruang koordinat kartesius 3D, bagaimana cara menghitung secara presisi setiap sudut motor sendi yang dibutuhkan untuk mencapai titik tersebut?"
+
+Lengan robotik artikulasi (seperti robot las industri 6-DOF atau lengan bedah medis) tersusun dari rantai kinematika segmen kaku (*links*) yang dihubungkan oleh sendi putar (*revolute joints*) atau sendi geser (*prismatic joints*).
+
+---
+
+## 1. Kinematika Maju (Forward Kinematics)
+
+Kinematika maju memetakan sudut sendi motor $(\theta_1, \theta_2)$ ke koordinat ujung lengan (*end-effector*) $(x, y)$:
+
+Untuk lengan planar 2-link dengan panjang segmen $l_1$ dan $l_2$:
+
+$$
+\begin{aligned}
+x &= l_1 \cos\theta_1 + l_2 \cos(\theta_1 + \theta_2) \\
+y &= l_1 \sin\theta_1 + l_2 \sin(\theta_1 + \theta_2)
+\end{aligned}
+$$
+
+Kinematika maju selalu menghasilkan satu solusi posisi deterministik yang unik.
+
+---
+
+## 2. Kinematika Invers Analitik (Inverse Kinematics / IK)
+
+Kinematika invers menyelesaikan persoalan sebaliknya: diberikan target tujuan $(x, y)$, tentukan sudut sendi yang sesuai $(\theta_1, \theta_2)$.
+
+### Langkah 1: Aturan Kosinus untuk Sendi Siku $\theta_2$
+Menerapkan hukum kosinus pada segitiga yang dibentuk oleh titik pangkal, siku, dan ujung lengan:
+
+$$
+D = \frac{x^2 + y^2 - l_1^2 - l_2^2}{2 l_1 l_2}
+$$
+
+- Jika $|D| > 1$: Target berada di luar ruang kerja lengan ($r > l_1 + l_2$).
+- Jika $|D| \le 1$: Terdapat dua solusi konfigurasi geometris simetris (**Siku-Atas / Elbow-Up** vs. **Siku-Bawah / Elbow-Down**):
+
+$$
+\theta_2 = \text{atan2}\left( \pm\sqrt{1 - D^2}, D \right)
+$$
+
+### Langkah 2: Sudut Sendi Bahu $\theta_1$
+$$
+\theta_1 = \text{atan2}(y, x) - \text{atan2}\left( l_2 \sin\theta_2, \, l_1 + l_2 \cos\theta_2 \right)
+$$
+
+---
+
+## 3. Simulator Interaktif IK Lengan Robot 2-DOF
+
+Geser titik target kuning pada kanvas ruang kerja di bawah ini. Beralih antara konfigurasi **Siku-Atas** dan **Siku-Bawah** untuk melihat pembaruan sudut analitik:
+
+<ArmKinematicsSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-ik"
+  question="Mengapa lengan robotik planar 2-link umumnya memiliki DUA solusi kinematika invers yang valid untuk satu titik target di ruang kerja?"
+  options={[
+    {
+      id: "A",
+      text: "Karena sendi siku dapat ditekuk ke atas (Elbow-Up) atau ke bawah (Elbow-Down) untuk mencapai titik ujung yang persis sama.",
+      isCorrect: true,
+      explanation: "Tepat! Tanda plus dan minus pada akar kuadrat +/- sqrt(1 - D^2) merepresentasikan dua postur konfigurasi siku lengan robot."
+    },
+    {
+      id: "B",
+      text: "Karena robot memiliki dua sumber catu daya listrik.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena motor harus selalu berputar berpasangan.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang tanda plus-minus pada suku akar saat menghitung theta_2."
+/>

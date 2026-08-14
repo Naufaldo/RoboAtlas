@@ -15,6 +15,10 @@ import { LocalizationSimulator } from '@/components/simulation/LocalizationSimul
 import { MappingSimulator } from '@/components/simulation/MappingSimulator';
 import { SlamSimulator } from '@/components/simulation/SlamSimulator';
 import { MultiAgentSimulator } from '@/components/simulation/MultiAgentSimulator';
+import { ArmKinematicsSimulator } from '@/components/simulation/ArmKinematicsSimulator';
+import { RrtSimulator } from '@/components/simulation/RrtSimulator';
+import { SensorNoiseSimulator } from '@/components/simulation/SensorNoiseSimulator';
+import { PidTuningSimulator } from '@/components/simulation/PidTuningSimulator';
 import {
   Compass,
   Cpu,
@@ -144,7 +148,7 @@ export default function LabsPage() {
       descId: 'Kendalikan robot dan saksikan awan partikel probabilitas konvergen menggunakan pengukuran suar.',
       levelBadge: 'Level 8',
       icon: '📍',
-      lessonHref: '/learn/localization/mcl-particle-filter',
+      lessonHref: '/learn/estimation/mcl-particle-filter',
       component: <LocalizationSimulator />,
     },
     {
@@ -156,8 +160,56 @@ export default function LabsPage() {
       descId: 'Pancarkan sinar laser dan perbarui sel grid dengan probabilitas log-odds Bayesian rekursif.',
       levelBadge: 'Level 9',
       icon: '📡',
-      lessonHref: '/learn/mapping/occupancy-grid-mapping',
+      lessonHref: '/learn/perception/occupancy-grid-mapping',
       component: <MappingSimulator />,
+    },
+    {
+      id: 'sensor-noise',
+      category: 'sensors',
+      titleEn: 'Gaussian Sensor Noise & Measurement Model',
+      titleId: 'Model Pengukuran & Derau Gaussian Sensor',
+      descEn: 'Observe Gaussian probability density function p(z|x) and noisy sample histograms.',
+      descId: 'Amati fungsi kerapatan probabilitas Gaussian p(z|x) dan histogram sampel pembacaan.',
+      levelBadge: 'Level 5',
+      icon: '📊',
+      lessonHref: '/learn/sensors/sensor-fundamentals',
+      component: <SensorNoiseSimulator />,
+    },
+    {
+      id: 'rrt-planning',
+      category: 'planning',
+      titleEn: 'RRT & RRT* Sampling-Based Motion Planning',
+      titleId: 'Perencanaan Gerak Berbasis Sampel RRT & RRT*',
+      descEn: 'Interactive continuous space random tree growth with obstacle avoidance and rewiring.',
+      descId: 'Penumbuhan pohon acak ruang kontinu interaktif dengan penghindaran rintangan dan rewiring.',
+      levelBadge: 'Level 6',
+      icon: '🌲',
+      lessonHref: '/learn/planning/rrt-and-rrt-star',
+      component: <RrtSimulator />,
+    },
+    {
+      id: 'pid-tuning',
+      category: 'control',
+      titleEn: 'PID Feedback Control & Transient Step Response',
+      titleId: 'Kendali Umpan Balik PID & Respon Transien',
+      descEn: 'Tune proportional, integral, and derivative gains with real-time step response graphs.',
+      descId: 'Tuning penguatan proporsional, integral, dan derivatif dengan grafik respon step real-time.',
+      levelBadge: 'Level 7',
+      icon: '🎛️',
+      lessonHref: '/learn/control/pid-and-lqr-control',
+      component: <PidTuningSimulator />,
+    },
+    {
+      id: 'arm-ik',
+      category: 'manipulation',
+      titleEn: '2-DOF Robotic Arm Analytical Inverse Kinematics',
+      titleId: 'Kinematika Invers Analitik Lengan Robot 2-DOF',
+      descEn: 'Drag the end-effector target in workspace to solve analytical joint angles (θ₁, θ₂).',
+      descId: 'Geser target ujung lengan di ruang kerja untuk menyelesaikan sudut sendi analitik (θ₁, θ₂).',
+      levelBadge: 'Level 14',
+      icon: '🦾',
+      lessonHref: '/learn/manipulation/forward-inverse-kinematics',
+      component: <ArmKinematicsSimulator />,
     },
     {
       id: 'icp-slam',
@@ -168,7 +220,7 @@ export default function LabsPage() {
       descId: 'Selaraskan pindaian laser 2D secara iteratif menggunakan estimasi rotasi SVD analitik.',
       levelBadge: 'Level 10',
       icon: '🧩',
-      lessonHref: '/learn/slam/icp-scan-matching',
+      lessonHref: '/learn/advanced/icp-scan-matching',
       component: <SlamSimulator />,
     },
     {
@@ -180,7 +232,7 @@ export default function LabsPage() {
       descId: 'Eksplorasi kawanan terdesentralisasi, formasi leader-follower, dan konektivitas aljabar.',
       levelBadge: 'Level 18',
       icon: '👥',
-      lessonHref: '/learn/multi-agent/laplacian-consensus',
+      lessonHref: '/learn/advanced/laplacian-consensus',
       component: <MultiAgentSimulator />,
     },
   ];

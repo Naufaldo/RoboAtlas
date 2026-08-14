@@ -1,0 +1,106 @@
+---
+id: rrt-and-rrt-star
+title: Sampling-Based Motion Planning, RRT & Asymptotically Optimal RRT*
+slug: rrt-and-rrt-star
+category: planning
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - a-star
+references:
+  - Steven M. LaValle (2006). Planning Algorithms (Chapter 5). Cambridge University Press.
+  - Sertac Karaman & Emilio Frazzoli (2011). Sampling-based Algorithms for Optimal Motion Planning. IJRR.
+components:
+  - RrtSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Sampling-Based Motion Planning: RRT & RRT*
+
+> "In high-dimensional continuous spaces where grid discretization suffers from the curse of dimensionality, how can a robot quickly discover collision-free paths?"
+
+Discrete graph search (like A*) requires discretizing continuous configuration spaces $\mathcal{C}_{\text{space}}$ into grids, which scales exponentially $\mathcal{O}(G^d)$ with dimension $d$. **Sampling-based motion planning** breaks this bottleneck by randomly sampling configurations in continuous space.
+
+---
+
+## 1. The Rapidly-exploring Random Tree (RRT)
+
+RRT incrementally builds a space-filling tree $\mathcal{T} = (\mathcal{V}, \mathcal{E})$ biased toward unexplored regions of free space $\mathcal{C}_{\text{free}}$:
+
+1. **Sample Random State**: $q_{\text{rand}} \sim \mathcal{U}(\mathcal{C})$. (With goal bias probability $p_{\text{goal}} \approx 0.1$).
+2. **Find Nearest Neighbor**:
+   $$
+   q_{\text{near}} = \arg\min_{v \in \mathcal{V}} \| v - q_{\text{rand}} \|
+   $$
+3. **Steer Step**: Extend toward $q_{\text{rand}}$ by incremental step size $\Delta q$:
+   $$
+   q_{\text{new}} = q_{\text{near}} + \min(\Delta q, \|q_{\text{rand}} - q_{\text{near}}\|) \cdot \frac{q_{\text{rand}} - q_{\text{near}}}{\|q_{\text{rand}} - q_{\text{near}}\|}
+   $$
+4. **Collision Check**: If the edge segment $(q_{\text{near}}, q_{\text{new}}) \subset \mathcal{C}_{\text{free}}$, add $q_{\text{new}}$ and directed edge $(q_{\text{near}}, q_{\text{new}})$ to $\mathcal{T}$.
+
+---
+
+## 2. Asymptotic Optimality in RRT*
+
+Standard RRT is **probabilistically complete** (finds a path if one exists as $N \to \infty$), but its solution path is almost surely suboptimal.
+
+**RRT*** (Karaman & Frazzoli, 2011) introduces two crucial optimizations within neighborhood radius $r_n = \gamma (\frac{\log n}{n})^{1/d}$:
+
+### 1. Near Parent Selection
+Instead of strictly connecting to $q_{\text{near}}$, RRT* searches all vertices $X_{\text{near}} \subset \mathcal{V}$ in radius $r_n$ and selects the parent $q_{\text{min}}$ that minimizes total accumulated path cost:
+
+$$
+q_{\text{min}} = \arg\min_{q \in X_{\text{near}}} \left( \text{Cost}(q) + \|q - q_{\text{new}}\| \right)
+$$
+
+### 2. Tree Rewiring
+RRT* checks if routing existing neighbors $q_{\text{near}} \in X_{\text{near}}$ through the new vertex $q_{\text{new}}$ reduces their cost:
+
+$$
+\text{If } \text{Cost}(q_{\text{new}}) + \|q_{\text{new}} - q_{\text{near}}\| < \text{Cost}(q_{\text{near}}): \quad \text{Parent}(q_{\text{near}}) \leftarrow q_{\text{new}}
+$$
+
+As $N \to \infty$, the cost of the path found by RRT* converges almost surely to the theoretical optimum.
+
+---
+
+## 3. Interactive RRT / RRT* Motion Planning Laboratory
+
+Watch the tree rapidly explore continuous 2D space around obstacles. Toggle between Standard RRT and Optimal RRT* to observe dynamic edge rewiring in real-time:
+
+<RrtSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-rrt"
+  question="What fundamental property distinguishes RRT* from standard RRT?"
+  options={[
+    {
+      id: "A",
+      text: "RRT* is asymptotically optimal: its neighbor rewiring step guarantees convergence to the shortest obstacle-free trajectory as iterations grow.",
+      isCorrect: true,
+      explanation: "Exact! Standard RRT is only probabilistically complete, while RRT* rewires edges to guarantee asymptotic optimality."
+    },
+    {
+      id: "B",
+      text: "RRT* uses a grid instead of random points.",
+      isCorrect: false,
+      explanation: "Incorrect. Both RRT and RRT* are sampling-based algorithms in continuous space."
+    },
+    {
+      id: "C",
+      text: "RRT* only works in 1D.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the tree rewiring procedure and path optimality."
+/>

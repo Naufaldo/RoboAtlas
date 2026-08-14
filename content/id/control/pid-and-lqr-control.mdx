@@ -1,0 +1,97 @@
+---
+id: pid-and-lqr-control
+title: Kendali Umpan Balik PID & Regulasi Ruang Status Optimal LQR
+slug: pid-and-lqr-control
+category: control
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+references:
+  - Karl Johan Astrom & Richard M. Murray (2008). Feedback Systems: An Introduction for Scientists and Engineers. Princeton University Press.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 6). Springer.
+components:
+  - PidTuningSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Kendali Umpan Balik PID & Regulasi Ruang Status Optimal
+
+> "Ketika hembusan angin, gesekan mekanis, dan gangguan torsi motor menggeser posisi robot, bagaimana kontroler umpan balik secara aktif mengembalikan sistem ke titik kesetimbangan?"
+
+Perintah loop terbuka (*open-loop*) tidak mampu mengatasi ketidakpastian dunia nyata. **Kendali umpan balik (*Feedback Control*)** terus-menerus mengukur galat (*error*) antara target acuan $r(t)$ dan kondisi aktual $y(t)$, lalu menghasilkan aksi koreksi kendali $u(t)$ secara dinamis.
+
+---
+
+## 1. Hukum Kendali Proportional-Integral-Derivative (PID)
+
+PID menghitung sinyal kendali $u(t)$ dari sinyal galat $e(t) = r(t) - y(t)$:
+
+$$
+u(t) = K_p \, e(t) + K_i \int_0^t e(\tau) \, d\tau + K_d \, \frac{de(t)}{dt}
+$$
+
+### Peran Masing-Masing Komponen:
+1. **Suku Proporsional ($K_p e(t)$)**: Memberikan gaya pemulih sebanding dengan besar galat saat ini. Meningkatkan kecepatan respon (*rise time*).
+2. **Suku Integral ($K_i \int e(\tau) d\tau$)**: Mengakumulasi riwayat galat masa lalu sepanjang waktu, efektif menghilangkan **galat keadaan tunak (*steady-state error*)**.
+3. **Suku Derivatif ($K_d \frac{de}{dt}$)**: Mengantisipasi laju perubahan galat ke depan dan memberikan redaman (*damping*), mereduksi **lonjakan (*overshoot*)** dan osilasi.
+
+---
+
+## 2. Implementasi Waktu-Diskrit pada Mikrokontroler Robot
+
+Pada mikrokontroler robot yang beroperasi dalam siklus diskrit dengan selang waktu $\Delta t$:
+
+$$
+\begin{aligned}
+e_k &= r_k - y_k \\
+I_k &= I_{k-1} + e_k \Delta t \\
+D_k &= \frac{e_k - e_{k-1}}{\Delta t} \\
+u_k &= K_p e_k + K_i I_k + K_d D_k
+\end{aligned}
+$$
+
+*(Pembatasan anti-windup diterapkan untuk mencegah saturasi berlebihan pada suku integral).*
+
+---
+
+## 3. Simulator Interaktif Tuning PID & Respon Transien
+
+Atur slider Proporsional ($K_p$), Integral ($K_i$), dan Derivatif ($K_d$) di bawah ini. Amati transisi kurva respon dari osilasi tak teredam menjadi respon kendali yang cepat, stabil, dan presisi:
+
+<PidTuningSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-pid"
+  question="Apa peran utama dari penguatan Integral (Ki) dalam kontroler PID robotika?"
+  options={[
+    {
+      id: "A",
+      text: "Mengakumulasi riwayat galat persisten dari waktu ke waktu untuk mengeliminasi galat keadaan tunak (steady-state offset) akibat beban gravitasi atau gesekan.",
+      isCorrect: true,
+      explanation: "Tepat! Suku proporsional murni selalu menyisakan offset saat menahan beban konstan, sedangkan akumulasi integral memaksa galat akhir menjadi nol."
+    },
+    {
+      id: "B",
+      text: "Memprediksi galat yang akan terjadi di masa depan.",
+      isCorrect: false,
+      explanation: "Salah. Prediksi tren masa depan adalah peran dari suku Derivatif (Kd)."
+    },
+    {
+      id: "C",
+      text: "Mematikan motor ketika suhu panas.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang apa yang terjadi pada galat konstan kecil ketika diintegrasikan sepanjang waktu."
+/>

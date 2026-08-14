@@ -1,0 +1,107 @@
+---
+id: forward-inverse-kinematics
+title: Serial Manipulator Kinematics & Analytical Inverse Kinematics
+slug: forward-inverse-kinematics
+category: manipulation
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - mathematical-foundations
+references:
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 4). Springer.
+  - John J. Craig (2005). Introduction to Robotics: Mechanics and Control. Pearson.
+components:
+  - ArmKinematicsSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Serial Manipulator Kinematics & Analytical Inverse Kinematics
+
+> "Given a desired tool position in physical 3D space, how do we solve the exact motor joint angles needed to reach that point?"
+
+Articulated robotic arms (such as 6-DOF industrial welding robots or surgical manipulators) consist of a kinematic chain of rigid links connected by motorized revolute or prismatic joints.
+
+---
+
+## 1. Forward Kinematics (FK)
+
+Forward kinematics maps known joint angles $(\theta_1, \theta_2)$ to the resulting end-effector Cartesian coordinate $(x, y)$:
+
+For a planar 2-link robotic arm with link lengths $l_1$ and $l_2$:
+
+$$
+\begin{aligned}
+x &= l_1 \cos\theta_1 + l_2 \cos(\theta_1 + \theta_2) \\
+y &= l_1 \sin\theta_1 + l_2 \sin(\theta_1 + \theta_2)
+\end{aligned}
+$$
+
+Forward kinematics always yields a unique, deterministic solution.
+
+---
+
+## 2. Analytical Inverse Kinematics (IK)
+
+Inverse kinematics solves the reverse problem: given desired target coordinates $(x, y)$, determine the required joint angles $(\theta_1, \theta_2)$.
+
+### Step 1: Law of Cosines for Elbow Joint $\theta_2$
+Applying the law of cosines to the triangle formed by origin, elbow, and end-effector:
+
+$$
+D = \frac{x^2 + y^2 - l_1^2 - l_2^2}{2 l_1 l_2}
+$$
+
+- If $|D| > 1$: Target is outside the reachable workspace circle ($r > l_1 + l_2$).
+- If $|D| \le 1$: Two symmetrical kinematic solutions exist (**Elbow-Up** vs. **Elbow-Down**):
+
+$$
+\theta_2 = \text{atan2}\left( \pm\sqrt{1 - D^2}, D \right)
+$$
+
+### Step 2: Shoulder Joint $\theta_1$
+$$
+\theta_1 = \text{atan2}(y, x) - \text{atan2}\left( l_2 \sin\theta_2, \, l_1 + l_2 \cos\theta_2 \right)
+$$
+
+---
+
+## 3. Interactive 2-DOF Robotic Arm IK Simulator
+
+Drag the yellow crosshair target within the circular workspace below. Toggle between **Elbow-Up** and **Elbow-Down** configurations and observe the analytical joint angle calculations:
+
+<ArmKinematicsSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-ik"
+  question="Why does a 2-link planar arm generally have TWO valid inverse kinematics solutions for a single reachable target point?"
+  options={[
+    {
+      id: "A",
+      text: "Because the elbow joint can bend either upward (Elbow-Up) or downward (Elbow-Down) while reaching the exact same end-effector point.",
+      isCorrect: true,
+      explanation: "Exact! The positive and negative square roots in +/- sqrt(1 - D^2) correspond to the two geometric configurations of the elbow."
+    },
+    {
+      id: "B",
+      text: "Because the robot has two power supplies.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because motors must always spin in pairs.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the +/- sign in the square root term when computing theta_2."
+/>

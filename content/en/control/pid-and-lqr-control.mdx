@@ -1,0 +1,97 @@
+---
+id: pid-and-lqr-control
+title: PID Feedback Control & State-Space Optimal Regulation
+slug: pid-and-lqr-control
+category: control
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+references:
+  - Karl Johan Astrom & Richard M. Murray (2008). Feedback Systems: An Introduction for Scientists and Engineers. Princeton University Press.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 6). Springer.
+components:
+  - PidTuningSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# PID Feedback Control & State-Space Optimal Regulation
+
+> "When external wind gusts, friction, and motor disturbances knock a robot off course, how does a feedback controller actively restore equilibrium?"
+
+Open-loop commands fail in physical environments. **Feedback control** measures the actual error between desired reference state $r(t)$ and measured state $y(t)$, continuously generating corrective control action $u(t)$.
+
+---
+
+## 1. The Proportional-Integral-Derivative (PID) Control Law
+
+PID calculates control effort $u(t)$ from error signal $e(t) = r(t) - y(t)$:
+
+$$
+u(t) = K_p \, e(t) + K_i \int_0^t e(\tau) \, d\tau + K_d \, \frac{de(t)}{dt}
+$$
+
+### Individual Component Actions:
+1. **Proportional Term ($K_p e(t)$)**: Generates restoring force proportional to current error. Increases responsiveness and rise time.
+2. **Integral Term ($K_i \int e(\tau) d\tau$)**: Accumulates past persistent errors over time, eliminating **steady-state offset error**.
+3. **Derivative Term ($K_d \frac{de}{dt}$)**: Anticipates future error trajectory and provides damping, reducing **overshoot** and oscillations.
+
+---
+
+## 2. Discrete-Time Implementation for Microcontrollers
+
+In embedded robot microcontrollers operating at discrete control loops with timestep $\Delta t$:
+
+$$
+\begin{aligned}
+e_k &= r_k - y_k \\
+I_k &= I_{k-1} + e_k \Delta t \\
+D_k &= \frac{e_k - e_{k-1}}{\Delta t} \\
+u_k &= K_p e_k + K_i I_k + K_d D_k
+\end{aligned}
+$$
+
+*(Anti-windup clamping is applied to prevent integral term saturation).*
+
+---
+
+## 3. Interactive PID Tuning & Step Response Simulator
+
+Adjust the Proportional ($K_p$), Integral ($K_i$), and Derivative ($K_d$) sliders below. Watch how the step response curve transitions from underdamped oscillations to fast, stable setpoint tracking:
+
+<PidTuningSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-pid"
+  question="What is the primary role of the Integral gain (Ki) in a PID controller?"
+  options={[
+    {
+      id: "A",
+      text: "It accumulates past persistent error over time to eliminate steady-state offset error caused by friction or gravity.",
+      isCorrect: true,
+      explanation: "Exact! While proportional gain alone leaves a steady-state error under load, integral accumulation drives steady-state error to strictly zero."
+    },
+    {
+      id: "B",
+      text: "It predicts future errors.",
+      isCorrect: false,
+      explanation: "Incorrect. The derivative term (Kd) anticipates future trends."
+    },
+    {
+      id: "C",
+      text: "It turns off the robot motor when hot.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about what happens to small remaining errors when integrated over time."
+/>

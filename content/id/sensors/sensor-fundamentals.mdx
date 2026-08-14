@@ -1,0 +1,93 @@
+---
+id: sensor-fundamentals
+title: Fundamental Sensor, Model Pengukuran & Derau Gaussian
+slug: sensor-fundamentals
+category: sensors
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 35
+prerequisites:
+  - mathematical-foundations
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 4). Springer Open.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 5). Springer.
+components:
+  - SensorNoiseSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Fundamental Sensor, Model Pengukuran & Derau Gaussian
+
+> "Bagaimana robot fisik mengamati dunia nyata ketika setiap perangkat sensor perangkat keras memiliki ketidakpastian pengukuran yang tak terhindarkan?"
+
+Tanpa sensor, sebuah mesin otonom ibarat berjalan dalam kebutaan. Sensor bertugas mengonversi fenomena fisik lingkungan (seperti foton cahaya, gelombang akustik suara, medan magnet, dan putaran roda) menjadi sinyal data numerik digital.
+
+---
+
+## 1. Sensor Eksteroseptif vs. Proprioseptif
+
+Robotika mengklasifikasikan perangkat keras sensor ke dalam dua kategori utama:
+
+1. **Sensor Proprioseptif**: Mengukur status internal dari robot itu sendiri (seperti enkoder optik roda, sensor arus motor, potensiometer sendi, dan giroskop IMU).
+2. **Sensor Eksteroseptif**: Mengukur fitur lingkungan eksternal (seperti LiDAR 2D/3D, sonar ultrasonik, kamera stereo, dan sensor kedalaman inframerah).
+
+---
+
+## 2. Model Derau Pengukuran Gaussian
+
+Tidak ada sensor fisik yang 100% sempurna. Ketika pemindai LiDAR mengukur jarak $z_t$ ke dinding rintangan pada jarak sebenarnya $d_{\text{true}}$, hasil pembacaan dipengaruhi oleh derau acak Gaussian aditif $\epsilon \sim \mathcal{N}(0, \sigma^2)$:
+
+$$
+z_t = d_{\text{true}} + \epsilon
+$$
+
+Fungsi kerapatan probabilitas bersyarat (*Probability Density Function / PDF*) yang merepresentasikan kemungkinan pengukuran sensor adalah:
+
+$$
+p(z_t \mid d_{\text{true}}) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(z_t - d_{\text{true}})^2}{2\sigma^2} \right)
+$$
+
+Di mana:
+- **$z_t$**: Nilai jarak terukur oleh sensor $[\text{m}]$
+- **$d_{\text{true}}$**: Jarak rintangan sebenarnya $[\text{m}]$
+- **$\sigma$**: Standar deviasi derau sensor $[\text{m}]$ ($\sigma^2$ adalah variansi pengukuran)
+
+---
+
+## 3. Simulator Interaktif Derau Sensor & Kurva Gaussian
+
+Atur slider jarak sebenarnya $d_{\text{true}}$ dan standar deviasi $\sigma$ di bawah ini. Amati bagaimana kurva lonceng probabilitas melebar dan bagaimana sampel pembacaan berulang membentuk histogram di sekitar nilai sebenarnya:
+
+<SensorNoiseSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-sensors"
+  question="Mengapa distribusi Gaussian N(0, sigma^2) menjadi model derau sensor yang paling banyak digunakan dalam robotika?"
+  options={[
+    {
+      id: "A",
+      text: "Berdasarkan Teorema Limit Pusat, akumulasi berbagai sumber derau mikro independen secara alami mendekati kurva normal Gaussian, yang juga memungkinkan solusi analitik tertutup pada filter Kalman.",
+      isCorrect: true,
+      explanation: "Tepat! Teorema Limit Pusat dan kemudahan komputasi aljabar linier menjadikan probabilitas Gaussian fondasi utama estimasi status robotika."
+    },
+    {
+      id: "B",
+      text: "Karena sensor nyata tidak pernah mengalami galat.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena komputer robot tidak dapat membaca angka pecahan.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang Teorema Limit Pusat dan kemudahan komputasi aljabar linier."
+/>

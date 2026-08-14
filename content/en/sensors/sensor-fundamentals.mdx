@@ -1,0 +1,93 @@
+---
+id: sensor-fundamentals
+title: Sensor Fundamentals, Measurement Models & Gaussian Noise
+slug: sensor-fundamentals
+category: sensors
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 35
+prerequisites:
+  - mathematical-foundations
+references:
+  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 4). Springer Open.
+  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 5). Springer.
+components:
+  - SensorNoiseSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Sensor Fundamentals, Measurement Models & Gaussian Noise
+
+> "How does a physical robot perceive the real world when every hardware sensor contains inherent measurement uncertainty?"
+
+Without sensors, an autonomous machine is blind. Sensors convert physical environmental phenomena (photons, acoustic pressure waves, magnetic fields, and wheel rotations) into digital numerical signals.
+
+---
+
+## 1. Exteroceptive vs. Proprioceptive Sensors
+
+Robotics classifies perception hardware into two fundamental categories:
+
+1. **Proprioceptive Sensors**: Measure internal states of the robot (e.g., optical wheel encoders, motor current sensors, joint potentiometers, and IMU gyroscopes).
+2. **Exteroceptive Sensors**: Measure external environmental features (e.g., 2D/3D LiDAR, ultrasonic rangefinders, stereo cameras, and depth sensors).
+
+---
+
+## 2. The Gaussian Measurement Noise Model
+
+No physical sensor is 100% exact. When a LiDAR measures distance $z_t$ to an obstacle located at true distance $d_{\text{true}}$, the reading is corrupted by additive zero-mean Gaussian noise $\epsilon \sim \mathcal{N}(0, \sigma^2)$:
+
+$$
+z_t = d_{\text{true}} + \epsilon
+$$
+
+The conditional probability density function (PDF) representing sensor likelihood is:
+
+$$
+p(z_t \mid d_{\text{true}}) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(z_t - d_{\text{true}})^2}{2\sigma^2} \right)
+$$
+
+Where:
+- **$z_t$**: Measured distance reading $[\text{m}]$
+- **$d_{\text{true}}$**: Ground-truth obstacle distance $[\text{m}]$
+- **$\sigma$**: Sensor standard deviation $[\text{m}]$ ($\sigma^2$ is measurement variance)
+
+---
+
+## 3. Interactive Sensor Noise & Gaussian PDF Simulator
+
+Adjust the true distance $d_{\text{true}}$ and standard deviation $\sigma$ sliders below. Observe how the probability distribution bell curve widens and how repeated sample readings form a histogram around the true value:
+
+<SensorNoiseSimulator />
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-sensors"
+  question="Why is Gaussian noise N(0, sigma^2) the most widely used mathematical sensor model in robotics?"
+  options={[
+    {
+      id: "A",
+      text: "By the Central Limit Theorem, the accumulation of multiple tiny independent noise sources naturally approximates a normal Gaussian distribution, which also yields closed-form solutions in Kalman filtering.",
+      isCorrect: true,
+      explanation: "Exact! The Central Limit Theorem and linear algebra tractability make Gaussian probability the bedrock of state estimation."
+    },
+    {
+      id: "B",
+      text: "Because real sensors never make mistakes.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because robots cannot read numbers with decimal places.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the Central Limit Theorem and mathematical tractability."
+/>

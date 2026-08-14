@@ -1,0 +1,106 @@
+---
+id: rrt-and-rrt-star
+title: Perencanaan Jalur Berbasis Sampel, RRT & RRT* Asimtotik Optimal
+slug: rrt-and-rrt-star
+category: planning
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - a-star
+references:
+  - Steven M. LaValle (2006). Planning Algorithms (Chapter 5). Cambridge University Press.
+  - Sertac Karaman & Emilio Frazzoli (2011). Sampling-based Algorithms for Optimal Motion Planning. IJRR.
+components:
+  - RrtSimulator
+  - FormulaExplainer
+  - MathCodeBridge
+  - ConceptCheck
+---
+
+# Perencanaan Gerak Berbasis Sampel: RRT & RRT*
+
+> "Pada ruang konfigurasi berdimensi tinggi di mana diskritisasi grid mengalami kutukan dimensi (curse of dimensionality), bagaimana robot dapat menemukan jalur bebas rintangan dengan cepat?"
+
+Pencarian graf diskrit (seperti A*) memerlukan diskritisasi ruang konfigurasi kontinu $\mathcal{C}_{\text{space}}$ menjadi sel grid, yang kompleksitasnya melonjak eksponensial $\mathcal{O}(G^d)$ terhadap dimensi $d$. **Perencanaan jalur berbasis sampel (*sampling-based planning*)** memecahkan batasan ini melalui pengambilan sampel titik acak pada ruang kontinu.
+
+---
+
+## 1. Algoritma Rapidly-exploring Random Tree (RRT)
+
+RRT menumbuhkan struktur pohon ruang $\mathcal{T} = (\mathcal{V}, \mathcal{E})$ secara bertahap menuju area ruang bebas $\mathcal{C}_{\text{free}}$ yang belum dijelajahi:
+
+1. **Ambil Sampel Titik Acak**: $q_{\text{rand}} \sim \mathcal{U}(\mathcal{C})$ (dengan probabilitas bias target $p_{\text{goal}} \approx 0.15$).
+2. **Cari Titik Pohon Terdekat**:
+   $$
+   q_{\text{near}} = \arg\min_{v \in \mathcal{V}} \| v - q_{\text{rand}} \|
+   $$
+3. **Langkah Kemudi (Steer)**: Rentangkan pohon ke arah $q_{\text{rand}}$ dengan batas langkah $\Delta q$:
+   $$
+   q_{\text{new}} = q_{\text{near}} + \min(\Delta q, \|q_{\text{rand}} - q_{\text{near}}\|) \cdot \frac{q_{\text{rand}} - q_{\text{near}}}{\|q_{\text{rand}} - q_{\text{near}}\|}
+   $$
+4. **Pemeriksaan Tabrakan**: Jika segmen garis $(q_{\text{near}}, q_{\text{new}}) \subset \mathcal{C}_{\text{free}}$, tambahkan $q_{\text{new}}$ dan sambungan $(q_{\text{near}}, q_{\text{new}})$ ke pohon $\mathcal{T}$.
+
+---
+
+## 2. Optimalitas Asimtotik pada RRT*
+
+RRT standar bersifat **lengkap secara probabilistik** (*probabilistically complete*—pasti menemukan jalur jika ada saat $N \to \infty$), namun jalur yang ditemukannya hampir pasti tidak optimal.
+
+**RRT*** (Karaman & Frazzoli, 2011) memperkenalkan dua tahapan kunci dalam radius $r_n$:
+
+### 1. Pemilihan Induk Terdekat Terbaik (Parent Selection)
+RRT* mencari semua node tetangga $X_{\text{near}} \subset \mathcal{V}$ dalam radius $r_n$ dan memilih induk $q_{\text{min}}$ yang menghasilkan total akumulasi biaya jalur terendah:
+
+$$
+q_{\text{min}} = \arg\min_{q \in X_{\text{near}}} \left( \text{Cost}(q) + \|q - q_{\text{new}}\| \right)
+$$
+
+### 2. Penataan Ulang Cabang Pohon (Rewiring)
+RRT* memeriksa apakah menghubungkan kembali node tetangga $q_{\text{near}}$ melalui node baru $q_{\text{new}}$ dapat memangkas biaya mereka:
+
+$$
+\text{Jika } \text{Cost}(q_{\text{new}}) + \|q_{\text{new}} - q_{\text{near}}\| < \text{Cost}(q_{\text{near}}): \quad \text{Parent}(q_{\text{near}}) \leftarrow q_{\text{new}}
+$$
+
+Saat iterasi $N \to \infty$, biaya jalur yang ditemukan RRT* konvergen menuju jalur teoritis terpendek (*optimal*).
+
+---
+
+## 3. Laboratorium RRT / RRT* Interaktif
+
+Amati bagaimana pohon bergerak menjelajahi ruang 2D kontinu menghindari rintangan. Beralih antara mode RRT Standar dan RRT* Optimal untuk mengamati penataan ulang cabang (*rewiring*) secara langsung:
+
+<RrtSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-rrt"
+  question="Apa perbedaan mendasar antara algoritma RRT* dibandingkan dengan RRT standar?"
+  options={[
+    {
+      id: "A",
+      text: "RRT* bersifat optimal secara asimtotik: tahap rewiring pada tetangga lokal menjamin konvergensi menuju jalur terpendek bebas tabrakan seiring bertambahnya iterasi.",
+      isCorrect: true,
+      explanation: "Tepat! RRT standar hanya lengkap secara probabilistik, sedangkan RRT* melakukan perbaikan cabang untuk menjamin optimalitas asimtotik."
+    },
+    {
+      id: "B",
+      text: "RRT* menggunakan grid diskrit statis.",
+      isCorrect: false,
+      explanation: "Salah. Keduanya beroperasi pada ruang kontinu berbasis sampel."
+    },
+    {
+      id: "C",
+      text: "RRT* hanya bisa bekerja pada ruang 1 dimensi.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang prosedur penataan ulang cabang (tree rewiring)."
+/>

@@ -15,7 +15,10 @@ import { MappingSimulator } from '@/components/simulation/MappingSimulator';
 import { SlamSimulator } from '@/components/simulation/SlamSimulator';
 import { MultiAgentSimulator } from '@/components/simulation/MultiAgentSimulator';
 import { SensePlanActExplorer } from '@/components/simulation/SensePlanActExplorer';
-import { RobotClassificationExplorer } from '@/components/simulation/RobotClassificationExplorer';
+import { ArmKinematicsSimulator } from '@/components/simulation/ArmKinematicsSimulator';
+import { RrtSimulator } from '@/components/simulation/RrtSimulator';
+import { SensorNoiseSimulator } from '@/components/simulation/SensorNoiseSimulator';
+import { PidTuningSimulator } from '@/components/simulation/PidTuningSimulator';
 import { ConceptCheck } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
@@ -179,8 +182,23 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
         i++;
         continue;
       }
-      if (line.startsWith('<RobotClassificationExplorer')) {
-        nodes.push(<RobotClassificationExplorer key={`comp-rce-${i}`} />);
+      if (line.startsWith('<ArmKinematicsSimulator')) {
+        nodes.push(<ArmKinematicsSimulator key={`comp-arm-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<RrtSimulator')) {
+        nodes.push(<RrtSimulator key={`comp-rrt-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<SensorNoiseSimulator')) {
+        nodes.push(<SensorNoiseSimulator key={`comp-sns-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<PidTuningSimulator')) {
+        nodes.push(<PidTuningSimulator key={`comp-pid-${i}`} />);
         i++;
         continue;
       }
