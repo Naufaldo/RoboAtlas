@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { DOMAINS } from '@/lib/navigation/curriculum';
+import { DOMAIN_REGISTRY, LESSON_REGISTRY } from '@/lib/curriculum/registry';
 import { MASTER_CURRICULUM_LEVELS } from '@/lib/navigation/master-curriculum-levels';
 import { LEARNING_PATHS, LearningPath } from '@/lib/navigation/learning-paths';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -24,16 +24,29 @@ import {
   CheckCircle2,
   Route,
   Play,
-  Check,
+  Grid,
+  Box,
+  Activity,
+  Radio,
+  Eye,
+  Crosshair,
+  Zap,
 } from 'lucide-react';
 
-const iconMap: Record<string, React.ElementType> = {
+const domainIconMap: Record<string, React.ElementType> = {
   Compass,
+  Grid,
+  Box,
+  Cpu,
+  Navigation,
+  Activity,
+  Radio,
   MapPin,
+  Eye,
+  Crosshair,
+  Zap,
   Layers,
   RotateCcw,
-  Navigation,
-  Cpu,
   Users,
 };
 
@@ -68,51 +81,51 @@ export default function LearnPage() {
           <BookOpen className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400" />
           <span>{isId ? 'RoboAtlas Master Curriculum & Learning Paths' : 'RoboAtlas Master Curriculum & Learning Paths'}</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 font-mono">
           {isId ? 'Kurikulum & Jalur Pembelajaran Robotika Otonom' : 'Autonomous Robotics Learning Paths & Curriculum'}
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 max-w-3xl leading-relaxed font-sans">
           {isId
-            ? 'Struktur pembelajaran terpandu dari fondasi matematika hingga implementasi SLAM, manipulasi lengan robot, dan kendali otonom. Setiap langkah menghubungkan teori matematis dengan laboratorium interaktif 60 FPS.'
-            : 'Structured progressive learning roadmaps from mathematical foundations to SLAM, robot arm manipulation, and autonomous control. Every milestone bridges analytical formulas to 60 FPS interactive sandboxes.'}
+            ? 'Struktur pembelajaran komprehensif terbagi ke dalam Jalur Belajar Terpandu (Learning Paths), Jenjang Berurutan Level 0–20, dan 11 Domain Keilmuan. Setiap materi menghubungkan teori matematis dengan simulator interaktif 60 FPS.'
+            : 'Comprehensive curriculum structure organized into Guided Learning Paths, 21-Level Mastery Tiers, and 11 Canonical Scientific Domains. Every lesson connects analytical formulas directly to 60 FPS interactive sandboxes.'}
         </p>
 
         {/* Tab Switcher */}
         <div className="flex items-center gap-2 mt-6 flex-wrap">
           <button
             onClick={() => setActiveTab('paths')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs transition-all ${
               activeTab === 'paths'
                 ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold shadow-md shadow-cyan-500/20'
                 : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
             }`}
           >
             <Route className="w-4 h-4" />
-            <span>{isId ? 'Jalur Belajar Terpandu (Learning Paths)' : 'Guided Learning Paths'}</span>
+            <span>{isId ? 'Jalur Belajar Terpandu (6 Tracks)' : 'Guided Learning Paths (6 Tracks)'}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('levels')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs transition-all ${
               activeTab === 'levels'
                 ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold shadow-md shadow-cyan-500/20'
                 : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
             }`}
           >
             <GraduationCap className="w-4 h-4" />
-            <span>{isId ? 'Jenjang Lengkap Level 0–20' : '21-Level Curriculum (0–20)'}</span>
+            <span>{isId ? 'Jenjang 21 Level (0–20)' : '21-Level Hierarchy (0–20)'}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('domains')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs transition-all ${
               activeTab === 'domains'
                 ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold shadow-md shadow-cyan-500/20'
                 : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
             }`}
           >
             <Compass className="w-4 h-4" />
-            <span>{isId ? 'Laboratorium Domain' : 'Domain Laboratories'}</span>
+            <span>{isId ? '11 Domain Keilmuan' : '11 Scientific Domains'}</span>
           </button>
         </div>
       </div>
@@ -120,7 +133,7 @@ export default function LearnPage() {
       {/* VIEW 1: GUIDED LEARNING PATHS */}
       {activeTab === 'paths' && (
         <div className="space-y-8 animate-fadeIn">
-          {/* Path Selection Cards */}
+          {/* Path Selection Grid (6 Paths) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {LEARNING_PATHS.map((path) => {
               const isSelected = path.id === selectedPathId;
@@ -144,13 +157,13 @@ export default function LearnPage() {
                   <h3 className="font-mono font-bold text-sm text-slate-900 dark:text-slate-100 mb-1">
                     {isId ? path.titleId : path.titleEn}
                   </h3>
-                  <p className="text-xs text-cyan-600 dark:text-cyan-400 font-mono mb-2">
+                  <p className="text-xs text-cyan-600 dark:text-cyan-400 font-mono mb-2 line-clamp-1">
                     {isId ? path.subtitleId : path.subtitleEn}
                   </p>
                   <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500 pt-3 border-t border-slate-200 dark:border-slate-800/80">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3 text-cyan-500" />
-                      <span>~{path.estimatedHours} {isId ? 'jam' : 'hours'}</span>
+                      <span>~{path.estimatedHours} {isId ? 'jam' : 'hrs'}</span>
                     </span>
                     <span>•</span>
                     <span>{path.steps.length} {isId ? 'tahap' : 'steps'}</span>
@@ -186,7 +199,7 @@ export default function LearnPage() {
             <div className="space-y-4">
               {activePath.steps.map((step, idx) => (
                 <div
-                  key={step.moduleId}
+                  key={`${step.moduleId}-${idx}`}
                   className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/90 hover:border-cyan-500/40 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md"
                 >
                   {/* Left: Step Number + Content */}
@@ -341,11 +354,13 @@ export default function LearnPage() {
         </div>
       )}
 
-      {/* VIEW 3: DOMAIN LABORATORIES */}
+      {/* VIEW 3: CANONICAL DOMAIN LABORATORIES (100% Zero 404s) */}
       {activeTab === 'domains' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
-          {DOMAINS.map((domain) => {
-            const Icon = iconMap[domain.iconName] || Navigation;
+          {DOMAIN_REGISTRY.map((domain) => {
+            const Icon = domainIconMap[domain.iconName] || Navigation;
+            const lessons = LESSON_REGISTRY.filter((l) => l.domain === domain.slug);
+
             return (
               <div
                 key={domain.slug}
@@ -357,26 +372,45 @@ export default function LearnPage() {
                       <Icon className="w-5 h-5" />
                     </div>
                     <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800/80 text-cyan-700 dark:text-cyan-300 border border-slate-300 dark:border-slate-700">
-                      {domain.levelBadge}
+                      {domain.levelRange}
                     </span>
                   </div>
 
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{domain.title}</h2>
-                  <p className="text-xs font-mono text-cyan-600 dark:text-cyan-400/80 mb-2">{domain.subtitle}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">{domain.description}</p>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 font-mono">
+                    {isId ? domain.titleId : domain.titleEn}
+                  </h2>
+                  <p className="text-xs font-mono text-cyan-600 dark:text-cyan-400/80 mb-2">
+                    {domain.primaryEmbodiment}
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
+                    {isId ? domain.descriptionId : domain.descriptionEn}
+                  </p>
 
-                  {/* Topics list */}
+                  {/* Registered Lessons list */}
                   <div className="mt-4 space-y-1.5 pt-3.5 border-t border-slate-200 dark:border-slate-800/80">
-                    <span className="text-[11px] font-mono font-semibold text-slate-800 dark:text-slate-200">
-                      {t.domainsSection.keyTopics}
+                    <span className="text-[11px] font-mono font-semibold text-slate-800 dark:text-slate-200 block mb-2">
+                      {isId ? `Materi Terdaftar (${lessons.length}):` : `Registered Modules (${lessons.length}):`}
                     </span>
                     <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1.5">
-                      {domain.topics.map((top) => (
-                        <li key={top.title} className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400 flex-shrink-0" />
-                          <span>{top.title}</span>
+                      {lessons.slice(0, 4).map((les) => (
+                        <li key={les.slug} className="flex items-center justify-between gap-2">
+                          <Link
+                            href={`/learn/${domain.slug}/${les.slug}`}
+                            className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors flex items-center gap-1.5 truncate"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400 flex-shrink-0" />
+                            <span className="truncate">{isId ? les.titleId : les.titleEn}</span>
+                          </Link>
+                          <span className="text-[10px] font-mono text-slate-500 flex-shrink-0">
+                            Level {les.level}
+                          </span>
                         </li>
                       ))}
+                      {lessons.length > 4 && (
+                        <li className="text-[11px] font-mono text-slate-500 pl-3">
+                          +{lessons.length - 4} {isId ? 'materi lainnya...' : 'more modules...'}
+                        </li>
+                      )}
                     </ul>
                   </div>
                 </div>
@@ -384,13 +418,13 @@ export default function LearnPage() {
                 <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                   <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>{domain.status}</span>
+                    <span>{isId ? `${lessons.length} Modul Siap` : `${lessons.length} Ready`}</span>
                   </span>
                   <Link
                     href={`/learn/${domain.slug}`}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20 font-mono text-xs font-semibold border border-cyan-500/30 transition-all shadow-sm"
                   >
-                    <span>{t.domainsSection.openDomain}</span>
+                    <span>{isId ? 'Buka Domain' : 'Open Domain'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

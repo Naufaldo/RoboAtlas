@@ -2,16 +2,20 @@ import { describe, it, expect } from 'vitest';
 import { DOMAINS, ALGORITHMS } from '@/lib/navigation/curriculum';
 
 describe('Curriculum Structure & Integrity', () => {
-  it('should contain all 7 core robotics domains', () => {
-    expect(DOMAINS.length).toBe(7);
+  it('should contain all 11 canonical robotics domains', () => {
+    expect(DOMAINS.length).toBe(11);
     const slugs = DOMAINS.map((d) => d.slug);
     expect(slugs).toContain('fundamentals');
-    expect(slugs).toContain('localization');
-    expect(slugs).toContain('mapping');
-    expect(slugs).toContain('slam');
+    expect(slugs).toContain('mathematics');
+    expect(slugs).toContain('geometry');
+    expect(slugs).toContain('kinematics');
+    expect(slugs).toContain('sensors');
     expect(slugs).toContain('planning');
     expect(slugs).toContain('control');
-    expect(slugs).toContain('multi-agent');
+    expect(slugs).toContain('estimation');
+    expect(slugs).toContain('perception');
+    expect(slugs).toContain('manipulation');
+    expect(slugs).toContain('advanced');
   });
 
   it('each domain should have topics and valid mathematical equations', () => {
@@ -27,7 +31,7 @@ describe('Curriculum Structure & Integrity', () => {
     }
   });
 
-  it('algorithm registry should contain required Milestone 0 reference algorithms', () => {
+  it('algorithm registry should contain required reference algorithms', () => {
     expect(ALGORITHMS.length).toBeGreaterThanOrEqual(8);
     const ids = ALGORITHMS.map((a) => a.id);
     expect(ids).toContain('dijkstra');
