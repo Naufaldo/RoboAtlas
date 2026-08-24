@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0] - 2026-08-24
+
+### Added
+- **Guided Learning Paths Architecture** (`lib/navigation/learning-paths.ts` & `app/learn/page.tsx`):
+  - Added dedicated step-by-step guided learning tracks bridging analytical formulas to interactive sandboxes:
+    - 🧭 **SLAM & Autonomous Mobile Robot Navigation** (10-Stage Milestone Pipeline from Vectors to Pure Pursuit)
+    - 🦾 **Articulated Robotic Arm Manipulation** (4-Stage Pipeline from Frame Chaining to Jacobian Singularities)
+    - 🎛️ **Control Systems & State-Space Dynamics** (4-Stage Pipeline from State-Space to Swarm Consensus)
+  - Integrated rich step-by-step milestone view in `/learn` featuring KaTeX formula badges, prerequisite tags, and dual action CTAs (*Read Theory* & *Launch Lab*).
+- **Master SLAM Textbook Guide** (`book/SLAM_Learning Path.md`):
+  - Authored comprehensive 8-chapter reference textbook following the RoboAtlas universal pedagogical pipeline: $\text{Problem} \to \text{Physical Intuition} \to \text{Mathematical Model} \to \text{Derivation} \to \text{Algorithm} \to \text{Interactive Lab} \to \text{Application}$.
+  - Seamlessly mapped to existing master curriculum modules with **zero content duplication**.
+- **LiDAR Sensor Working Principle Technical Illustrations**:
+  - Generated and embedded high-detail technical schematic infographics explaining Time-of-Flight (ToF) laser pulses, 360° laser sweep on autonomous mobile robots, and 2D/3D Cartesian Point Cloud extraction (`public/images/sensors/lidar-working-principle.jpg`).
+  - Integrated into bilingual LiDAR lessons (`content/id/sensors/lidar-raycasting.mdx` & `content/en/sensors/lidar-raycasting.mdx`).
+- **Interactive Laboratory Workstation Expansion** (`app/labs/page.tsx`):
+  - Expanded simulation workstation to house **28 in-browser 60 FPS simulators**.
+  - Added instant Learning Path filters (`🧭 SLAM Path`, `🦾 Arm Path`, `🎛️ Control Path`) allowing users to navigate simulators according to algorithmic progression.
+- **CodeBlock Component with Copy-to-Clipboard** (`components/mdx/CodeBlock.tsx`):
+  - Interactive syntax-highlighted code block component with language badge and copy-to-clipboard state feedback.
+
+### Fixed & Improved
+- **ConceptCheck Quiz State Reset & Parsing Resiliency**:
+  - Fixed state persistence bug in `components/educational/ConceptCheck.tsx` by adding `useEffect` state reset on quiz ID change, preventing previous submission states from bleeding into newly opened lessons.
+  - Implemented strict boolean normalization (`isCorrect` handling both real booleans and strings) across parser and components.
+  - Enhanced visual feedback with emerald green badges for correct answers, rose red badges for incorrect choices, and detailed pedagogical explanations.
+- **MDX Markdown Image & Element Support** (`components/mdx/MdxArticle.tsx`):
+  - Added native support for Markdown images `![alt](src)` with rounded borders, dark slate styling, and automated captions.
+  - Upgraded `parseConceptCheck` into a resilient multiline parser supporting complex LaTeX math characters, quotes, and newlines.
+- **Automated Test Suite Expansion** (`tests/mdx/concept-check.test.ts`):
+  - Verified 100% successful parsing across all 74 lessons in Indonesian and English (**31 / 31 unit tests passing**).
+
+---
+
 ## [0.4.0] - 2026-08-14
 
 ### Added

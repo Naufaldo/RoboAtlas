@@ -11,12 +11,13 @@
 
 <p align="center">
   <a href="https://naufaldo.github.io/RoboAtlas/"><img src="https://img.shields.io/badge/Live_Demo-GitHub_Pages-06b6d4?style=for-the-badge&logo=githubpages&logoColor=white" alt="Live Demo" /></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-v0.4.0-10b981?style=for-the-badge" alt="Version 0.4.0" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-v0.5.0-10b981?style=for-the-badge" alt="Version 0.5.0" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License MIT" /></a>
   <img src="https://img.shields.io/badge/Bilingual-EN%20%7C%20ID-8b5cf6?style=for-the-badge" alt="Bilingual EN | ID" />
   <img src="https://img.shields.io/badge/Theme-Dark%20%2F%20Light-f59e0b?style=for-the-badge" alt="Dual Theme" />
   <img src="https://img.shields.io/badge/Curriculum-21_Levels_(0--20)-cyan?style=for-the-badge" alt="21-Level Master Curriculum" />
-  <img src="https://img.shields.io/badge/Platforms-Cross--Platform_Embodiments-indigo?style=for-the-badge" alt="Cross-Platform Embodiments" />
+  <img src="https://img.shields.io/badge/Learning_Paths-SLAM_%7C_Arms_%7C_Control-06b6d4?style=for-the-badge" alt="Guided Learning Paths" />
+  <img src="https://img.shields.io/badge/Simulators-28_Interactive_Labs-3b82f6?style=for-the-badge" alt="28 Interactive Simulators" />
   <img src="https://img.shields.io/badge/Mobile-Touch_Optimized-ec4899?style=for-the-badge" alt="Mobile Touch Optimized" />
 </p>
 
@@ -70,9 +71,23 @@ Synthesizing foundational literature from three classical textbooks:
 
 ---
 
-## 🎓 21-Level Master Robotics Curriculum Hierarchy (v1.0 / v2.0 Spec)
+## 🧭 Guided Learning Paths & Master SLAM Guide
 
-Organized at **[`/learn`](https://naufaldo.github.io/RoboAtlas/learn/)** and specified in **[`docs/RoboAtlas_Master_Curriculum_v1.md`](docs/RoboAtlas_Master_Curriculum_v1.md)** and **[`docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md`](docs/RoboAtlas_Master_Web_Curriculum_Spec_v2.md)**:
+Explore structured progressive tracks bridging analytical mathematics to 60 FPS simulators at **[`/learn`](https://naufaldo.github.io/RoboAtlas/learn/)**:
+
+1. 🧭 **SLAM & Autonomous Mobile Robot Navigation (10 Milestones)**:
+   - *Vectors & Euclidean Geometry $\to$ Coordinate Frames & $SE(2)$ Transforms $\to$ Differential Drive Kinematics $\to$ LiDAR Time-of-Flight Raycasting $\to$ Wheel Odometry Drift $\to$ Monte Carlo Particle Filter Localization (MCL) $\to$ Log-Odds Occupancy Grid Mapping $\to$ ICP Scan Matching SLAM $\to$ $A^*$ Path Planning $\to$ Pure Pursuit Motion Control*.
+   - Reference Book: **[`book/SLAM_Learning Path.md`](book/SLAM_Learning%20Path.md)**.
+2. 🦾 **Articulated Robotic Arm Manipulation (4 Milestones)**:
+   - *Homogeneous Transform Chaining $\to$ 2-DOF Planar Forward Kinematics (FK) $\to$ Analytical Inverse Kinematics (IK) $\to$ Jacobian Matrix & Velocity Ellipse Singularities*.
+3. 🎛️ **Control Systems & State-Space Dynamics (4 Milestones)**:
+   - *State-Space Dynamics & Phase Planes $\to$ Discrete Numerical Integration (Euler vs RK4) $\to$ PID Feedback Tuning $\to$ Multi-Agent Graph Laplacian Consensus*.
+
+---
+
+## 🎓 21-Level Master Robotics Curriculum Hierarchy
+
+Organized at **[`/learn`](https://naufaldo.github.io/RoboAtlas/learn/)** across 4 Primary Tiers:
 
 ```text
 TIER 1: FOUNDATIONS (LEVELS 0 – 4)
@@ -107,6 +122,47 @@ Level 20: Robotics Research & Emerging Topics (NeRF SLAM, Soft Continuum)
 
 ---
 
+## 🎮 28 In-Browser 60 FPS Interactive Simulators
+
+Explore the full laboratory workstation at **[`/labs`](https://naufaldo.github.io/RoboAtlas/labs/)**:
+
+- **Math & Spatial Geometry**:
+  - `TransformSandbox.tsx`: $SE(2)$ Homogeneous Matrix & Coordinate Frame Gizmo.
+  - `SpatialRotation3D.tsx`: 3D $SO(3)$ Euler Angle Roll-Pitch-Yaw Simulator.
+  - `TransformChainSimulator.tsx`: Transform Composition & Matrix Non-Commutativity ($T_1 T_2 \neq T_2 T_1$).
+  - `VectorVisualizer.tsx`, `DotProductExplorer.tsx`, `CoordinateFrameExplorer.tsx`: Geometric vector operations and projection.
+  - `CspaceInflationSimulator.tsx`: Minkowski obstacle expansion ($C_{\text{obs}} = \mathcal{O} \oplus \mathcal{B}_r$).
+  - `BayesianRoomSimulator.tsx`: Discrete room localization and Bayes rule updates.
+- **Kinematics & Dynamics**:
+  - `KinematicsSimulator.tsx`: Differential-drive velocity integrator with Instantaneous Center of Curvature (ICC).
+  - `HolonomicConstraintSimulator.tsx`: Pfaffian non-holonomic no-slip constraints.
+  - `ArmForwardKinematicsSimulator.tsx`: 2-DOF planar arm forward kinematics & workspace annulus limits.
+  - `ArmInverseKinematicsSimulator.tsx`: Analytical inverse kinematics solver (Elbow-Up vs. Elbow-Down).
+  - `JacobianSingularitySimulator.tsx`: Velocity manipulability ellipse and singularity detection ($\det(J) \to 0$).
+- **Perception & Sensors**:
+  - `LidarRaycastSimulator.tsx`: 360° LiDAR Raycaster with parametric segment intersections and point cloud generation.
+  - `SensorNoiseSimulator.tsx`: Gaussian sensor noise modeling and histogram density functions.
+  - `OdometryDriftSimulator.tsx`: Wheel radius bias and dead reckoning divergence.
+  - `MappingSimulator.tsx`: Log-Odds recursive Bayesian Occupancy Grid Mapping.
+- **Planning & Trajectory Generation**:
+  - `PathPlanningSimulator.tsx`: Custom obstacle drawing with $A^*$ and Dijkstra graph search.
+  - `AStarVsDijkstraSimulator.tsx`: Uniform wavefront vs. heuristic search comparison.
+  - `RrtSimulator.tsx` & `RrtExplorationSimulator.tsx`: Randomized rapidly-exploring tree growth and $RRT^*$ neighborhood rewiring.
+- **State Estimation & SLAM**:
+  - `BayesianFilterSimulator.tsx`: 1D Recursive Bayes & Kalman filter prediction-correction.
+  - `LocalizationSimulator.tsx`: Monte Carlo Localization (MCL) particle filter with sensor updates.
+  - `SlamSimulator.tsx`: Iterative Closest Point (ICP) point cloud alignment via Singular Value Decomposition (SVD).
+- **Motion Control & Swarms**:
+  - `ControlSimulator.tsx`: Pure Pursuit lookahead geometry vs. Stanley non-linear feedback.
+  - `PurePursuitSimulator.tsx`: Pure Pursuit lookahead distance tuning ($L_d$).
+  - `TrackingErrorGeometrySimulator.tsx`: Frenet-Serret cross-track lateral error ($e_{\text{lat}}$) and heading error ($e_\theta$).
+  - `PidTuningSimulator.tsx`: PID loop tuning with transient step response analysis.
+  - `StateSpaceSimulator.tsx`: Continuous state-space dynamics ($\dot{\mathbf{x}} = \mathbf{A}\mathbf{x} + \mathbf{B}\mathbf{u}$) and phase portraits.
+  - `NumericalDiscretizationSimulator.tsx`: Numerical solver comparison (Euler vs. Midpoint vs. Runge-Kutta 4).
+  - `MultiAgentSimulator.tsx`: Graph Laplacian swarm consensus and decentralized formation control.
+
+---
+
 ## 🤖 Supported Robot Platforms (Embodiments Hub)
 
 Explore platform-specific implementations at **[`/robots`](https://naufaldo.github.io/RoboAtlas/robots/)**:
@@ -126,7 +182,8 @@ Explore platform-specific implementations at **[`/robots`](https://naufaldo.gith
   - `LessonOrientation.tsx`: Answers "Where am I? What am I learning? Why does it matter?" with estimated study time.
   - `MathCodeBridge.tsx`: Direct 1-to-1 visual and conceptual mapping from mathematical formulas to TypeScript code.
   - `AcademicReferences.tsx`: Structured literature cards citing authoritative papers with DOIs and chapter coverage.
-  - `ConceptCheck.tsx`: Interactive checkpoint quizzes with instantaneous feedback and pedagogical reasoning.
+  - `ConceptCheck.tsx`: Interactive checkpoint quizzes with automatic state reset, boolean normalization, and instant pedagogical feedback.
+  - `CodeBlock.tsx`: Syntax-highlighted code blocks with language badges and copy-to-clipboard functionality.
 - 📐 **7-Step Mathematical Explanation Standard (`FormulaExplainer.tsx`)**:
   - KaTeX rendering $\to$ Intuitive Meaning $\to$ Physical Reasoning ("Why?") $\to$ Dimensional Unit Tables $\to$ Collapsible Step-by-Step Derivations $\to$ Interactive Live Parameter Calculators.
 - 🌓 **Dual-Theme Engine (Dark & Light Mode)**: Futuristic deep-void robotics laboratory (`#040711`) vs. clean clinical light mode (`#f8fafc`).
@@ -134,16 +191,6 @@ Explore platform-specific implementations at **[`/robots`](https://naufaldo.gith
 - 📱 **Mobile-Adaptive & Touch-First**:
   - Full touch interactions (`onTouchStart`, `onTouchMove`) across all 60 FPS Canvas simulators.
   - Horizontal touch-scroll containers (`overflow-x-auto scrollbar-thin`) for all complex KaTeX equations and matrices.
-- 🎮 **Bespoke In-Browser 60 FPS Simulators**:
-  - **`TransformSandbox.tsx`**: $SE(2)$ Homogeneous Matrix & Coordinate Frame Gizmo.
-  - **`SpatialRotation3D.tsx`**: 3D $SO(3)$ Euler Angle Roll-Pitch-Yaw Simulator.
-  - **`KinematicsSimulator.tsx`**: Differential-drive unicycle velocity integrator with ICC projection.
-  - **`PathPlanningSimulator.tsx`**: Interactive grid search sandbox with custom obstacle wall drawing, A*, and Dijkstra.
-  - **`LocalizationSimulator.tsx`**: Monte Carlo Particle Filter (MCL) with landmark beacon triangulation.
-  - **`ControlSimulator.tsx`**: Pure Pursuit lookahead geometry vs. Stanley cross-track feedback controller.
-  - **`MappingSimulator.tsx`**: 360° LiDAR Raycaster with Log-Odds Bayesian Occupancy Grid.
-  - **`SlamSimulator.tsx`**: Step-by-step Iterative Closest Point (ICP) scan matching with closed-form SVD rigid alignment.
-  - **`CoordinateFrameExplorer.tsx`**, **`VectorVisualizer.tsx`**, **`DotProductExplorer.tsx`**: Interactive geometric and mathematical foundations labs.
 - ⚡ **100% Client-Side Architecture**: Pure TypeScript and HTML5 Canvas 2D engine. Zero server latency, zero database overhead, and instant load times.
 
 ---
@@ -151,6 +198,7 @@ Explore platform-specific implementations at **[`/robots`](https://naufaldo.gith
 ## 📖 Comprehensive Documentation
 
 - 📋 **[System & Technical Specification v2.0](docs/SPECIFICATION.md)** — Architectural design, 21-Level Master Curriculum, MDX schemas, 7-Step Math standard, and Learner-First UI/UX framework.
+- 🧭 **[SLAM Learning Path Master Guide](book/SLAM_Learning%20Path.md)** — 8-Chapter autonomous mobile robotics & SLAM pipeline reference.
 - 🤖 **[Agentic Governance & Collaboration](docs/GOVERNANCE.md)** — 16 Core Agentic Rules and 8-Step Workflow Loop.
 - 🗺️ **[Feature Roadmap](docs/ROADMAP.md)** — 12-Milestone delivery hierarchy (M1 through M12).
 - 📜 **[Changelog](CHANGELOG.md)** — Detailed version release history adhering to Keep a Changelog and SemVer.
