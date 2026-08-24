@@ -1,6 +1,6 @@
-# RoboAtlas — SLAM, Spatial Perception & Multi-Paradigm Mapping Master Guide
-### Comprehensive Textbook on Point Cloud Processing, Spatial Mapping Algorithms & The Grand Taxonomy of SLAM
-*By RoboAtlas Knowledge Systems — Version 3.0 (2026)*
+# RoboAtlas — SLAM, Spatial Perception & Visual Autonomy Master Guide
+### Comprehensive Textbook on Point Clouds, Multi-Paradigm Mapping, Monocular/Stereo Visual SLAM & The Grand SLAM Taxonomy
+*By RoboAtlas Knowledge Systems — Version 4.0 (2026)*
 
 ---
 
@@ -11,17 +11,18 @@ Simultaneous Localization and Mapping (**SLAM**) enables an autonomous agent to 
 ```text
                      ┌───────────────────────────────────────────────┐
                      │              Physical Sensors                 │
-                     │  LiDAR (r, θ), RGB-D (u,v,Z), IMU (a, ω)      │
+                     │  Cameras (Mono/Stereo/RGB-D), LiDAR, IMU      │
                      └───────────────────────┬───────────────────────┘
-                                             │ Raw Sensor Streams
+                                             │ Raw Photometric & Geometric Streams
                                              ▼
                      ┌───────────────────────────────────────────────┐
-                     │          Point Cloud Processing               │
-                     │  - Voxel Grid Downsampling Filter             │
-                     │  - Statistical Outlier Removal (SOR)          │
-                     │  - PCA Surface Normal & Curvature Estimation  │
+                     │     Visual & Spatial Perception Engine        │
+                     │  - Pinhole Intrinsic Matrix K                 │
+                     │  - Epipolar Essential Matrix E = [t]x R       │
+                     │  - Stereo Baseline Disparity: Z = (f * B) / d │
+                     │  - Point Cloud Voxel Grid & PCA Normal Est.   │
                      └───────────────────────┬───────────────────────┘
-                                             │ Filtered Point Cloud Pk & Extracted Features
+                                             │ 3D Map Points Xj & Extracted Features
                                              ▼
                      ┌───────────────────────────────────────────────┐
                      │          Multi-Paradigm Spatial Mapping       │
@@ -34,12 +35,12 @@ Simultaneous Localization and Mapping (**SLAM**) enables an autonomous agent to 
                                              ▼
                      ┌───────────────────────────────────────────────┐
                      │          Grand SLAM Algorithm Engine          │
+                     │  - Visual SLAM: ORB-SLAM3 & DSO (Bundle Adj.) │
                      │  - Filter-Based: EKF-SLAM & FastSLAM 2.0      │
                      │  - Graph SLAM: Factor Graphs (GTSAM / g2o)    │
-                     │  - Visual SLAM: ORB-SLAM3 & DSO               │
                      │  - 3D LiDAR SLAM: LOAM & LIO-SAM              │
                      └───────────────────────┬───────────────────────┘
-                                             │ Trajectory {x_0, ..., x_t} & Dense Global Map
+                                             │ Trajectory {x_0, ..., x_t} & Metric Map
                                              ▼
                      ┌───────────────────────────────────────────────┐
                      │        Global Planning & Motion Control       │
@@ -51,11 +52,151 @@ Simultaneous Localization and Mapping (**SLAM**) enables an autonomous agent to 
 
 ---
 
-## 2. Point Cloud Fundamentals & Geometric Signal Processing
+## 2. Visual SLAM (V-SLAM): 1-Camera vs 2-Camera Principles & Mathematical Derivations
+
+![Prinsip Visual SLAM: Monokular, Stereo, Triangulasi 3D, dan Bundle Adjustment Reprojection Error](/images/sensors/vslam-monocular-stereo-triangulation.jpg)
+
+### 2.1 The Pinhole Camera Model & Pixel Coordinate Transformation
+
+A camera sensor captures 3D world points $\mathbf{X}^W = [X, Y, Z, 1]^T$ and projects them onto a 2D digital image matrix $[u, v]^T$ measured in integer pixel coordinates:
+
+```text
+3D World Point X^W ──► [ Extrinsics T_CW = (R, t) ] ──► 3D Camera Frame X^C ──► [ Intrinsics K ] ──► 2D Pixel (u, v)
+```
+
+#### The Camera Intrinsic Matrix $\mathbf{K}$:
+$$
+\mathbf{K} = \begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}
+$$
+
+Where:
+- $f_x = \frac{F}{p_w}$: Focal length in horizontal pixel units ($F$ is optical focal length in mm, $p_w$ is physical pixel pitch width in mm/pixel).
+- $f_y = \frac{F}{p_h}$: Focal length in vertical pixel units.
+- $(c_x, c_y)$: Principal point coordinates (the optical center offset where the optical axis pierces the digital sensor plane).
+
+#### Complete Perspective Projection:
+$$
+Z^C \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = \mathbf{K} \left( \mathbf{R} \mathbf{X}^W + \mathbf{t} \right) = \begin{bmatrix} f_x X^C + c_x Z^C \\ f_y Y^C + c_y Z^C \\ Z^C \end{bmatrix}
+$$
+Dividing by depth $Z^C$:
+$$
+u = f_x \frac{X^C}{Z^C} + c_x, \qquad v = f_y \frac{Y^C}{Z^C} + c_y
+$$
+
+---
+
+### 2.2 Monocular V-SLAM (1 Camera): Epipolar Geometry & Scale Ambiguity
+
+With a **single camera**, depth $Z$ is lost during perspective projection. A single 2D pixel $[u, v]^T$ corresponds to an infinite 3D optical ray projecting into space:
+
+$$
+\mathbf{r}(\lambda) = \lambda \cdot \mathbf{K}^{-1} \begin{bmatrix} u \\ v \\ 1 \end{bmatrix}, \quad \lambda > 0
+$$
+
+#### 1. Estimating Motion Across Time ($t_1 \to t_2$) via Epipolar Geometry
+When the single camera moves from pose 1 to pose 2, feature point $\mathbf{p}_1$ in image 1 and $\mathbf{p}_2$ in image 2 satisfy the **Epipolar Constraint**:
+
+$$
+\mathbf{x}_2^T \mathbf{E} \mathbf{x}_1 = 0 \quad \iff \quad \mathbf{p}_2^T \mathbf{F} \mathbf{p}_1 = 0
+$$
+
+Where:
+- $\mathbf{x}_1 = \mathbf{K}^{-1} \mathbf{p}_1$ and $\mathbf{x}_2 = \mathbf{K}^{-1} \mathbf{p}_2$ are normalized image coordinates.
+- $\mathbf{E} = [\mathbf{t}]_\times \mathbf{R} \in \mathbb{R}^{3 \times 3}$ is the **Essential Matrix** ($[\mathbf{t}]_\times$ is the skew-symmetric matrix of translation $\mathbf{t}$).
+- $\mathbf{F} = \mathbf{K}^{-T} \mathbf{E} \mathbf{K}^{-1}$ is the **Fundamental Matrix** (operates directly on raw pixel coordinates without requiring intrinsic calibration).
+
+Decomposing $\mathbf{E}$ via SVD extracts relative rotation $\mathbf{R}$ and up-to-scale translation unit vector $\hat{\mathbf{t}} = \frac{\mathbf{t}}{\|\mathbf{t}\|}$.
+
+#### 2. Triangulation
+By calculating the intersection of the two calibrated optical rays from camera pose 1 and pose 2, the 3D position of map point $\mathbf{X}$ is computed using Linear Triangulation (Direct Linear Transformation / DLT).
+
+#### 3. The Physical Nature of Monocular Scale Ambiguity (*Skala Relatif*)
+> **Why 1 camera cannot know metric scale alone:**
+> Moving $10\text{ cm}$ in a miniature dollhouse produces the **exact same pixel optical flow** as moving $10\text{ meters}$ in a giant airplane hangar!
+
+A monocular SLAM system estimates trajectory and map up to an unknown scalar scale factor $s \in \mathbb{R}^+$ (7-DOF $\text{Sim}(3)$ manifold). To recover true metric scale ($s = 1.0$), monocular cameras must be paired with:
+1. An **IMU (Visual-Inertial Odometry / VIO)**: Using the known physical acceleration of Earth's gravity ($\|\mathbf{g}\| \approx 9.81\text{ m/s}^2$) to calibrate absolute metric scale.
+2. **Known Geometric Fiducial Markers**: Detecting markers with known real-world physical dimensions (e.g. ArUco / AprilTags).
+
+---
+
+### 2.3 Stereo V-SLAM (2 Cameras): Instantaneous Metric Triangulation & Disparity
+
+A **Stereo Camera rig** mounts two identical synchronized cameras separated by a known, fixed physical **Baseline distance $B$** (e.g. $B = 12\text{ cm}$):
+
+```text
+       Left Camera {L}                       Right Camera {R}
+        ┌──────────┐                          ┌──────────┐
+        │  (u_L)   │                          │  (u_R)   │
+        └────┬─────┘                          └────┬─────┘
+             │ ◄────────── Baseline B ───────────► │
+             │                                     │
+              \                                   /
+               \                                 /
+                \                               /
+                 \                             /
+                  ▼                           ▼
+                 3D Physical World Target P(X, Y, Z)
+```
+
+#### Derivation of the Stereo Metric Depth Formula:
+After epipolar stereo rectification, both camera image planes are coplanar and horizontally aligned. A 3D point $\mathbf{P}(X, Y, Z)$ projects to pixel $u_L$ in the left camera and pixel $u_R$ in the right camera.
+
+From similar triangles in the epipolar plane:
+$$
+\frac{Z}{B} = \frac{f}{u_L - u_R}
+$$
+
+Defining **Horizontal Disparity $d = u_L - u_R$** (the pixel shift between left and right images):
+
+$$
+Z = \frac{f \cdot B}{d}
+$$
+
+The full 3D metric coordinates $(X, Y, Z)$ in meters relative to the left camera are computed directly:
+$$
+X = \frac{(u_L - c_x) \cdot Z}{f_x} = \frac{(u_L - c_x) \cdot B}{d}, \qquad Y = \frac{(v_L - c_y) \cdot Z}{f_y} = \frac{(v_L - c_y) \cdot B}{d}
+$$
+
+#### Key Advantages of Stereo over Monocular V-SLAM:
+1. **Instant Metric Scale**: Scale is known in exact meters immediately upon powering on ($s \equiv 1.0$).
+2. **Zero Motion Requirement**: Depth can be measured even when the robot is completely stationary ($v = 0$).
+3. **No Initialization Delay**: 3D feature points are inserted into the map on the very first frame.
+
+---
+
+### 2.4 Multi-Camera Surround Vision Rigs (360° Omnidirectional V-SLAM)
+
+Autonomous passenger vehicles (e.g. Tesla FSD, Waymo) and multi-directional drones employ multi-camera arrays (e.g. 4 to 8 cameras providing 360° surround vision):
+
+- Each camera $C_i$ has its own calibrated static rigid transform $\mathbf{T}_{C_i}^B = [\mathbf{R}_{C_i}^B \mid \mathbf{t}_{C_i}^B]$ relative to the robot base body $\{B\}$.
+- **Generalized Camera Model (GCM)**: Rather than treating each camera as an isolated perspective center, visual rays from all cameras are unified into a single coordinate frame using Plücker ray lines $(\mathbf{q}, \mathbf{v})$.
+- **Zero Blind Spots**: When the vehicle rotates or turns sharply, forward-facing features leave the front camera but are immediately tracked by side-facing cameras, preventing tracking loss.
+
+---
+
+### 2.5 Non-Linear Optimization: Bundle Adjustment (BA) & Reprojection Error
+
+Whether using Monocular, Stereo, or Multi-Camera configurations, visual SLAM optimizes camera trajectory poses $\mathbf{T}_i = [\mathbf{R}_i \mid \mathbf{t}_i]$ and 3D map points $\mathbf{X}_j$ simultaneously by minimizing the **2D Pixel Reprojection Error**:
+
+$$
+\min_{\{\mathbf{T}_i\}, \{\mathbf{X}_j\}} \sum_{i} \sum_{j} \rho\left( \left\| \begin{bmatrix} u_{ij} \\ v_{ij} \end{bmatrix} - \pi\left(\mathbf{K}, \mathbf{T}_i \mathbf{X}_j\right) \right\|_{\mathbf{\Sigma}_{ij}}^2 \right)
+$$
+
+Where:
+- $\begin{bmatrix} u_{ij} \\ v_{ij} \end{bmatrix}$ is the detected 2D pixel coordinate of feature $j$ in camera frame $i$.
+- $\pi(\mathbf{K}, \mathbf{T}_i \mathbf{X}_j) = \begin{bmatrix} f_x \frac{X_{ij}^C}{Z_{ij}^C} + c_x \\ f_y \frac{Y_{ij}^C}{Z_{ij}^C} + c_y \end{bmatrix}$ is the analytical 2D perspective projection of 3D point $\mathbf{X}_j$.
+- $\rho(\cdot)$ is a robust M-estimator cost function (such as the **Huber Loss**) that downweights outlier feature mismatches.
+
+Solved iteratively via **Levenberg-Marquardt** using sparse Schur complement marginalization (*g2o / Ceres / GTSAM*).
+
+---
+
+## 3. Point Cloud Fundamentals & Geometric Signal Processing
 
 ![Pemrosesan Point Cloud, Paradigma Pemetaan Spasial 2D/3D, dan Taksonomi Lengkap Algoritma SLAM](/images/sensors/point-cloud-mapping-slam-taxonomy.jpg)
 
-### 2.1 Mathematical Representation of a Point Cloud
+### 3.1 Mathematical Representation of a Point Cloud
 
 A **Point Cloud** $\mathcal{P}$ is an unorganized collection of $N$ discrete 3D spatial points measured relative to a coordinate frame:
 
@@ -68,13 +209,10 @@ Depending on the sensor embodiment, each point $\mathbf{p}_i$ can be augmented w
 - **Reflectance / Intensity**: $I_i \in [0, 1]$ measuring surface albedo from LiDAR return power.
 - **Surface Normal Vector**: $\mathbf{n}_i = [n_{x,i}, n_{y,i}, n_{z,i}]^T$ with $\|\mathbf{n}_i\| = 1$.
 - **Local Curvature**: $\kappa_i \in \mathbb{R}_{\ge 0}$ indicating local geometric roughness.
-- **Timestamp / Ring ID**: $t_i, \text{ring}_i$ from spinning multi-beam LiDARs (Velodyne/Ouster).
 
 ---
 
-### 2.2 Point Cloud Filtering, Denoising & Downsampling
-
-Raw point clouds from 3D LiDAR (e.g. 100,000+ points/scan) or RGB-D cameras (300,000+ points/frame) exceed real-time processing budgets without filtering:
+### 3.2 Point Cloud Filtering, Denoising & Downsampling
 
 #### 1. Voxel Grid Downsampling Filter
 Space is discretized into a 3D grid of cubic voxels with leaf size $\Delta x \times \Delta y \times \Delta z$. All points falling inside voxel $V_k$ are replaced by their single spatial centroid $\mathbf{c}_k$:
@@ -82,48 +220,28 @@ Space is discretized into a 3D grid of cubic voxels with leaf size $\Delta x \ti
 $$
 \mathbf{c}_k = \frac{1}{|V_k|} \sum_{\mathbf{p}_i \in V_k} \mathbf{p}_i
 $$
-*Result*: Eliminates redundant density near the sensor while preserving uniform spatial geometry in $O(N)$ hash-table time.
 
 #### 2. Statistical Outlier Removal (SOR)
-Ambient dust, moisture, and optical multipath reflections produce floating noise points. For every point $\mathbf{p}_i$, compute its mean Euclidean distance $\bar{d}_i$ to its $k$-nearest neighbors:
-
+For every point $\mathbf{p}_i$, compute its mean Euclidean distance $\bar{d}_i$ to its $k$-nearest neighbors:
 $$
 \bar{d}_i = \frac{1}{k} \sum_{j=1}^k \left\| \mathbf{p}_i - \mathbf{p}_j \right\|
 $$
-
-Assuming Gaussian distribution of neighbor distances $\bar{d} \sim \mathcal{N}(\mu, \sigma^2)$, point $\mathbf{p}_i$ is classified as a valid inlier if:
-$$
-\bar{d}_i \le \mu + \alpha \cdot \sigma
-$$
-where $\alpha$ is typically chosen in the range $[1.0, 2.5]$.
+Point $\mathbf{p}_i$ is kept as a valid inlier if $\bar{d}_i \le \mu + \alpha \cdot \sigma$.
 
 ---
 
-### 2.3 Surface Normal & Curvature Estimation via Principal Component Analysis (PCA)
+### 3.3 Surface Normal & Curvature Estimation via Principal Component Analysis (PCA)
 
-To perform Point-to-Plane ICP or feature-based SLAM, local surface normals are estimated from the covariance matrix $\mathbf{C}$ of the $k$-nearest neighborhood $\mathcal{N}(\mathbf{p}_i)$:
-
-$$
-\mathbf{C} = \frac{1}{k} \sum_{\mathbf{q}_j \in \mathcal{N}(\mathbf{p}_i)} (\mathbf{q}_j - \bar{\mathbf{p}})(\mathbf{q}_j - \bar{\mathbf{p}})^T, \qquad \bar{\mathbf{p}} = \frac{1}{k}\sum \mathbf{q}_j
-$$
-
-Performing **Eigenvalue Decomposition** on $\mathbf{C} \in \mathbb{R}^{3 \times 3}$:
+From the neighborhood covariance matrix $\mathbf{C} = \frac{1}{k} \sum (\mathbf{q}_j - \bar{\mathbf{p}})(\mathbf{q}_j - \bar{\mathbf{p}})^T$:
 $$
 \mathbf{C} \mathbf{v}_m = \lambda_m \mathbf{v}_m \qquad (\lambda_0 \le \lambda_1 \le \lambda_2)
 $$
-1. The **Surface Normal Vector** $\mathbf{n}_i$ corresponds to the eigenvector $\mathbf{v}_0$ associated with the minimum eigenvalue $\lambda_0$.
-2. The **Local Curvature Surface Roughness** $\kappa_i$ is evaluated as:
-$$
-\kappa_i = \frac{\lambda_0}{\lambda_0 + \lambda_1 + \lambda_2}
-$$
-- $\kappa_i \approx 0 \implies$ Planar surface (walls, floors, roads).
-- $\kappa_i \gg 0 \implies$ Sharp edge or corner feature (pillars, curbs, building corners).
+1. **Surface Normal Vector**: $\mathbf{n}_i = \mathbf{v}_0$ (eigenvector of minimum eigenvalue $\lambda_0$).
+2. **Local Curvature Surface Roughness**: $\kappa_i = \frac{\lambda_0}{\lambda_0 + \lambda_1 + \lambda_2}$.
 
 ---
 
-## 3. The Multi-Paradigm Spatial Mapping Universe
-
-Robots represent physical space using different mathematical structures depending on computational constraints and degrees of freedom:
+## 4. Multi-Paradigm Spatial Mapping Algorithms
 
 ```text
 ┌─────────────────────────┬────────────────────────────┬─────────────────────────────┐
@@ -137,180 +255,33 @@ Robots represent physical space using different mathematical structures dependin
 └─────────────────────────┴────────────────────────────┴─────────────────────────────┘
 ```
 
----
-
-### 3.1 2D Occupancy Grid Mapping (OGM) & Log-Odds Formulation
-
-Discretizes continuous 2D space into regular grid cells $m_i$. Cell state is modeled using the **Log-Odds** Bayesian update:
-
-$$
-l_t(m_i) = l_{t-1}(m_i) + \text{inv\_sensor}(m_i, \mathbf{z}_t) - l_0
-$$
-
-Where ray traversal is calculated via **Bresenham's Line Algorithm** to mark traversed cells as $l_{\text{free}} < 0$ and the final obstacle cell as $l_{\text{occ}} > 0$.
+- **2D Occupancy Grid (OGM)**: $l_t(m_i) = l_{t-1}(m_i) + \text{inv\_sensor}(m_i, \mathbf{z}_t) - l_0$.
+- **3D OctoMap**: Hierarchical 8-child octree tree with dynamic memory node pruning.
+- **TSDF**: Metric distance to surface $D(\mathbf{x}) = \text{sign}(\mathbf{x}) \cdot \min \|\mathbf{x} - \mathbf{p}\|$ for continuous GPU fusion.
+- **NDT Grid**: Converts point sets into smooth Gaussian probability density manifolds $\mathcal{N}(\boldsymbol{\mu}_i, \mathbf{\Sigma}_i)$.
 
 ---
 
-### 3.2 3D OctoMap: Hierarchical Octree Voxel Mapping
+## 5. Grand Taxonomy of SLAM Algorithms
 
-For 3D space, storing a dense 3D matrix $[1000 \times 1000 \times 1000]$ would require **1 GB of RAM** per map layer. **OctoMap** solves this via recursive hierarchical 8-child octree decomposition:
-
-1. A parent node divides space into $2 \times 2 \times 2 = 8$ sub-octants.
-2. If all 8 children have identical occupancy states (e.g. all empty space), the children are pruned and collapsed into the single parent node.
-3. Probability clamping prevents certainty saturation:
-$$
-l(n) = \max\left(l_{\min}, \min\left(l_{\max}, l(n)\right)\right)
-$$
-*Result*: Memory footprint is compressed by up to **90–95%**, enabling full-scale 3D UAV exploration.
+1. **Filter-Based SLAM**: EKF-SLAM ($O(K^2)$), FastSLAM 2.0 (Rao-Blackwellized $O(M \log K)$), Gmapping.
+2. **Graph-Based SLAM**: Pose-Graph SLAM ($\min \sum \mathbf{e}_{ij}^T \mathbf{\Omega}_{ij} \mathbf{e}_{ij}$), Google Cartographer (Submaps + Branch & Bound loop closures).
+3. **Visual SLAM**: ORB-SLAM3 (ORB Feature Tracking + Local BA), DSO (Direct Photometric Error Optimization).
+4. **3D LiDAR SLAM**: LOAM (Edge/Planar segmentation), LIO-SAM & Fast-LIO2 (LiDAR-Inertial tight coupling with `ik-d tree` at $100+ \text{ Hz}$).
 
 ---
 
-### 3.3 Truncated Signed Distance Fields (TSDF) & ESDF
-
-Instead of discrete occupancy probabilities, a **TSDF** stores the metric signed distance $D(\mathbf{x})$ from voxel center $\mathbf{x}$ to the nearest physical obstacle surface:
-
-$$
-D(\mathbf{x}) = \text{sign}(\mathbf{x}) \cdot \min_{\mathbf{p} \in \mathcal{S}} \|\mathbf{x} - \mathbf{p}\|
-$$
-- $D(\mathbf{x}) > 0$: Free space outside obstacle.
-- $D(\mathbf{x}) = 0$: The exact zero-crossing physical isosurface (reconstructed via *Marching Cubes*).
-- $D(\mathbf{x}) < 0$: Inside solid obstacle volume.
-
-Distances are truncated within $[-\delta_{\text{trunc}}, +\delta_{\text{trunc}}]$ and fused continuously across frames via running weighted averages:
-$$
-D_t(\mathbf{x}) = \frac{W_{t-1}(\mathbf{x}) D_{t-1}(\mathbf{x}) + w_t D_{\text{meas}}(\mathbf{x})}{W_{t-1}(\mathbf{x}) + w_t}
-$$
-
----
-
-### 3.4 Normal Distributions Transform (NDT) 2D/3D Mapping
-
-Rather than storing individual points or binary occupancy, **NDT** subdivides space into cells and models the collection of points in each cell as a continuous local Gaussian probability distribution $\mathcal{N}(\boldsymbol{\mu}_i, \mathbf{\Sigma}_i)$:
-
-$$
-\boldsymbol{\mu}_i = \frac{1}{M}\sum_{k=1}^M \mathbf{p}_k, \qquad \mathbf{\Sigma}_i = \frac{1}{M-1}\sum_{k=1}^M (\mathbf{p}_k - \boldsymbol{\mu}_i)(\mathbf{p}_k - \boldsymbol{\mu}_i)^T
-$$
-
-The probability of finding surface matter at arbitrary coordinate $\mathbf{x}$ inside cell $i$ is:
-$$
-p(\mathbf{x}) = \frac{1}{(2\pi)^{d/2} \sqrt{\det(\mathbf{\Sigma}_i)}} \exp\left(-\frac{1}{2}(\mathbf{x} - \boldsymbol{\mu}_i)^T \mathbf{\Sigma}_i^{-1} (\mathbf{x} - \boldsymbol{\mu}_i)\right)
-$$
-*Advantage*: Converts discrete noisy points into a smooth, differentiable probability manifold, enabling ultra-fast Newton-method scan matching for autonomous cars (*Autoware / NDT Matching*).
-
----
-
-## 4. The Grand Taxonomy of SLAM Algorithms & How They Function
-
-```text
-                                  THE SLAM FAMILY
-                                         │
-       ┌───────────────────┬─────────────┴──────────────┬──────────────────┐
-       ↓                   ↓                            ↓                  ↓
-FILTER-BASED SLAM    GRAPH-BASED SLAM             VISUAL SLAM (V-SLAM)  3D LIDAR SLAM
-- EKF-SLAM           - Pose-Graph Optimization    - Feature: ORB-SLAM3  - LOAM
-- FastSLAM 1.0/2.0   - Factor Graphs (GTSAM)      - Direct: DSO / SVO   - LIO-SAM
-- Gmapping           - Cartographer (Google)      - RGB-D Dense Fusion  - Fast-LIO2
-```
-
----
-
-### 4.1 Filter-Based SLAM: EKF-SLAM & FastSLAM 2.0
-
-#### 1. EKF-SLAM (Extended Kalman Filter SLAM)
-- **Concept**: Concatenates robot pose $\mathbf{x}_R = [x, y, \theta]^T$ and all $K$ landmark coordinates $\mathbf{m}_k = [m_{k,x}, m_{k,y}]^T$ into a giant state vector $\mathbf{x} \in \mathbb{R}^{3 + 2K}$:
-$$
-\mathbf{x} = \begin{bmatrix} x_R & y_R & \theta_R & m_{1,x} & m_{1,y} & \dots & m_{K,x} & m_{K,y} \end{bmatrix}^T
-$$
-- **Covariance Size**: $\mathbf{\Sigma} \in \mathbb{R}^{(3+2K) \times (3+2K)}$. Off-diagonal submatrices represent landmark-to-landmark correlations.
-- **Limitation**: Matrix updates take $O(K^2)$ time per step. Impractical for maps with $> 1,000$ landmarks.
-
-#### 2. FastSLAM 2.0 (Rao-Blackwellized Particle Filter)
-- **Concept**: Decomposes the full posterior using Rao-Blackwellization:
-$$
-p(\mathbf{x}_{1:t}, \mathbf{m} \mid \mathbf{z}_{1:t}, \mathbf{u}_{1:t}) = p(\mathbf{x}_{1:t} \mid \mathbf{z}_{1:t}, \mathbf{u}_{1:t}) \prod_{k=1}^K p(\mathbf{m}_k \mid \mathbf{x}_{1:t}, \mathbf{z}_{1:t})
-$$
-- Each particle maintains the robot path $\mathbf{x}_{1:t}^{[m]}$ plus $K$ small, independent $2 \times 2$ Kalman filters (one per landmark).
-- **Computational Complexity**: Reduced to $O(M \log K)$ using balanced $k$-d trees.
-
-#### 3. OpenSLAM Gmapping (2D LiDAR Grid FastSLAM)
-- Uses scan matching to construct a highly informed proposal distribution before particle sampling, drastically reducing particle count $M$ from thousands down to $30 \approx 50$.
-
----
-
-### 4.2 Graph-Based SLAM & Factor Graphs (Modern Industry Standard)
-
-Modern production SLAM decouples the system into two threads: **Frontend (Feature tracking & loop closure)** and **Backend (Nonlinear graph optimization)**:
-
-1. **Nodes $\mathbf{x}_i \in \text{SE}(2) / \text{SE}(3)$**: Discrete robot poses along the trajectory.
-2. **Binary Edges $(i, j)$**: Relative motion constraints with information matrix $\mathbf{\Omega}_{ij} = \mathbf{\Sigma}_{ij}^{-1}$.
-3. **Loop Closures**: When the robot re-enters a previously visited zone, scan matching creates cross-trajectory constraint edges $(i_{\text{current}}, j_{\text{past}})$.
-
-#### Non-Linear Graph Optimization Objective
-$$
-\min_{\mathbf{x}} \sum_{(i,j) \in \mathcal{E}} \mathbf{e}_{ij}(\mathbf{x}_i, \mathbf{x}_j)^T \mathbf{\Omega}_{ij} \mathbf{e}_{ij}(\mathbf{x}_i, \mathbf{x}_j)
-$$
-
-Solved via sparse Cholesky factorization in **GTSAM**, **g2o**, or **Ceres Solver** via Levenberg-Marquardt:
-$$
-(\mathbf{J}^T \mathbf{\Omega} \mathbf{J} + \lambda \mathbf{D}) \Delta \mathbf{x}^* = -\mathbf{J}^T \mathbf{\Omega} \mathbf{e}
-$$
-*Result*: Eliminates all accumulated odometry drift upon closing a loop, snapping the entire global map into perfect consistency.
-
-#### 4. Google Cartographer (2D/3D Real-Time Graph SLAM)
-- **Local SLAM**: Inserts scans into consecutive overlapping **Submaps** using Ceres non-linear scan matching.
-- **Global SLAM**: Runs multi-resolution Branch-and-Bound scan matching in the background to detect global loop closures against all existing submaps.
-
----
-
-### 4.3 Visual SLAM (V-SLAM): Feature-Based vs Direct Methods
-
-Visual SLAM utilizes cameras as passive, high-information density exteroceptive sensors:
-
-#### 1. ORB-SLAM3 (Feature-Based Visual-Inertial SLAM)
-- **Frontend**: Extracts fast, rotation-invariant ORB (Oriented FAST and Rotated BRIEF) keypoints across image octaves.
-- **Local Mapping**: Performs local **Bundle Adjustment (BA)** minimizing photometric reprojection error:
-$$
-\min_{\mathbf{T}_i, \mathbf{X}_j} \sum_{i} \sum_{j} \rho\left( \left\| \mathbf{x}_{ij} - \pi(\mathbf{K} \mathbf{T}_i \mathbf{X}_j) \right\|_{\mathbf{\Sigma}}^2 \right)
-$$
-- **Loop Closing & Map Merging**: Uses DBoW2 bag-of-words visual place recognition to detect loops and seamlessly merge disconnected sub-maps.
-
-#### 2. Direct Sparse Odometry (DSO) & SVO
-- Bypasses keypoint feature detection entirely.
-- Optimizes directly over raw pixel intensity gradient differences (**Photometric Error**):
-$$
-E_{\text{photo}} = \sum_{\mathbf{p} \in \Omega} \left| I_1(\mathbf{p}) - I_2\left(\pi\left(\mathbf{T}_{21} \pi^{-1}(\mathbf{p}, d_{\mathbf{p}})\right)\right) \right|
-$$
-*Advantage*: Robust in low-texture environments where feature detectors find zero keypoints.
-
----
-
-### 4.4 3D LiDAR SLAM: LOAM, LIO-SAM & Fast-LIO2
-
-For 3D autonomous vehicles, aerial drones, and quadruped robots:
-
-#### 1. LOAM (LiDAR Odometry and Mapping)
-- Segregates 3D laser points into:
-  - **Edge Points (High Curvature $\kappa_i$)**: Matched against nearest line segments via point-to-line distance minimization.
-  - **Planar Points (Low Curvature $\kappa_i$)**: Matched against nearest surface patches via point-to-plane distance minimization.
-- Operates two threads: Fast Odometry ($10 \text{ Hz}$) and High-Precision Mapping ($1 \text{ Hz}$).
-
-#### 2. LIO-SAM & Fast-LIO2 (LiDAR-Inertial Tight Coupling)
-- Tightly couples raw 3D LiDAR point clouds with high-frequency 6-axis IMU preintegration on a factor graph.
-- **Fast-LIO2**: Uses an incremental $k$-d tree (**ik-d tree**) supporting dynamic point insertion and deletion in logarithmic time $O(\log N)$, achieving $100+ \text{ Hz}$ state estimation on quadrotor drones without scan-matching feature extraction.
-
----
-
-## 5. Summary & Universal Learning Path Roadmap
+## 6. Summary & Universal Learning Path Roadmap
 
 | Milestone | Stage | Algorithmic Paradigm | Primary Mathematical Operator | RoboAtlas Lab |
 |---|---|---|---|---|
 | **M1** | Vector Foundations | Coordinate Frames & Metrics | $\mathbf{p}^W = \mathbf{T}_B^W \mathbf{p}^B$ | [Transform Sandbox](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
 | **M2** | Kinematics | Differential-Drive Unicycle | $R_{\text{ICC}} = \frac{L}{2}\frac{v_R + v_L}{v_R - v_L}$ | [Kinematics Lab](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
 | **M3** | Sensor Perception | LiDAR ToF & RGB-D Pinhole | $X = \frac{(u - c_x)Z}{f_x}, \quad d = \frac{c\Delta t}{2}$ | [LiDAR Raycasting](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
-| **M4** | Point Cloud Proc. | Voxel Grid & PCA Normals | $\mathbf{C}\mathbf{v}_0 = \lambda_0 \mathbf{v}_0, \quad \kappa = \frac{\lambda_0}{\sum \lambda}$ | [Point Cloud Lab](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
-| **M5** | State Estimation | EKF & Monte Carlo MCL | $w_t^{[m]} \propto p(\mathbf{z}_t \mid \mathbf{x}_t^{[m]})$ | [MCL Particle Filter](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
-| **M6** | Spatial Mapping | Log-Odds OGM & Distance EDT | $l_t(m_i) = l_{t-1} + \text{inv}(m_i) - l_0$ | [Occupancy Mapping](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
-| **M7** | Scan Matching | SVD Analytical Closed-Form ICP | $\mathbf{H} = \mathbf{U}\mathbf{\Sigma}\mathbf{V}^T \implies \mathbf{R}^* = \mathbf{V}\mathbf{U}^T$ | [Slam Simulator](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
-| **M8** | Graph Optimization | Pose-Graph SLAM & Loop Closures | $\min \sum \mathbf{e}_{ij}^T \mathbf{\Omega}_{ij} \mathbf{e}_{ij}$ | [Pose Graph SLAM](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
-| **M9** | Path Planning | $A^*$ Heuristic & $RRT^*$ Rewiring | $f(n) = g(n) + h(n)$ | [A* Search Sandbox](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
-| **M10** | Motion Control | Pure Pursuit & Stanley Steering | $\kappa = \frac{2\sin\alpha}{L_d}, \quad \delta = \arctan(\kappa L)$ | [Pure Pursuit Lab](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
+| **M4** | Visual V-SLAM | Stereo Disparity & Triangulation | $Z = \frac{f \cdot B}{d}, \quad \mathbf{x}_2^T \mathbf{E} \mathbf{x}_1 = 0$ | [Transform Chaining](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
+| **M5** | Point Cloud Proc. | Voxel Grid & PCA Normals | $\mathbf{C}\mathbf{v}_0 = \lambda_0 \mathbf{v}_0, \quad \kappa = \frac{\lambda_0}{\sum \lambda}$ | [Point Cloud Lab](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
+| **M6** | State Estimation | EKF & Monte Carlo MCL | $w_t^{[m]} \propto p(\mathbf{z}_t \mid \mathbf{x}_t^{[m]})$ | [MCL Particle Filter](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
+| **M7** | Spatial Mapping | Log-Odds OGM & Distance EDT | $l_t(m_i) = l_{t-1} + \text{inv}(m_i) - l_0$ | [Occupancy Mapping](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
+| **M8** | Scan Matching | SVD Analytical Closed-Form ICP | $\mathbf{H} = \mathbf{U}\mathbf{\Sigma}\mathbf{V}^T \implies \mathbf{R}^* = \mathbf{V}\mathbf{U}^T$ | [Slam Simulator](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
+| **M9** | Graph Optimization | Pose-Graph SLAM & Loop Closures | $\min \sum \mathbf{e}_{ij}^T \mathbf{\Omega}_{ij} \mathbf{e}_{ij}$ | [Pose Graph SLAM](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
+| **M10** | Path Planning & Control | $A^*$ Heuristic & Pure Pursuit | $f(n) = g(n) + h(n), \quad \kappa = \frac{2\sin\alpha}{L_d}$ | [A* Search Sandbox](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
