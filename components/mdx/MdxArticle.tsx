@@ -36,17 +36,129 @@ import { ArmInverseKinematicsSimulator } from '@/components/simulation/ArmInvers
 import { JacobianSingularitySimulator } from '@/components/simulation/JacobianSingularitySimulator';
 import { StateSpaceSimulator } from '@/components/simulation/StateSpaceSimulator';
 import { NumericalDiscretizationSimulator } from '@/components/simulation/NumericalDiscretizationSimulator';
-import { ConceptCheck } from '@/components/educational/ConceptCheck';
+import { RobotClassificationExplorer } from '@/components/simulation/RobotClassificationExplorer';
+import { ConceptCheck, QuizOption } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
-import { FormulaExplainer } from '@/components/mathematics/FormulaExplainer';
-import { MathCodeBridge } from '@/components/educational/MathCodeBridge';
-import { AcademicReferences } from '@/components/educational/AcademicReferences';
-import { LessonOrientation } from '@/components/layout/LessonOrientation';
-import { LessonNavigation } from '@/components/layout/LessonNavigation';
+import { CodeBlock } from '@/components/mdx/CodeBlock';
 
 interface MdxArticleProps {
   content: string;
   className?: string;
+}
+
+function unescapeString(str: string): string {
+  return str
+    .replace(/\\"/g, '"')
+    .replace(/\\'/g, "'")
+    .replace(/\\`/g, '`')
+    .replace(/\\\\/g, '\\')
+    .replace(/\\n/g, '\n');
+}
+
+function parseConceptCheck(block: string, keyIndex: number): React.ReactNode | null {
+  const idMatch = block.match(/id\s*=\s*["']([^"']+)["']/);
+  const id = idMatch ? idMatch[1] : `quiz-${keyIndex}`;
+
+  let question = '';
+  const questionMatch = block.match(
+    /question\s*=\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|\{`((?:[^`\\]|\\.)*)`\}|\{"((?:[^"\\]|\\.)*)"\})/
+  );
+  if (questionMatch) {
+    question = (questionMatch[1] ?? questionMatch[2] ?? questionMatch[3] ?? questionMatch[4] ?? '').trim();
+    question = unescapeString(question);
+  } else {
+    const qIndex = block.indexOf('question="');
+    if (qIndex !== -1) {
+      const rest = block.slice(qIndex + 10);
+      const endQ = rest.indexOf('"\n') !== -1 ? rest.indexOf('"\n') : rest.indexOf('"');
+      if (endQ !== -1) {
+        question = unescapeString(rest.slice(0, endQ).trim());
+      }
+    }
+  }
+
+  let hint: string | undefined = undefined;
+  const hintMatch = block.match(
+    /hint\s*=\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|\{`((?:[^`\\]|\\.)*)`\}|\{"((?:[^"\\]|\\.)*)"\})/
+  );
+  if (hintMatch) {
+    const rawHint = (hintMatch[1] ?? hintMatch[2] ?? hintMatch[3] ?? hintMatch[4] ?? '').trim();
+    if (rawHint) {
+      hint = unescapeString(rawHint);
+    }
+  }
+
+  const options: QuizOption[] = [];
+  const optionsStartIdx = block.indexOf('options=');
+  if (optionsStartIdx !== -1) {
+    const optionsChunk = block.slice(optionsStartIdx);
+    
+    // Find array contents between options={[ and ]}
+    const arrayMatch = optionsChunk.match(/options\s*=\s*\{\[\s*([\s\S]*?)\s*\]\}/);
+    const targetBlock = arrayMatch ? arrayMatch[1] : optionsChunk;
+
+    const itemRegex = /\{([\s\S]*?)\}/g;
+    let itemMatch: RegExpExecArray | null;
+    while ((itemMatch = itemRegex.exec(targetBlock)) !== null) {
+      const itemBody = itemMatch[1];
+      const itemIdMatch = itemBody.match(/id\s*:\s*["']([^"']+)["']/);
+      const isCorrectMatch = itemBody.match(/isCorrect\s*:\s*(true|false)/i);
+      
+      const itemTextMatch = itemBody.match(
+        /text\s*:\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`)/
+      );
+      
+      const explMatch = itemBody.match(
+        /explanation\s*:\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`)/
+      );
+
+      if (itemIdMatch) {
+        const optId = itemIdMatch[1];
+        let optText = '';
+        if (itemTextMatch) {
+          optText = (itemTextMatch[1] ?? itemTextMatch[2] ?? itemTextMatch[3] ?? '').trim();
+        } else {
+          const tIdx = itemBody.indexOf('text:');
+          if (tIdx !== -1) {
+            const rawT = itemBody.slice(tIdx + 5).trim();
+            const firstChar = rawT[0];
+            if (firstChar === '"' || firstChar === "'" || firstChar === '`') {
+              const endQuote = rawT.indexOf(firstChar, 1);
+              if (endQuote !== -1) optText = rawT.slice(1, endQuote).trim();
+            }
+          }
+        }
+
+        const isCorrect = isCorrectMatch ? isCorrectMatch[1].toLowerCase() === 'true' : false;
+
+        let explanation = '';
+        if (explMatch) {
+          explanation = (explMatch[1] ?? explMatch[2] ?? explMatch[3] ?? '').trim();
+        }
+
+        options.push({
+          id: optId,
+          text: unescapeString(optText),
+          isCorrect,
+          explanation: unescapeString(explanation),
+        });
+      }
+    }
+  }
+
+  if (!question || options.length === 0) {
+    return null;
+  }
+
+  return (
+    <ConceptCheck
+      key={`comp-cc-${id}-${keyIndex}`}
+      id={id}
+      question={question}
+      options={options}
+      hint={hint}
+    />
+  );
 }
 
 function parseInlineFormatting(text: string): React.ReactNode[] {
@@ -129,6 +241,28 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
           <div key={`mathblock-${i}`} className="my-4">
             <MathBlock latex={mathBlock} displayMode={true} />
           </div>
+        );
+        continue;
+      }
+
+      // Fenced Code Blocks (```ts, ```python, ```text, etc.)
+      if (line.startsWith('```')) {
+        const language = line.slice(3).trim() || 'text';
+        i++;
+        const codeLines: string[] = [];
+        while (i < rawLines.length && !rawLines[i].trim().startsWith('```')) {
+          codeLines.push(rawLines[i]);
+          i++;
+        }
+        if (i < rawLines.length) {
+          i++; // Skip closing ```
+        }
+        nodes.push(
+          <CodeBlock
+            key={`codeblock-${i}`}
+            code={codeLines.join('\n')}
+            language={language}
+          />
         );
         continue;
       }
@@ -304,25 +438,79 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
         i++;
         continue;
       }
+      if (line.startsWith('<RobotClassificationExplorer')) {
+        nodes.push(<RobotClassificationExplorer key={`comp-rce-${i}`} />);
+        i++;
+        continue;
+      }
+
+      // Concept Check / Quiz Component
+      if (line.startsWith('<ConceptCheck')) {
+        let conceptBlock = line;
+        while (
+          i + 1 < rawLines.length &&
+          !rawLines[i].includes('/>') &&
+          !rawLines[i].includes('</ConceptCheck>')
+        ) {
+          i++;
+          conceptBlock += '\n' + rawLines[i];
+        }
+        i++;
+
+        const checkNode = parseConceptCheck(conceptBlock, i);
+        if (checkNode) {
+          nodes.push(checkNode);
+        }
+        continue;
+      }
 
       // Video Embed Component
       if (line.startsWith('<VideoEmbed')) {
         let videoBlock = line;
-        while (i < rawLines.length && !rawLines[i].includes('/>')) {
+        while (
+          i + 1 < rawLines.length &&
+          !rawLines[i].includes('/>') &&
+          !rawLines[i].includes('</VideoEmbed>')
+        ) {
           i++;
           videoBlock += ' ' + rawLines[i];
         }
         i++;
         const titleMatch = videoBlock.match(/title="([^"]+)"/);
         const videoIdMatch = videoBlock.match(/videoId="([^"]+)"/);
+        const providerMatch = videoBlock.match(/provider="([^"]+)"/);
         nodes.push(
           <VideoEmbed
             key={`comp-video-${i}`}
             title={titleMatch ? titleMatch[1] : 'Video Demonstration'}
             videoId={videoIdMatch ? videoIdMatch[1] : '-nGlDsk1rS4'}
-            provider="youtube"
+            provider={(providerMatch ? providerMatch[1] : 'youtube') as 'youtube' | 'vimeo'}
           />
         );
+        continue;
+      }
+
+      // Markdown Images (![Alt](url))
+      const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+      if (imgMatch) {
+        const altText = imgMatch[1];
+        const src = imgMatch[2];
+        nodes.push(
+          <figure key={`img-${i}`} className="my-6 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/70 p-2 shadow-xl">
+            <img
+              src={src}
+              alt={altText}
+              className="w-full h-auto rounded-xl object-contain max-h-[520px] mx-auto"
+              loading="lazy"
+            />
+            {altText && (
+              <figcaption className="text-center text-xs font-mono text-slate-500 dark:text-slate-400 mt-2.5 pb-1">
+                📸 {altText}
+              </figcaption>
+            )}
+          </figure>
+        );
+        i++;
         continue;
       }
 

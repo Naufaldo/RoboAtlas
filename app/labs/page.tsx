@@ -48,11 +48,13 @@ import {
   Play,
   ArrowRight,
   BookOpen,
+  Route,
 } from 'lucide-react';
 
 interface LabItem {
   id: string;
   category: string;
+  paths?: string[];
   titleEn: string;
   titleId: string;
   descEn: string;
@@ -74,13 +76,14 @@ export default function LabsPage() {
     {
       id: 'transforms-2d',
       category: 'math',
+      paths: ['slam'],
       titleEn: '2D Homogeneous Transforms SE(2)',
       titleId: 'Transformasi Homogen 2D SE(2)',
       descEn: 'Translate and rotate coordinate frames with real-time matrix updates and LiDAR beam projection.',
       descId: 'Translasi dan rotasi kerangka koordinat dengan pembaruan matriks real-time dan proyeksi sinar LiDAR.',
       levelBadge: 'Level 2',
       icon: '📐',
-      lessonHref: '/learn/fundamentals/2d-geometry',
+      lessonHref: '/learn/geometry/coordinate-frames-and-transforms',
       component: <TransformSandbox />,
     },
     {
@@ -92,48 +95,52 @@ export default function LabsPage() {
       descId: 'Amati rotasi Roll, Pitch, Yaw, komposisi Tait-Bryan ZYX, dan fenomena Gimbal Lock.',
       levelBadge: 'Level 2',
       icon: '🌐',
-      lessonHref: '/learn/fundamentals/3d-geometry',
+      lessonHref: '/learn/geometry/3d-geometry',
       component: <SpatialRotation3D />,
     },
     {
       id: 'vector-explorer',
       category: 'math',
+      paths: ['slam', 'manipulation', 'control'],
       titleEn: '2D Vector Geometry & Pythagoras',
       titleId: 'Geometri Vektor 2D & Pythagoras',
       descEn: 'Interactive vector decomposition, Euclidean magnitude, and unit direction vectors.',
       descId: 'Dekomposisi vektor interaktif, magnitudo Euclidean, dan vektor arah satuan.',
       levelBadge: 'Level 1',
       icon: '🧭',
-      lessonHref: '/learn/fundamentals/mathematical-foundations',
+      lessonHref: '/learn/mathematics/vectors-and-coordinate-geometry',
       component: <VectorVisualizer />,
     },
     {
       id: 'dot-product',
       category: 'math',
+      paths: ['slam'],
       titleEn: 'Vector Dot Product & Alignment',
       titleId: 'Dot Product Vektor & Penyelarasan Arah',
       descEn: 'Understand projection, cosine similarity, and directional alignment between vectors.',
       descId: 'Pahami proyeksi, kesamaan kosinus, dan penyelarasan arah antar dua vektor.',
       levelBadge: 'Level 1',
       icon: '🔢',
-      lessonHref: '/learn/fundamentals/mathematical-foundations',
+      lessonHref: '/learn/mathematics/dot-product-and-projection',
       component: <DotProductExplorer />,
     },
     {
       id: 'kinematics-2d',
       category: 'kinematics',
+      paths: ['slam'],
       titleEn: 'Differential-Drive Unicycle Kinematics',
       titleId: 'Kinematika Unicycle Roda Diferensial',
       descEn: 'Adjust left and right wheel velocities to compute Instantaneous Center of Curvature (ICC).',
       descId: 'Atur kecepatan roda kiri dan kanan untuk menghitung Pusat Kurvatur Seketika (ICC).',
       levelBadge: 'Level 3',
       icon: '🚗',
-      lessonHref: '/learn/fundamentals/velocity-kinematics-2d',
+      lessonHref: '/learn/kinematics/differential-drive-kinematics',
       component: <KinematicsSimulator />,
     },
     {
       id: 'a-star-planning',
       category: 'planning',
+      paths: ['slam'],
       titleEn: 'A* & Dijkstra Grid Path Search',
       titleId: 'Pencarian Jalur Grid A* & Dijkstra',
       descEn: 'Draw custom obstacle walls, choose heuristic metrics, and step through the Open Set search frontier.',
@@ -146,6 +153,7 @@ export default function LabsPage() {
     {
       id: 'control-tracking',
       category: 'control',
+      paths: ['slam', 'control'],
       titleEn: 'Pure Pursuit & Stanley Steering Control',
       titleId: 'Kendali Kemudi Pure Pursuit & Stanley',
       descEn: 'Compare geometric lookahead steering with Stanley front-axle non-linear error feedback.',
@@ -158,6 +166,7 @@ export default function LabsPage() {
     {
       id: 'mcl-localization',
       category: 'estimation',
+      paths: ['slam'],
       titleEn: 'Monte Carlo Localization (MCL) Particle Filter',
       titleId: 'Filter Partikel Monte Carlo Localization (MCL)',
       descEn: 'Drive the robot and watch probabilistic particle clouds converge using beacon measurements.',
@@ -170,6 +179,7 @@ export default function LabsPage() {
     {
       id: 'occupancy-mapping',
       category: 'mapping',
+      paths: ['slam'],
       titleEn: '360° LiDAR Log-Odds Occupancy Mapping',
       titleId: 'Pemetaan Okupansi Log-Odds LiDAR 360°',
       descEn: 'Raycast simulated laser beams and update grid cells with recursive Bayesian log-odds.',
@@ -182,13 +192,14 @@ export default function LabsPage() {
     {
       id: 'sensor-noise',
       category: 'sensors',
+      paths: ['slam'],
       titleEn: 'Gaussian Sensor Noise & Measurement Model',
       titleId: 'Model Pengukuran & Derau Gaussian Sensor',
       descEn: 'Observe Gaussian probability density function p(z|x) and noisy sample histograms.',
       descId: 'Amati fungsi kerapatan probabilitas Gaussian p(z|x) dan histogram sampel pembacaan.',
       levelBadge: 'Level 5',
       icon: '📊',
-      lessonHref: '/learn/sensors/sensor-fundamentals',
+      lessonHref: '/learn/sensors/sensor-noise-and-uncertainty',
       component: <SensorNoiseSimulator />,
     },
     {
@@ -206,6 +217,7 @@ export default function LabsPage() {
     {
       id: 'pid-tuning',
       category: 'control',
+      paths: ['control'],
       titleEn: 'PID Feedback Control & Transient Step Response',
       titleId: 'Kendali Umpan Balik PID & Respon Transien',
       descEn: 'Tune proportional, integral, and derivative gains with real-time step response graphs.',
@@ -218,18 +230,20 @@ export default function LabsPage() {
     {
       id: 'arm-ik',
       category: 'manipulation',
+      paths: ['manipulation'],
       titleEn: '2-DOF Robotic Arm Analytical Inverse Kinematics',
       titleId: 'Kinematika Invers Analitik Lengan Robot 2-DOF',
       descEn: 'Drag the end-effector target in workspace to solve analytical joint angles (θ₁, θ₂).',
       descId: 'Geser target ujung lengan di ruang kerja untuk menyelesaikan sudut sendi analitik (θ₁, θ₂).',
       levelBadge: 'Level 14',
       icon: '🦾',
-      lessonHref: '/learn/manipulation/forward-inverse-kinematics',
+      lessonHref: '/learn/manipulation/2dof-inverse-kinematics',
       component: <ArmKinematicsSimulator />,
     },
     {
       id: 'icp-slam',
       category: 'slam',
+      paths: ['slam'],
       titleEn: 'Iterative Closest Point (ICP) Point Cloud SLAM',
       titleId: 'SLAM Pencocokan Pindaian ICP',
       descEn: 'Align 2D laser scans iteratively using SVD closed-form rotation and translation estimation.',
@@ -242,6 +256,7 @@ export default function LabsPage() {
     {
       id: 'cspace-inflation',
       category: 'math',
+      paths: ['slam'],
       titleEn: 'Configuration Space & Minkowski Obstacle Inflation',
       titleId: 'Ruang Konfigurasi & Inflasi Rintangan Minkowski',
       descEn: 'Observe obstacle expansion by robot radius r for point-robot planning simplification.',
@@ -254,6 +269,7 @@ export default function LabsPage() {
     {
       id: 'wheel-odometry',
       category: 'sensors',
+      paths: ['slam'],
       titleEn: 'Wheel Odometry Drift & Dead Reckoning',
       titleId: 'Akumulasi Galat Drift Odometri Roda',
       descEn: 'Simulate systematic wheel radius errors and observe lateral and heading drift divergence.',
@@ -266,6 +282,7 @@ export default function LabsPage() {
     {
       id: 'bayesian-filter',
       category: 'estimation',
+      paths: ['slam'],
       titleEn: '1D Recursive Bayesian & Kalman Predict-Correct',
       titleId: 'Prediksi-Koreksi Filter Bayesian & Kalman 1D',
       descEn: 'Execute motion prediction and sensor update steps with live Gaussian belief curves.',
@@ -278,6 +295,7 @@ export default function LabsPage() {
     {
       id: 'transform-composition',
       category: 'math',
+      paths: ['manipulation'],
       titleEn: 'Transform Composition & Matrix Non-Commutativity',
       titleId: 'Komposisi Transformasi & Sifat Non-Komutatif',
       descEn: 'Compare final poses between T1*T2 vs T2*T1 to understand spatial frame chaining.',
@@ -290,6 +308,7 @@ export default function LabsPage() {
     {
       id: 'holonomic-constraints',
       category: 'kinematics',
+      paths: ['slam'],
       titleEn: 'Holonomic vs Non-Holonomic Motion Constraints',
       titleId: 'Kendala Gerak Holonomik vs Non-Holonomik',
       descEn: 'Experience why differential unicycles cannot slide sideways due to Pfaffian constraints.',
@@ -302,6 +321,7 @@ export default function LabsPage() {
     {
       id: 'multi-agent-swarm',
       category: 'advanced',
+      paths: ['control'],
       titleEn: 'Multi-Agent Graph Laplacian Swarm Consensus',
       titleId: 'Konsensus Graf Laplacian Kawanan Multi-Agent',
       descEn: 'Explore decentralized flocking, leader-follower formations, and algebraic connectivity.',
@@ -314,6 +334,7 @@ export default function LabsPage() {
     {
       id: 'bayesian-room',
       category: 'math',
+      paths: ['slam'],
       titleEn: 'Bayesian Room Localization & Prior-Posterior Lab (M10)',
       titleId: 'Lokalisasi Ruangan Bayesian & Pembaharuan Keyakinan (M10)',
       descEn: 'Observe how noisy sensor measurements update posterior probability beliefs via Bayes Rule.',
@@ -326,6 +347,7 @@ export default function LabsPage() {
     {
       id: 'tracking-error-geometry',
       category: 'control',
+      paths: ['slam', 'control'],
       titleEn: 'Path Tracking Error Geometry (e_lat & e_θ) (M14)',
       titleId: 'Geometri Galat Pelacakan Jalur (e_lat & e_θ) (M14)',
       descEn: 'Calculate signed cross-track lateral error and heading alignment error with Frenet-Serret framing.',
@@ -338,6 +360,7 @@ export default function LabsPage() {
     {
       id: 'arm-2dof-fk',
       category: 'manipulation',
+      paths: ['manipulation'],
       titleEn: '2-DOF Planar Arm Forward Kinematics & Workspace (M18)',
       titleId: 'Kinematika Maju Lengan 2-DOF & Batas Ruang Kerja (M18)',
       descEn: 'Calculate end-effector Cartesian coordinates and sweep reachable workspace annulus limits.',
@@ -350,6 +373,7 @@ export default function LabsPage() {
     {
       id: 'lidar-raycast',
       category: 'sensors',
+      paths: ['slam'],
       titleEn: '2D LiDAR Raycasting & Point Cloud Extraction (M21)',
       titleId: 'Raycasting LiDAR 2D & Ekstraksi Point Cloud (M21)',
       descEn: 'Emit 360° laser rays intersecting obstacles and extract 2D Cartesian reflection point clouds.',
@@ -362,6 +386,7 @@ export default function LabsPage() {
     {
       id: 'pure-pursuit',
       category: 'control',
+      paths: ['slam', 'control'],
       titleEn: 'Pure Pursuit Geometric Path Tracking Lab (M13)',
       titleId: 'Laboratorium Pelacakan Jalur Pure Pursuit (M13)',
       descEn: 'Tune lookahead distance L_d to balance aggressive heading tracking vs smooth cornering.',
@@ -374,6 +399,7 @@ export default function LabsPage() {
     {
       id: 'astar-dijkstra',
       category: 'planning',
+      paths: ['slam'],
       titleEn: 'A* vs Dijkstra Search & Heuristics Lab (M15)',
       titleId: 'Laboratorium Komparasi A* vs Dijkstra (M15)',
       descEn: 'Compare Dijkstra uniform wavefronts against Euclidean and Manhattan goal-biased search cones.',
@@ -398,6 +424,7 @@ export default function LabsPage() {
     {
       id: 'arm-2dof-ik',
       category: 'manipulation',
+      paths: ['manipulation'],
       titleEn: '2-DOF Planar Arm Inverse Kinematics Lab (M19)',
       titleId: 'Laboratorium Kinematika Invers (IK) Lengan 2-DOF (M19)',
       descEn: 'Drag target reticle to solve joint motor angles via Law of Cosines (Elbow-Up vs Elbow-Down).',
@@ -410,6 +437,7 @@ export default function LabsPage() {
     {
       id: 'jacobian-singularity',
       category: 'manipulation',
+      paths: ['manipulation'],
       titleEn: 'Jacobian Matrix & Velocity Ellipse Lab (M20)',
       titleId: 'Laboratorium Matriks Jacobian & Elips Kecepatan (M20)',
       descEn: 'Observe velocity manipulability ellipse collapse as det(J) vanishes into a kinematic singularity.',
@@ -422,6 +450,7 @@ export default function LabsPage() {
     {
       id: 'state-space',
       category: 'control',
+      paths: ['control'],
       titleEn: 'State-Space Dynamics & Phase Plane Lab (M27)',
       titleId: 'Laboratorium Ruang Status & Diagram Fase (M27)',
       descEn: 'Simulate mass-spring-damper phase portrait trajectory converging under full state feedback.',
@@ -434,6 +463,7 @@ export default function LabsPage() {
     {
       id: 'discrete-simulation',
       category: 'control',
+      paths: ['control'],
       titleEn: 'Discrete Simulation: Euler vs RK4 Lab (M28)',
       titleId: 'Laboratorium Simulasi Diskret: Euler vs RK4 (M28)',
       descEn: 'Compare numerical drift and energy divergence across Euler, Midpoint, and RK4 solvers.',
@@ -446,17 +476,24 @@ export default function LabsPage() {
   ];
 
   const categories = [
-    { id: 'all', labelEn: 'All Labs (11)', labelId: 'Semua Lab (11)' },
+    { id: 'all', labelEn: `All Labs (${labs.length})`, labelId: `Semua Lab (${labs.length})` },
+    { id: 'path-slam', labelEn: '🧭 SLAM Path', labelId: '🧭 Jalur SLAM' },
+    { id: 'path-manipulation', labelEn: '🦾 Arm Path', labelId: '🦾 Jalur Manipulator' },
+    { id: 'path-control', labelEn: '🎛️ Control Path', labelId: '🎛️ Jalur Kendali' },
     { id: 'math', labelEn: 'Math & Geometry', labelId: 'Matematika & Geometri' },
     { id: 'kinematics', labelEn: 'Kinematics', labelId: 'Kinematika' },
     { id: 'planning', labelEn: 'Planning', labelId: 'Perencanaan' },
     { id: 'control', labelEn: 'Control', labelId: 'Kendali' },
     { id: 'estimation', labelEn: 'Estimation & SLAM', labelId: 'Estimasi & SLAM' },
+    { id: 'manipulation', labelEn: 'Manipulation', labelId: 'Manipulasi' },
     { id: 'advanced', labelEn: 'Swarm & Advanced', labelId: 'Kawanan & Lanjutan' },
   ];
 
   const filteredLabs = labs.filter((l) => {
     if (activeCategory === 'all') return true;
+    if (activeCategory === 'path-slam') return l.paths?.includes('slam');
+    if (activeCategory === 'path-manipulation') return l.paths?.includes('manipulation');
+    if (activeCategory === 'path-control') return l.paths?.includes('control');
     if (activeCategory === 'estimation') return l.category === 'estimation' || l.category === 'mapping' || l.category === 'slam';
     return l.category === activeCategory;
   });
