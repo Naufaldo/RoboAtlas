@@ -249,7 +249,7 @@ export default function LearnPage() {
                     </Link>
 
                     <Link
-                      href={`/labs`}
+                      href={step.labId ? `/labs#${step.labId}` : '/labs'}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-600/20 hover:from-cyan-500/30 hover:to-blue-600/30 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 text-xs font-mono font-bold transition-all shadow-sm"
                     >
                       <Play className="w-3.5 h-3.5 text-cyan-500" />

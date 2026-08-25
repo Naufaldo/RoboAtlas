@@ -84,6 +84,66 @@ export default function ResourcesPage() {
       doi: 'http://modernrobotics.org/',
       tag: 'Free Textbook + Videos',
     },
+    {
+      title: 'Handbook of Marine Craft Hydrodynamics and Motion Control',
+      authors: 'Thor I. Fossen (2011)',
+      publisher: 'John Wiley & Sons',
+      category: 'Marine Robotics & Hydrodynamics',
+      descriptionEn:
+        'The definitive global standard on 6-DOF marine vessel modeling, added mass, hydrodynamic damping, and thruster control allocation.',
+      descriptionId:
+        'Standar global otoritatif tentang pemodelan wahana laut 6-DOF, added mass, redaman hidrodinamika, dan alokasi kontrol pendorong.',
+      doi: 'https://doi.org/10.1002/9781119994138',
+      tag: 'Marine Reference',
+    },
+    {
+      title: 'Introduction to Humanoid Robotics',
+      authors: 'Shuuji Kajita, Hirohisa Hirukawa, Kensuke Harada, Kazuhito Yokoi (2014)',
+      publisher: 'Springer',
+      category: 'Legged & Humanoid Locomotion',
+      descriptionEn:
+        'Authoritative reference on Zero Moment Point (ZMP) stability, Linear Inverted Pendulum Model (LIPM), and 3D bipedal walking pattern generation.',
+      descriptionId:
+        'Referensi otoritatif tentang stabilitas Zero Moment Point (ZMP), Linear Inverted Pendulum Model (LIPM), dan pembangkitan pola jalan bipedal.',
+      doi: 'https://doi.org/10.1007/978-3-642-54536-8',
+      tag: 'Humanoid Classic',
+    },
+    {
+      title: 'Small Unmanned Aircraft: Theory and Practice',
+      authors: 'Randal W. Beard & Timothy W. McLain (2012)',
+      publisher: 'Princeton University Press',
+      category: 'Aerial Robotics & UAVs',
+      descriptionEn:
+        'Rigorous treatment of 6-DOF flight dynamics, rotor thrust allocation, cascaded autopilot architectures, and waypoint tracking.',
+      descriptionId:
+        'Kajian mendalam tentang dinamika penerbangan 6-DOF, alokasi dorongan rotor, arsitektur autopilot kaskade, dan pelacakan waypoint.',
+      doi: 'https://press.princeton.edu/books/hardcover/9780691149219/small-unmanned-aircraft',
+      tag: 'UAV Reference',
+    },
+    {
+      title: 'State Estimation for Robotics',
+      authors: 'Timothy D. Barfoot (2017)',
+      publisher: 'Cambridge University Press',
+      category: 'Lie Groups & Factor Graph SLAM',
+      descriptionEn:
+        'Comprehensive exploration of state estimation on matrix Lie groups SO(3)/SE(3), batch continuous-time estimation, and sparse factor graphs.',
+      descriptionId:
+        'Eksplorasi komprehensif estimasi status pada grup Lie matriks SO(3)/SE(3), estimasi waktu kontinu, dan graf faktor jarang.',
+      doi: 'http://asrl.utias.utoronto.ca/~tdb/bib/barfoot_ser17.pdf',
+      tag: 'Free PDF Edition',
+    },
+    {
+      title: 'A Micro Lie Theory for State Estimation in Robotics',
+      authors: 'Joan Solà, Jeremie Deray, Dinesh Atchuthan (2018)',
+      publisher: 'Institut de Robòtica i Informàtica Industrial / arXiv',
+      category: 'Lie Theory & Manifold Optimization',
+      descriptionEn:
+        'Pragmatic, visual, and mathematically rigorous tutorial on Lie groups, Lie algebras, and error-state Kalman filtering for robotics engineers.',
+      descriptionId:
+        'Tutorial praktis, visual, dan matematis tentang grup Lie, aljabar Lie, dan error-state Kalman filter untuk rekayasawan robotika.',
+      doi: 'https://arxiv.org/abs/1812.01537',
+      tag: 'Open Access Paper',
+    },
   ];
 
   const cheatSheets = [
@@ -98,6 +158,24 @@ export default function ResourcesPage() {
       formula: 'v = \\frac{v_R + v_L}{2}, \\quad \\omega = \\frac{v_R - v_L}{L}, \\quad R_{ICC} = \\frac{L}{2}\\left(\\frac{v_R + v_L}{v_R - v_L}\\right)',
       meaningEn: 'Forward kinematic mapping from wheel speeds to body linear velocity and rotational yaw rate.',
       meaningId: 'Pemetaan kinematika maju dari kecepatan roda ke kecepatan linier bodi dan laju yaw rotasi.',
+    },
+    {
+      domain: 'Zero Moment Point (ZMP)',
+      formula: 'x_{\\text{ZMP}} = x_{\\text{CoM}} - \\frac{z_c}{g} \\ddot{x}_{\\text{CoM}}, \\quad \\omega_0 = \\sqrt{\\frac{g}{z_c}}',
+      meaningEn: 'Dynamic balance criterion: tipping moments vanish if ZMP stays inside the foot support polygon.',
+      meaningId: 'Kriteria keseimbangan dinamis: momen gulingan nol jika ZMP berada di dalam poligon tumpuan kaki.',
+    },
+    {
+      domain: 'Fossen 6-DOF Marine Equation',
+      formula: '(\\mathbf{M}_{RB} + \\mathbf{M}_A) \\boldsymbol{\\dot{\\nu}} + \\mathbf{C}(\\boldsymbol{\\nu})\\boldsymbol{\\nu} + \\mathbf{D}(\\boldsymbol{\\nu})\\boldsymbol{\\nu} + \\mathbf{g}(\\boldsymbol{\\eta}) = \\boldsymbol{\\tau}',
+      meaningEn: 'Nonlinear subsea AUV equations incorporating hydrodynamic added mass M_A and quadratic water drag.',
+      meaningId: 'Persamaan non-linear AUV bawah air yang menggabungkan massa tambahan fluida M_A dan hambatan seret kuadratik.',
+    },
+    {
+      domain: 'Rodrigues SO(3) Exponential Map',
+      formula: '\\mathbf{R} = \\exp([\\boldsymbol{\\omega}]_\\times) = \\mathbf{I} + \\frac{\\sin\\theta}{\\theta}[\\boldsymbol{\\omega}]_\\times + \\frac{1-\\cos\\theta}{\\theta^2}[\\boldsymbol{\\omega}]_\\times^2',
+      meaningEn: 'Wraps tangent Lie algebra rotation vector omega into a 3D orthogonal rotation matrix in SO(3).',
+      meaningId: 'Memetakan vektor putaran aljabar Lie omega menjadi matriks rotasi ortogonal 3D pada manifold SO(3).',
     },
     {
       domain: 'A* Heuristic Evaluation',
@@ -118,10 +196,10 @@ export default function ResourcesPage() {
       meaningId: 'Pembaruan probabilitas rekursif Bayesian yang diubah ke skala penjumlahan log-odds cepat.',
     },
     {
-      domain: 'Graph Laplacian Matrix',
-      formula: '\\mathcal{L} = D - A, \\quad \\mathbf{\\dot{x}} = -\\mathcal{L} \\mathbf{x}',
-      meaningEn: 'Decentralized continuous-time consensus protocol driving multi-agent swarm state to average centroid.',
-      meaningId: 'Protokol konsensus kontinu terdesentralisasi yang membawa kawanan multi-agent ke titik berat bersama.',
+      domain: 'Graph Laplacian Swarms',
+      formula: '\\mathbf{L} = \\mathbf{D} - \\mathbf{A}, \\quad \\mathbf{\\dot{x}} = -\\mathbf{L} \\mathbf{x}',
+      meaningEn: 'Decentralized consensus protocol driving multi-agent swarm state to average centroid.',
+      meaningId: 'Protokol konsensus terdesentralisasi yang memandu kawanan multi-agent ke konsensus geometris.',
     },
   ];
 
@@ -149,10 +227,31 @@ export default function ResourcesPage() {
     },
     {
       name: 'EuRoC MAV Micro Aerial Vehicle Dataset',
-      sensors: 'Synchronized Stereo Camera, ADIS16448 MEMS IMU, Vicon Ground Truth',
-      useCase: 'Visual-Inertial Odometry (VIO) & Aerial Drone Flight State Estimation',
-      format: 'ASL ROSbag, CSV Ground Truth',
+      sensors: 'Stereo Cameras (WVGA 20Hz), ADIS16448 IMU (200Hz), Vicon GT',
+      useCase: 'Visual-Inertial Odometry (VIO) & 3D Flight Control Benchmark',
+      format: 'ROS Bag, ASL Format, Ground-Truth Trajectories',
       link: 'https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets',
+    },
+    {
+      name: 'TUM RGB-D SLAM Benchmark',
+      sensors: 'Microsoft Kinect (30Hz), Motion Capture Ground Truth',
+      useCase: 'Dense 3D Volumetric Mapping, DVO, and 3DGS-SLAM testing',
+      format: 'RGB & Depth PNG pairs, Camera intrinsics',
+      link: 'https://cvg.cit.tum.de/data/datasets/rgbd-dataset',
+    },
+    {
+      name: 'PythonRobotics Open Algorithm Collection',
+      sensors: 'Pure Python/TypeScript Multi-Platform Robotics Algorithms',
+      useCase: 'Open algorithm collection covering mapping, localization, SLAM, and planning',
+      format: 'Open Source GitHub Repository',
+      link: 'https://github.com/AtsushiSakai/PythonRobotics',
+    },
+    {
+      name: 'NOAA Multibeam Bathymetry Subsea Dataset',
+      sensors: 'Multibeam Sonar, USBL Acoustic Positioning, DVL Doppler Velocity Log',
+      useCase: 'Subsea AUV Underwater Mapping, Bathymetric SLAM & Terrain Navigation',
+      format: 'GeoTIFF, XYZ Point Clouds, BAG Files',
+      link: 'https://www.ncei.noaa.gov/products/multibeam-bathymetry',
     },
   ];
 

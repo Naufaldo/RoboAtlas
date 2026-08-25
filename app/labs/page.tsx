@@ -93,6 +93,15 @@ export default function LabsPage() {
   const [activeLabId, setActiveLabId] = useState<string>('transforms-2d');
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const targetHash = window.location.hash.replace('#', '');
+      if (targetHash) {
+        setActiveLabId(targetHash);
+      }
+    }
+  }, []);
+
   const labs: LabItem[] = [
     {
       id: 'transforms-2d',
