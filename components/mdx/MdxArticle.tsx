@@ -55,6 +55,9 @@ import { LieGroupAlgebraSimulator } from '@/components/simulation/LieGroupAlgebr
 import { FactorGraphOptimizerSimulator } from '@/components/simulation/FactorGraphOptimizerSimulator';
 import { GaussianSplattingSlamSimulator } from '@/components/simulation/GaussianSplattingSlamSimulator';
 import { DiffusionPolicyVlaSimulator } from '@/components/simulation/DiffusionPolicyVlaSimulator';
+import { FormationControlSimulator } from '@/components/simulation/FormationControlSimulator';
+import { NumericalIntegrationSimulator } from '@/components/simulation/NumericalIntegrationSimulator';
+import { SensorFusionSimulator } from '@/components/simulation/SensorFusionSimulator';
 import { ConceptCheck, QuizOption } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { CodeBlock } from '@/components/mdx/CodeBlock';
@@ -549,6 +552,21 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<DiffusionPolicyVlaSimulator')) {
         nodes.push(<DiffusionPolicyVlaSimulator key={`comp-dpvs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<FormationControlSimulator')) {
+        nodes.push(<FormationControlSimulator key={`comp-fcs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<NumericalIntegrationSimulator')) {
+        nodes.push(<NumericalIntegrationSimulator key={`comp-nis-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<SensorFusionSimulator')) {
+        nodes.push(<SensorFusionSimulator key={`comp-sfs-${i}`} />);
         i++;
         continue;
       }

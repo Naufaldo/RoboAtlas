@@ -1,0 +1,112 @@
+---
+id: sensor-fusion-imu-gps-odometry
+title: "Fusi Multi-Sensor: Odometri Roda + IMU + GPS (M30)"
+slug: sensor-fusion-imu-gps-odometry
+domain: estimation
+level: 8
+tier: Core Autonomy
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - ekf-localization
+  - sensor-noise-and-uncertainty
+references:
+  - "Jay A. Farrell (2008). Aided Navigation: GPS with High Rate Sensors. McGraw-Hill."
+  - "Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics. MIT Press."
+components:
+  - SensorFusionSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Fusi Multi-Sensor: Odometri Roda + IMU + GPS (M30)
+
+> "Mengapa tidak ada satu sensor pun yang sempurna di dunia nyata (Odometri melayang akibat selip roda, IMU melayang akibat bias gyro, dan GPS berderau acak)—dan bagaimana Fusi Multi-Sensor menggabungkan ketiganya menjadi estimasi posisi yang akurat dan bebas drift?"
+
+Dalam navigasi robot otonom di luar ruangan (seperti traktor pertanian otonom, mobil otonom, dan drone pengantar barang), sistem penentuan posisi (*Positioning System*) mengandalkan prinsip **Fusi Sensor Heterogen (*Multi-Sensor Fusion*)**.
+
+---
+
+## 1. Karakteristik Komplementer Masing-Masing Sensor
+
+```text
+┌─────────────────────────┬──────────────────────────┬──────────────────────────┬────────────────────────────────────────┐
+│ Jenis Sensor            │ Frekuensi Pembaruan      │ Karakteristik Galat      │ Peran dalam Arsitektur Fusi            │
+├─────────────────────────┼──────────────────────────┼──────────────────────────┼────────────────────────────────────────┤
+│ 1. Odometri Enkoder Roda│ Sangat Tinggi (50–200 Hz)│ Drift kuadratik (selip)  │ Prediksi gerak lokal frekuensi tinggi  │
+│ 2. IMU (Giroskop/Aksel) │ Ekstrem Tinggi (200–1kHz)│ Random walk bias drift   │ Prediksi orientasi sudut & akselerasi  │
+│ 3. GNSS / GPS Satelit   │ Rendah (1–10 Hz)         │ Derau Gaussian (multipath│ Koreksi absolut global (tanpa drift)   │
+└─────────────────────────┴──────────────────────────┴──────────────────────────┴────────────────────────────────────────┘
+```
+
+---
+
+## 2. Model Matematika Siklus Kalman Filter Fusi
+
+Status gabungan robot mencakup posisi dan kecepatan $\mathbf{x}_k = [x, y, v_x, v_y]^T$:
+
+### 1. Fase Prediksi Cepat (Digerakkan oleh Enkoder & IMU):
+
+$$
+\mathbf{\hat{x}}_k^- = \mathbf{F}_k \mathbf{\hat{x}}_{k-1} + \mathbf{B}_k \mathbf{u}_k
+$$
+
+$$
+\mathbf{P}_k^- = \mathbf{F}_k \mathbf{P}_{k-1} \mathbf{F}_k^T + \mathbf{Q}_k
+$$
+
+### 2. Fase Koreksi Absolut (Saat Sinyal GPS Tiba):
+
+$$
+\mathbf{K}_k = \mathbf{P}_k^- \mathbf{H}_k^T (\mathbf{H}_k \mathbf{P}_k^- \mathbf{H}_k^T + \mathbf{R}_k)^{-1}
+$$
+
+$$
+\mathbf{\hat{x}}_k = \mathbf{\hat{x}}_k^- + \mathbf{K}_k (\mathbf{z}_{\text{GPS}, k} - \mathbf{H}_k \mathbf{\hat{x}}_k^-)
+$$
+
+$$
+\mathbf{P}_k = (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k) \mathbf{P}_k^-
+$$
+
+Di mana $\mathbf{K}_k$ adalah Matriks Penguatan Kalman (*Kalman Gain*) yang secara optimal menimbang antara ketidakpastian gerak $\mathbf{P}_k^-$ dan derau pengukuran GPS $\mathbf{R}_k$.
+
+---
+
+## 3. Simulator Interaktif: Fusi Multi-Sensor Robotik
+
+Nyalakan/matikan masing-masing lapisan sensor (Odometri, GPS, dan Filter Fusi) untuk melihat secara langsung bagaimana filter Kalman mengeliminasi *drift* akumulasi roda:
+
+<SensorFusionSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-sensor-fusion-imu-gps-odometry"
+  question="Apa yang terjadi pada estimasi posisi robot jika sinyal GPS terputus saat robot memasuki terowongan panjang bawah tanah?"
+  options={[
+    {
+      id: "A",
+      text: "Filter fusi secara otomatis beralih ke mode dead-reckoning murni (mengandalkan integrasi IMU dan enkoder roda), di mana estimasi tetap mulus dalam jangka pendek namun matriks kovariansi ketidakpastian P_k akan membesar secara bertahap seiring berjalannya waktu.",
+      isCorrect: true,
+      explanation: "Tepat! Tanpa koreksi GPS, filter tetap dapat memprediksi posisi dari odometri/IMU, tetapi ketidakpastian P terus meningkat sampai sinyal GPS kembali tertangkap."
+    },
+    {
+      id: "B",
+      text: "Robot langsung kehilangan daya baterai dan berhenti seketika.",
+      isCorrect: false,
+      explanation: "Salah. Kehilangan sinyal sensor tidak mematikan daya perangkat keras fisik robot."
+    },
+    {
+      id: "C",
+      text: "Estimasi posisi robot langsung teleportasi kembali ke titik awal (0,0).",
+      isCorrect: false,
+      explanation: "Salah. Filter Kalman mempertahankan status continuous state dari langkah prediksi terakhir."
+    }
+  ]}
+  hint="Pikirkan sistem navigasi mobil Anda di dalam terowongan: mobil tetap bergerak di peta berdasarkan laju kecepatan roda terakhir."
+/>

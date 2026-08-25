@@ -34,6 +34,7 @@ const LESSON_INDEX: Record<string, string> = {
   'en/mathematics/vectors-and-coordinate-geometry': 'en/mathematics/vectors-and-coordinate-geometry.mdx',
   'en/mathematics/dot-product-and-projection': 'en/mathematics/dot-product-and-projection.mdx',
   'en/mathematics/probability-for-robotics': 'en/mathematics/probability-for-robotics.mdx',
+  'en/mathematics/numerical-stability-euler-vs-rk4': 'en/mathematics/numerical-stability-euler-vs-rk4.mdx',
   'en/geometry/2d-geometry': 'en/geometry/2d-geometry.mdx',
   'en/geometry/lie-groups-and-lie-algebras': 'en/geometry/lie-groups-and-lie-algebras.mdx',
   'en/geometry/3d-geometry': 'en/geometry/3d-geometry.mdx',
@@ -62,6 +63,7 @@ const LESSON_INDEX: Record<string, string> = {
   'en/control/discrete-time-simulation': 'en/control/discrete-time-simulation.mdx',
   'en/estimation/localization-fundamentals': 'en/estimation/localization-fundamentals.mdx',
   'en/estimation/ekf-localization': 'en/estimation/ekf-localization.mdx',
+  'en/estimation/sensor-fusion-imu-gps-odometry': 'en/estimation/sensor-fusion-imu-gps-odometry.mdx',
   'en/estimation/histogram-filter-localization': 'en/estimation/histogram-filter-localization.mdx',
   'en/estimation/bayes-filter-and-kalman': 'en/estimation/bayes-filter-and-kalman.mdx',
   'en/estimation/mcl-particle-filter': 'en/estimation/mcl-particle-filter.mdx',
@@ -85,6 +87,7 @@ const LESSON_INDEX: Record<string, string> = {
   'en/advanced/sim-to-real-and-domain-randomization': 'en/advanced/sim-to-real-and-domain-randomization.mdx',
   'en/advanced/vla-and-diffusion-policies': 'en/advanced/vla-and-diffusion-policies.mdx',
   'en/advanced/laplacian-consensus': 'en/advanced/laplacian-consensus.mdx',
+  'en/advanced/formation-control-and-swarms': 'en/advanced/formation-control-and-swarms.mdx',
 
   // Indonesian Lessons
   'id/fundamentals/intro-to-robotics': 'id/fundamentals/intro-to-robotics.mdx',
@@ -95,6 +98,7 @@ const LESSON_INDEX: Record<string, string> = {
   'id/mathematics/vectors-and-coordinate-geometry': 'id/mathematics/vectors-and-coordinate-geometry.mdx',
   'id/mathematics/dot-product-and-projection': 'id/mathematics/dot-product-and-projection.mdx',
   'id/mathematics/probability-for-robotics': 'id/mathematics/probability-for-robotics.mdx',
+  'id/mathematics/numerical-stability-euler-vs-rk4': 'id/mathematics/numerical-stability-euler-vs-rk4.mdx',
   'id/geometry/2d-geometry': 'id/geometry/2d-geometry.mdx',
   'id/geometry/lie-groups-and-lie-algebras': 'id/geometry/lie-groups-and-lie-algebras.mdx',
   'id/geometry/3d-geometry': 'id/geometry/3d-geometry.mdx',
@@ -123,6 +127,7 @@ const LESSON_INDEX: Record<string, string> = {
   'id/control/discrete-time-simulation': 'id/control/discrete-time-simulation.mdx',
   'id/estimation/localization-fundamentals': 'id/estimation/localization-fundamentals.mdx',
   'id/estimation/ekf-localization': 'id/estimation/ekf-localization.mdx',
+  'id/estimation/sensor-fusion-imu-gps-odometry': 'id/estimation/sensor-fusion-imu-gps-odometry.mdx',
   'id/estimation/histogram-filter-localization': 'id/estimation/histogram-filter-localization.mdx',
   'id/estimation/bayes-filter-and-kalman': 'id/estimation/bayes-filter-and-kalman.mdx',
   'id/estimation/mcl-particle-filter': 'id/estimation/mcl-particle-filter.mdx',
@@ -146,6 +151,7 @@ const LESSON_INDEX: Record<string, string> = {
   'id/advanced/sim-to-real-and-domain-randomization': 'id/advanced/sim-to-real-and-domain-randomization.mdx',
   'id/advanced/vla-and-diffusion-policies': 'id/advanced/vla-and-diffusion-policies.mdx',
   'id/advanced/laplacian-consensus': 'id/advanced/laplacian-consensus.mdx',
+  'id/advanced/formation-control-and-swarms': 'id/advanced/formation-control-and-swarms.mdx',
 };
 
 function sanitizeParam(input: string): string {

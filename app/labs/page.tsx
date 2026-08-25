@@ -53,6 +53,9 @@ import { LieGroupAlgebraSimulator } from '@/components/simulation/LieGroupAlgebr
 import { FactorGraphOptimizerSimulator } from '@/components/simulation/FactorGraphOptimizerSimulator';
 import { GaussianSplattingSlamSimulator } from '@/components/simulation/GaussianSplattingSlamSimulator';
 import { DiffusionPolicyVlaSimulator } from '@/components/simulation/DiffusionPolicyVlaSimulator';
+import { FormationControlSimulator } from '@/components/simulation/FormationControlSimulator';
+import { NumericalIntegrationSimulator } from '@/components/simulation/NumericalIntegrationSimulator';
+import { SensorFusionSimulator } from '@/components/simulation/SensorFusionSimulator';
 import {
   Compass,
   Cpu,
@@ -724,6 +727,45 @@ export default function LabsPage() {
       icon: '🦾',
       lessonHref: '/learn/advanced/vla-and-diffusion-policies',
       component: <DiffusionPolicyVlaSimulator />,
+    },
+    {
+      id: 'formation-control',
+      category: 'control',
+      paths: ['control'],
+      titleEn: 'Multi-Agent Formation Control & Flocking Lab',
+      titleId: 'Laboratorium Kendali Formasi & Kawanan Robot',
+      descEn: 'Guide a leader-follower multi-robot swarm along triangle, V-wedge, and line formations via graph consensus.',
+      descId: 'Pandu kawanan robot multi-agen mengikuti formasi segitiga, V, dan garis menggunakan konsensus graf Laplacian.',
+      levelBadge: 'Level 18',
+      icon: '👥',
+      lessonHref: '/learn/advanced/formation-control-and-swarms',
+      component: <FormationControlSimulator />,
+    },
+    {
+      id: 'numerical-stability',
+      category: 'math',
+      paths: ['control'],
+      titleEn: 'Numerical Stability: Euler vs Symplectic vs RK4 Lab',
+      titleId: 'Laboratorium Stabilitas Numerik: Euler vs Simplektik vs RK4',
+      descEn: 'Compare energy drift and numerical stiffness across Explicit Euler, Symplectic Euler, and 4th-Order Runge-Kutta.',
+      descId: 'Bandingkan akumulasi galat energi dan kestabilan numerik antara Euler Eksplisit, Euler Simplektik, dan Runge-Kutta 4.',
+      levelBadge: 'Level 1',
+      icon: '📈',
+      lessonHref: '/learn/mathematics/numerical-stability-euler-vs-rk4',
+      component: <NumericalIntegrationSimulator />,
+    },
+    {
+      id: 'sensor-fusion',
+      category: 'estimation',
+      paths: ['slam'],
+      titleEn: 'Multi-Sensor Fusion (Odometry + IMU + GPS) Lab',
+      titleId: 'Laboratorium Fusi Multi-Sensor (Odometri + IMU + GPS)',
+      descEn: 'Fuse drifting high-rate wheel odometry and IMU with noisy global GPS position fixes using Kalman filtering.',
+      descId: 'Gabungkan pembacaan odometri berkecepatan tinggi yang mengalami drift dengan koreksi GPS absolut menggunakan filter Kalman.',
+      levelBadge: 'Level 8',
+      icon: '🛰️',
+      lessonHref: '/learn/estimation/sensor-fusion-imu-gps-odometry',
+      component: <SensorFusionSimulator />,
     },
   ];
 

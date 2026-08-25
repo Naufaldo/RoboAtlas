@@ -1,0 +1,94 @@
+---
+id: formation-control-and-swarms
+title: "Kendali Formasi & Kawanan Robot Leader-Follower (M26)"
+slug: formation-control-and-swarms
+domain: advanced
+level: 18
+tier: Advanced Embodiments
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - laplacian-consensus
+  - velocity-kinematics-2d
+references:
+  - "Wei Ren & Randal W. Beard (2008). Distributed Consensus in Multi-Vehicle Cooperative Control. Springer."
+  - "Reza Olfati-Saber (2006). Flocking for Multi-Agent Dynamic Systems: Algorithms and Theory. IEEE Transactions on Automatic Control."
+components:
+  - FormationControlSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Kendali Formasi & Kawanan Robot Leader-Follower (M26)
+
+> "Bagaimana kawanan ratusan drone quadrotor (*drone swarm show*) atau armada kapal otonom USV dapat mempertahankan formasi geometri presisi (seperti bentuk segitiga, V, atau garis) saat bermanuver lincah tanpa tabrakan antar robot?"
+
+Dalam sistem multi-robot terdistribusi (*Multi-Agent Robotic Systems*), **Kendali Formasi (*Formation Control*)** menggabungkan teori konsensus graf aljabar, pelacakan pemimpin (*Leader-Follower*), dan fungsi potensial repulsi artifisial untuk mencegah benturan fisik.
+
+---
+
+## 1. Topologi Graf Komunikasi & Matriks Laplacian
+
+Kawanan robot direpresentasikan sebagai graf komunikasi $\mathcal{G} = (\mathcal{V}, \mathcal{E})$:
+
+$$
+\mathbf{L} = \mathbf{D} - \mathbf{A}
+$$
+
+Di mana $\mathbf{D}$ adalah matriks derajat konektivitas dan $\mathbf{A}$ adalah matriks ketetanggaan (*adjacency matrix*). Jika graf komunikasi memiliki pohon perentang (*spanning tree*), seluruh agen dijamin mencapai konsensus geometri global.
+
+---
+
+## 2. Hukum Kendali Formasi Leader-Follower Terdistribusi
+
+Diberikan robot Pemimpin (*Leader* $\mathbf{p}_0$) dan vektor pergeseran geometri formasi yang diinginkan $\mathbf{d}_{ij} = \mathbf{p}_i^* - \mathbf{p}_j^*$, hukum kendali akselerasi untuk setiap agen pengikut (*Follower* $i$) dirumuskan sebagai:
+
+$$
+\mathbf{\dot{p}}_i = \mathbf{\dot{p}}_0 - k_p (\mathbf{p}_i - \mathbf{p}_0 - \mathbf{d}_{i0}) - k_v (\mathbf{v}_i - \mathbf{v}_0) - \sum_{j \in \mathcal{N}_i} a_{ij} (\mathbf{p}_i - \mathbf{p}_j - \mathbf{d}_{ij}) + \mathbf{F}_{\text{rep}, i}
+$$
+
+Di mana:
+1. **Istilah Pelacakan Pemimpin**: Memastikan formasi bergerak mengikuti arah manuver pemimpin $\mathbf{p}_0$.
+2. **Istilah Konsensus Relatif**: Meminimalkan deviasi jarak antar tetangga lokal $\mathcal{N}_i$.
+3. **Gaya Tolakan Tabrakan Antar Agen ($\mathbf{F}_{\text{rep}, i}$)**:
+   $$\mathbf{F}_{\text{rep}, i} = \sum_{j \neq i, \, \|\mathbf{p}_i - \mathbf{p}_j\| < r_{\text{safe}}} k_{\text{rep}} \frac{\mathbf{p}_i - \mathbf{p}_j}{\|\mathbf{p}_i - \mathbf{p}_j\|} (r_{\text{safe}} - \|\mathbf{p}_i - \mathbf{p}_j\|)$$
+
+---
+
+## 3. Simulator Interaktif: Kendali Formasi Kawanan Robot
+
+Klik pada kanvas untuk mengarahkan titik tujuan baru robot Pemimpin (*Leader*) dan ganti pola formasi antara Segitiga (*Triangle*), V-Wedge, dan Garis (*Line*):
+
+<FormationControlSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-formation-control-and-swarms"
+  question="Mengapa pendekatan konsensus terdistribusi (Distributed Consensus) lebih disukai untuk kawanan ribuan drone dibandingkan pendekatan stasiun pengendali pusat (Centralized Ground Control)?"
+  options={[
+    {
+      id: "A",
+      text: "Karena sistem terdistribusi tidak memiliki single-point-of-failure, setiap drone hanya perlu berkomunikasi dengan tetangga terdekatnya sehingga skalabilitasnya tinggi dan tidak membebani bandwidth jaringan nirkabel pusat.",
+      isCorrect: true,
+      explanation: "Tepat! Pendekatan terdistribusi membuat kawanan tetap tangguh bahkan jika beberapa drone mengalami kegagalan komunikasi di udara."
+    },
+    {
+      id: "B",
+      text: "Karena drone terdistribusi tidak membutuhkan baling-baling motor.",
+      isCorrect: false,
+      explanation: "Salah. Seluruh drone tetap memerlukan sistem propulsi mekanik."
+    },
+    {
+      id: "C",
+      text: "Karena kendali terpusat dilarang oleh hukum fisika.",
+      isCorrect: false,
+      explanation: "Salah. Kendali terpusat dapat dilakukan, namun menderita latency tinggi dan bottleneck komputasi saat jumlah agen bertambah banyak."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi pada pertunjukan 2.000 drone jika satu komputer server pengendali pusat di darat mendadak hang atau kehilangan sinyal Wi-Fi."
+/>

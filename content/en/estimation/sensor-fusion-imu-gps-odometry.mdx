@@ -1,0 +1,112 @@
+---
+id: sensor-fusion-imu-gps-odometry
+title: "Multi-Sensor Fusion: Wheel Odometry + IMU + GPS (M30)"
+slug: sensor-fusion-imu-gps-odometry
+domain: estimation
+level: 8
+tier: Core Autonomy
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - ekf-localization
+  - sensor-noise-and-uncertainty
+references:
+  - "Jay A. Farrell (2008). Aided Navigation: GPS with High Rate Sensors. McGraw-Hill."
+  - "Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics. MIT Press."
+components:
+  - SensorFusionSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Multi-Sensor Fusion: Wheel Odometry + IMU + GPS (M30)
+
+> "Why is no single sensor sufficient on its own (wheel odometry drifts from kinematic wheel slip, IMU gyro drifts from bias random walk, and GPS exhibits erratic Gaussian multipath noise)—and how does multi-sensor fusion synthesize them into an accurate, drift-free pose estimate?"
+
+In outdoor autonomous mobile robotics (agricultural rovers, self-driving vehicles, search-and-rescue UAVs), navigation reliability depends on **Heterogeneous Multi-Sensor Fusion**.
+
+---
+
+## 1. Complementary Sensor Characteristics
+
+```text
+┌─────────────────────────┬──────────────────────────┬──────────────────────────┬────────────────────────────────────────┐
+│ Sensor Modality         │ Update Frequency         │ Error Characteristic     │ Fusion Architecture Role               │
+├─────────────────────────┼──────────────────────────┼──────────────────────────┼────────────────────────────────────────┤
+│ 1. Wheel Optical Encoder│ High (50–200 Hz)         │ Quadratic slip drift     │ High-rate local kinematic propagation  │
+│ 2. 6-Axis IMU (Gyro/Acc)│ Very High (200–1000 Hz)  │ Random walk bias drift   │ High-rate angular rate & accel predict │
+│ 3. GNSS / GPS Satellites│ Low (1–10 Hz)            │ Unbiased Gaussian noise  │ Global absolute drift correction       │
+└─────────────────────────┴──────────────────────────┴──────────────────────────┴────────────────────────────────────────┘
+```
+
+---
+
+## 2. Mathematical Multi-Rate Kalman Fusion Architecture
+
+The augmented state vector models robot position and linear velocity $\mathbf{x}_k = [x, y, v_x, v_y]^T$:
+
+### 1. High-Rate Prediction Phase (Driven by Odometry & IMU):
+
+$$
+\mathbf{\hat{x}}_k^- = \mathbf{F}_k \mathbf{\hat{x}}_{k-1} + \mathbf{B}_k \mathbf{u}_k
+$$
+
+$$
+\mathbf{P}_k^- = \mathbf{F}_k \mathbf{P}_{k-1} \mathbf{F}_k^T + \mathbf{Q}_k
+$$
+
+### 2. Low-Rate Absolute Correction Phase (When GPS Arrives):
+
+$$
+\mathbf{K}_k = \mathbf{P}_k^- \mathbf{H}_k^T (\mathbf{H}_k \mathbf{P}_k^- \mathbf{H}_k^T + \mathbf{R}_k)^{-1}
+$$
+
+$$
+\mathbf{\hat{x}}_k = \mathbf{\hat{x}}_k^- + \mathbf{K}_k (\mathbf{z}_{\text{GPS}, k} - \mathbf{H}_k \mathbf{\hat{x}}_k^-)
+$$
+
+$$
+\mathbf{P}_k = (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k) \mathbf{P}_k^-
+$$
+
+Where optimal Kalman gain $\mathbf{K}_k$ dynamically balances internal motion uncertainty $\mathbf{P}_k^-$ against noisy GPS measurement covariance $\mathbf{R}_k$.
+
+---
+
+## 3. Interactive Simulator: Multi-Sensor Fusion
+
+Toggle individual sensor streams (Wheel Odometry, GPS Fixes, Fused Kalman Filter) to observe how the fused state estimator bounds kinematic drift:
+
+<SensorFusionSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-sensor-fusion-imu-gps-odometry"
+  question="What happens to the estimated robot pose if the GPS signal is completely lost as the robot enters a tunnel?"
+  options={[
+    {
+      id: "A",
+      text: "The fusion filter transitions into dead-reckoning mode (relying solely on odometry and IMU integration), maintaining smooth short-term tracking while the state covariance matrix P_k grows continuously over time until satellite lock is re-acquired.",
+      isCorrect: true,
+      explanation: "Correct! In the absence of GPS corrections, prediction steps continue normally while the uncertainty ellipse expands to reflect accumulated kinematic drift."
+    },
+    {
+      id: "B",
+      text: "The robot immediately loses all battery power and shuts down.",
+      isCorrect: false,
+      explanation: "Incorrect. Sensor dropouts do not cut hardware electrical power."
+    },
+    {
+      id: "C",
+      text: "The robot's estimated position resets instantly to (0,0).",
+      isCorrect: false,
+      explanation: "Incorrect. The Kalman filter retains the continuous state from the last valid update."
+    }
+  ]}
+  hint="Consider how automotive smartphone navigation functions inside underground tunnels."
+/>

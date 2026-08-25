@@ -1,0 +1,94 @@
+---
+id: formation-control-and-swarms
+title: "Formation Control & Leader-Follower Swarms (M26)"
+slug: formation-control-and-swarms
+domain: advanced
+level: 18
+tier: Advanced Embodiments
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - laplacian-consensus
+  - velocity-kinematics-2d
+references:
+  - "Wei Ren & Randal W. Beard (2008). Distributed Consensus in Multi-Vehicle Cooperative Control. Springer."
+  - "Reza Olfati-Saber (2006). Flocking for Multi-Agent Dynamic Systems: Algorithms and Theory. IEEE Transactions on Automatic Control."
+components:
+  - FormationControlSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Formation Control & Leader-Follower Swarms (M26)
+
+> "How do large-scale multi-rotor drone swarms and fleets of autonomous surface vessels (USVs) maintain rigid geometric formations (triangles, V-wedges, columns) during dynamic maneuvers while autonomously avoiding inter-robot collisions?"
+
+In distributed multi-robot systems, **Formation Control** synthesizes algebraic graph theory, Leader-Follower tracking dynamics, and artificial potential repulsion fields to guarantee flocking stability.
+
+---
+
+## 1. Communication Network Topology & Graph Laplacian
+
+The inter-agent communication topology is formalized via graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$:
+
+$$
+\mathbf{L} = \mathbf{D} - \mathbf{A}
+$$
+
+Where $\mathbf{D}$ is the in-degree diagonal matrix and $\mathbf{A}$ is the adjacency matrix. The existence of a directed spanning tree guarantees asymptotic geometric consensus.
+
+---
+
+## 2. Distributed Leader-Follower Control Law
+
+Given leader trajectory $\mathbf{p}_0(t)$ and desired relative inter-agent offsets $\mathbf{d}_{ij} = \mathbf{p}_i^* - \mathbf{p}_j^*$, the acceleration control law for follower agent $i$ is:
+
+$$
+\mathbf{\dot{p}}_i = \mathbf{\dot{p}}_0 - k_p (\mathbf{p}_i - \mathbf{p}_0 - \mathbf{d}_{i0}) - k_v (\mathbf{v}_i - \mathbf{v}_0) - \sum_{j \in \mathcal{N}_i} a_{ij} (\mathbf{p}_i - \mathbf{p}_j - \mathbf{d}_{ij}) + \mathbf{F}_{\text{rep}, i}
+$$
+
+Where:
+1. **Leader Feedforward Tracking**: Propagates global mission heading and velocity from leader $\mathbf{p}_0$.
+2. **Relative Neighbor Consensus**: Minimizes geometric shape distortion across local neighbors $\mathcal{N}_i$.
+3. **Inter-Agent Repulsion Field ($\mathbf{F}_{\text{rep}, i}$)**:
+   $$\mathbf{F}_{\text{rep}, i} = \sum_{j \neq i, \, \|\mathbf{p}_i - \mathbf{p}_j\| < r_{\text{safe}}} k_{\text{rep}} \frac{\mathbf{p}_i - \mathbf{p}_j}{\|\mathbf{p}_i - \mathbf{p}_j\|} (r_{\text{safe}} - \|\mathbf{p}_i - \mathbf{p}_j\|)$$
+
+---
+
+## 3. Interactive Simulator: Multi-Agent Formation Control
+
+Click anywhere on the canvas to assign a new goal waypoint for the swarm Leader, and switch between Triangle, V-Wedge, and Line configurations:
+
+<FormationControlSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-formation-control-and-swarms"
+  question="Why is distributed local neighbor consensus superior to centralized ground control for coordinating swarms of thousands of aerial drones?"
+  options={[
+    {
+      id: "A",
+      text: "Distributed consensus removes the single point of failure and scales to arbitrary swarm sizes with minimal communication bandwidth, as each robot only communicates with adjacent neighbors rather than a overloaded central server.",
+      isCorrect: true,
+      explanation: "Correct! Distributed peer-to-peer communication ensures robust fault tolerance even under packet dropouts and individual drone losses."
+    },
+    {
+      id: "B",
+      text: "Because distributed drones do not require electrical motors.",
+      isCorrect: false,
+      explanation: "Incorrect. Every vehicle requires onboard propulsion."
+    },
+    {
+      id: "C",
+      text: "Because centralized control is mathematically impossible.",
+      isCorrect: false,
+      explanation: "Incorrect. Centralized control is possible for small teams, but creates severe network latency bottlenecks as swarm size expands."
+    }
+  ]}
+  hint="Consider what happens to a 2,000-drone light show if a single central ground station crashes or experiences Wi-Fi congestion."
+/>
