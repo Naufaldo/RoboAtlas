@@ -285,3 +285,41 @@ $$
 | **M8** | Scan Matching | SVD Analytical Closed-Form ICP | $\mathbf{H} = \mathbf{U}\mathbf{\Sigma}\mathbf{V}^T \implies \mathbf{R}^* = \mathbf{V}\mathbf{U}^T$ | [Slam Simulator](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
 | **M9** | Graph Optimization | Pose-Graph SLAM & Loop Closures | $\min \sum \mathbf{e}_{ij}^T \mathbf{\Omega}_{ij} \mathbf{e}_{ij}$ | [Pose Graph SLAM](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
 | **M10** | Path Planning & Control | $A^*$ Heuristic & Pure Pursuit | $f(n) = g(n) + h(n), \quad \kappa = \frac{2\sin\alpha}{L_d}$ | [A* Search Sandbox](file:///c:/Users/ASUS/Documents/Personal/RoboAtlas/app/labs/page.tsx) |
+
+---
+
+## 7. PythonRobotics (Atsushi Sakai) Algorithm Taxonomy & Master Equivalencies
+
+To ensure complete coverage of standard robotics curricula, RoboAtlas cross-maps the foundational algorithms from the renowned **PythonRobotics** suite (*Atsushi Sakai et al.*) directly into our pedagogical derivations and 60 FPS interactive browser sandboxes:
+
+```text
+┌────────────────────────┬───────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ PythonRobotics Domain  │ Key Algorithms Included           │ RoboAtlas Theory & Interactive Simulator Equivalent    │
+├────────────────────────┼───────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Localization        │ - Extended Kalman Filter (EKF)    │ - Theory: /learn/estimation/bayes-filter-and-kalman    │
+│                        │ - Unscented Kalman Filter (UKF)   │ - Simulator: BayesianFilterSimulator & MCL Simulator   │
+│                        │ - Particle Filter (MCL)           │ - Lab: /labs (MCL Localization & Sensor Noise)         │
+├────────────────────────┼───────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 2. Mapping             │ - Log-Odds Raycasting Grid Map    │ - Theory: /learn/perception/occupancy-grid-mapping     │
+│                        │ - Normal Distributions (NDT) Map  │ - Simulator: MappingSimulator & CspaceInflation        │
+│                        │ - Distance Map & Costmaps         │ - Lab: /labs (Occupancy Mapping & C-Space Inflation)   │
+├────────────────────────┼───────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 3. SLAM                │ - Iterative Closest Point (ICP)   │ - Theory: /learn/advanced/icp-scan-matching            │
+│                        │ - EKF-SLAM & FastSLAM 2.0         │ - Simulator: SlamSimulator & TransformSandbox          │
+│                        │ - Pose Graph Optimization         │ - Lab: /labs (ICP SLAM & Multi-Agent Swarms)           │
+├────────────────────────┼───────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 4. Path Planning       │ - Dijkstra & A* Heuristic Search  │ - Theory: /learn/planning/a-star & astar-vs-dijkstra   │
+│                        │ - Dynamic Window Approach (DWA)   │ - Simulator: PathPlanningSimulator & RrtSimulator      │
+│                        │ - RRT, RRT* & Informed RRT*       │ - Lab: /labs (A* Search & RRT Sampling Sandbox)        │
+│                        │ - Quintic Polynomials & Splines   │                                                        │
+├────────────────────────┼───────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 5. Path Tracking       │ - Pure Pursuit Steering Control   │ - Theory: /learn/control/pure-pursuit-path-tracking    │
+│                        │ - Stanley Cross-Track Controller  │ - Simulator: ControlSimulator & TrackingErrorGeometry  │
+│                        │ - LQR & MPC Trajectory Tracking   │ - Lab: /labs (Pure Pursuit & PID Tuning Sandbox)       │
+├────────────────────────┼───────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 6. Arm Navigation      │ - N-Joint Forward Kinematics (FK) │ - Theory: /learn/manipulation/2dof-forward-kinematics  │
+│                        │ - Analytical & Jacobian IK        │ - Simulator: ArmForwardKinematics & ArmInverseKinematics│
+│                        │ - Singularity & Velocity Ellipse  │ - Lab: /labs (Arm FK, IK Solver & Jacobian Singularity)│
+└────────────────────────┴───────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+

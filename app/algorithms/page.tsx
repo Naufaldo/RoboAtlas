@@ -13,7 +13,7 @@ export default function AlgorithmsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
 
-  const categories = ['All', 'Path Planning', 'Localization', 'Control', 'SLAM', 'Multi-Agent'];
+  const categories = ['All', 'Path Planning', 'Localization', 'Mapping', 'Control', 'SLAM', 'Multi-Agent'];
   const difficulties = ['All', 'Beginner', 'Intermediate', 'Advanced'];
 
   const filteredAlgorithms = useMemo(() => {
