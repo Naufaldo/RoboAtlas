@@ -1,0 +1,113 @@
+---
+id: 3d-lidar-and-vslam
+title: "SLAM LiDAR 3D (LOAM/FAST-LIO) & Visual SLAM (VSLAM)"
+slug: 3d-lidar-and-vslam
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - slam-fundamentals
+  - icp-scan-matching
+  - 2d-lidar-slam
+references:
+  - "Ji Zhang, Sanjiv Singh (2014). LOAM: Lidar Odometry and Mapping in Real-Time. Robotics: Science and Systems."
+  - "Wei Xu, Fu Zhang (2022). FAST-LIO2: Fast Direct LiDAR-Inertial Odometry. IEEE Transactions on Robotics."
+  - "Carlos Campos et al. (2021). ORB-SLAM3: An Accurate Open-Source Library for Visual, Visual-Inertial, and Multi-Map SLAM. IEEE TRO."
+  - "Yong Li et al. (2025). A Review of Simultaneous Localization and Mapping Algorithms Based on Lidar. World Electric Vehicle Journal (MDPI)."
+components:
+  - SlamSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# SLAM LiDAR 3D (LOAM/FAST-LIO) & Visual SLAM (VSLAM)
+
+> "Bagaimana kendaraan otonom berkecepatan tinggi dan drone 3D memetakan dunia nyata menggunakan perpaduan awan titik 3D LiDAR berkurvatur tinggi dan citra visual kamera yang terkopel rapat (*tightly-coupled sensor fusion*)?"
+
+Navigasi robotika modern di ruang tiga dimensi menuntut estimasi status 6-Derajat Kebebasan ($SE(3)$: $x, y, z, \text{roll}, \text{pitch}, \text{yaw}$). Dua pilar teknologi utama untuk rekonstruksi 3D adalah **SLAM LiDAR 3D** dan **Visual SLAM (VSLAM)**.
+
+![Perbandingan SLAM LiDAR 3D dan Visual SLAM](/images/sensors/3d-lidar-loam-fastlio-vslam.jpg)
+
+---
+
+## 1. SLAM LiDAR 3D: Evolusi LOAM hingga FAST-LIO2
+
+### A. Ekstraksi Fitur Geometris LOAM Berdasarkan Kelengkungan (*Curvature*)
+Untuk titik $\mathbf{p}_{(k,i)}$ pada frame pindaian ke-$k$ dengan himpunan tetangga $S$:
+
+$$
+c = \frac{1}{|S| \cdot \|\mathbf{p}_{(k,i)}\|} \left\| \sum_{j \in S, j \neq i} (\mathbf{p}_{(k,i)} - \mathbf{p}_{(k,j)}) \right\|
+$$
+
+- Nilai $c$ tinggi $\to$ **Titik Sudut / Tepi Garis (*Edge Features*)** $\to$ dicocokkan ke garis terdekat.
+- Nilai $c$ rendah $\to$ **Titik Permukaan Bidang Datar (*Planar Features*)** $\to$ dicocokkan ke bidang terdekat.
+
+### B. Inovasi FAST-LIO2 & Pohon KD Inkremental (`ikd-Tree`)
+- Menghapus tahap ekstraksi fitur berbiaya tinggi dengan langsung mendaftarkan titik laser mentah (*direct raw point cloud registration*).
+- Menggunakan struktur data **`ikd-Tree` (Incremental KD-Tree)** yang mendukung penyisipan (*insertion*), penghapusan (*deletion*), dan pencarian tetangga terdekat dalam waktu logaritmik $O(\log N)$, memungkinkan pemetaan 3D real-time pada frekuensi $100\text{ Hz}$.
+
+---
+
+## 2. Visual SLAM (VSLAM): Geometri Epipolar & Triangulasi Kamera
+
+### A. Kamera Monokular & Matriks Esensial ($\mathbf{E}$)
+Dua titik citra terkalibrasi $\mathbf{x}_1$ dan $\mathbf{x}_2$ memenuhi kendala epipolar:
+
+$$
+\mathbf{x}_2^T \mathbf{E} \mathbf{x}_1 = 0, \quad \text{di mana } \mathbf{E} = [\mathbf{t}]_{\times} \mathbf{R}
+$$
+
+*(Skala metrik fisik tidak dapat diketahui secara absolut tanpa bantuan sensor inersial IMU atau penanda eksternal).*
+
+### B. Kamera Stereo & Triangulasi Disparitas
+Untuk kamera stereo dengan panjang fokus $f$ dan jarak antar lensa (*baseline*) $B$:
+
+$$
+Z = \frac{f \cdot B}{d}, \quad \text{di mana } d = u_L - u_R \text{ (disparitas piksel)}
+$$
+
+### C. Fusi Terkopel Rapat (*Tightly-Coupled LVI-SAM / R3LIVE*)
+- **LVI-SAM**: Menggabungkan subsistem LiDAR-Inertial (LIS) dan Visual-Inertial (VIS) dalam graf faktor bersama.
+- **R3LIVE**: Menggunakan *Iterated Error-State Kalman Filter (IESKF)* untuk fusi LiDAR-IMU pada frekuensi tinggi dan *photometric bundle adjustment* untuk merender warna RGB pada peta awan titik 3D.
+
+---
+
+## 3. Simulator Interaktif: Estimasi SLAM & Pelacakan Lintasan
+
+Jalankan eksperimen SLAM interaktif di mana robot mengekstrak landmark lingkungan dan memperbarui graf pose:
+
+<SlamSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-3d-lidar-vslam"
+  question="Apa keunggulan utama struktur data ikd-Tree pada algoritma FAST-LIO2 dibanding KD-Tree standar?"
+  options={[
+    {
+      id: "A",
+      text: "ikd-Tree mendukung penyisipan titik baru dan pemangkasan dinamis secara inkremental tanpa perlu membangun ulang seluruh pohon dari nol, menghemat waktu komputasi secara masif.",
+      isCorrect: true,
+      explanation: "Tepat! ikd-Tree mempertahankan keseimbangan pohon secara efisien sehingga FAST-LIO2 dapat berjalan hingga ratusan Hertz pada prosesor komputasi terbatas."
+    },
+    {
+      id: "B",
+      text: "ikd-Tree mengubah sensor laser menjadi pemanas air.",
+      isCorrect: false,
+      explanation: "Salah. ikd-Tree adalah struktur data spasial komputasi titik 3D."
+    },
+    {
+      id: "C",
+      text: "ikd-Tree hanya bisa memproses 3 titik dalam setahun.",
+      isCorrect: false,
+      explanation: "Salah. ikd-Tree mampu menangani puluhan ribu titik laser setiap detik."
+    }
+  ]}
+  hint="Pikirkan berapa biaya komputasi membangun ulang KD-Tree dengan 500.000 titik setiap frame."
+/>

@@ -70,6 +70,10 @@ const LESSON_INDEX: Record<string, string> = {
   'en/manipulation/jacobian-and-singularity': 'en/manipulation/jacobian-and-singularity.mdx',
   'en/manipulation/forward-inverse-kinematics': 'en/manipulation/forward-inverse-kinematics.mdx',
   'en/advanced/icp-scan-matching': 'en/advanced/icp-scan-matching.mdx',
+  'en/advanced/slam-fundamentals': 'en/advanced/slam-fundamentals.mdx',
+  'en/advanced/fastslam-1': 'en/advanced/fastslam-1.mdx',
+  'en/advanced/2d-lidar-slam': 'en/advanced/2d-lidar-slam.mdx',
+  'en/advanced/3d-lidar-and-vslam': 'en/advanced/3d-lidar-and-vslam.mdx',
   'en/advanced/laplacian-consensus': 'en/advanced/laplacian-consensus.mdx',
 
   // Indonesian Lessons
@@ -117,6 +121,10 @@ const LESSON_INDEX: Record<string, string> = {
   'id/manipulation/jacobian-and-singularity': 'id/manipulation/jacobian-and-singularity.mdx',
   'id/manipulation/forward-inverse-kinematics': 'id/manipulation/forward-inverse-kinematics.mdx',
   'id/advanced/icp-scan-matching': 'id/advanced/icp-scan-matching.mdx',
+  'id/advanced/slam-fundamentals': 'id/advanced/slam-fundamentals.mdx',
+  'id/advanced/fastslam-1': 'id/advanced/fastslam-1.mdx',
+  'id/advanced/2d-lidar-slam': 'id/advanced/2d-lidar-slam.mdx',
+  'id/advanced/3d-lidar-and-vslam': 'id/advanced/3d-lidar-and-vslam.mdx',
   'id/advanced/laplacian-consensus': 'id/advanced/laplacian-consensus.mdx',
 };
 

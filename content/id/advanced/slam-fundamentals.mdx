@@ -1,0 +1,105 @@
+---
+id: slam-fundamentals
+title: "Prinsip Dasar & Arsitektur Sistem SLAM (MDPI 2025 Review)"
+slug: slam-fundamentals
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - ekf-localization
+  - occupancy-grid-mapping
+  - lidar-raycasting
+references:
+  - Yong Li et al. (2025). A Review of Simultaneous Localization and Mapping Algorithms Based on Lidar. World Electric Vehicle Journal (MDPI), 16(2), 56.
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics. MIT Press.
+components:
+  - LoopClosureOptimizationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Prinsip Dasar & Arsitektur Sistem SLAM (MDPI 2025 Review)
+
+> "Bagaimana robot dapat membangun peta lingkungan yang belum pernah dilihatnya, sementara ia sendiri membutuhkan peta tersebut untuk mengetahui di mana ia berada? Inilah paradoks 'Ayam dan Telur' dari SLAM."
+
+**Simultaneous Localization and Mapping (SLAM)** adalah teknologi kunci yang memungkinkan agen otonom menjelajahi lingkungan asing (*unknown environment*), melakukan estimasi posisi dan orientasi secara *real-time*, sekaligus merekonstruksi peta spasial 2D/3D yang konsisten secara global.
+
+Berdasarkan kajian literatur terbaru (*World Electric Vehicle Journal / MDPI 2025*), arsitektur modern sistem SLAM berbasis sensor LiDAR, Kamera, dan IMU tersusun atas 4 modul inti:
+
+![Arsitektur Sistem SLAM 2025](/images/sensors/slam-system-architecture.jpg)
+
+---
+
+## 1. Empat Modul Arsitektur Sistem SLAM
+
+```text
+┌─────────────────────────┐     ┌───────────────────────────┐     ┌────────────────────────────┐     ┌─────────────────────────┐
+│ 1. Front-End Matching   │ ──> │ 2. Loop Closure Detection │ ──> │ 3. Back-End Optimization   │ ──> │ 4. Map Construction     │
+│ (ICP, NDT, LOAM Point   │     │ (Scan Context, Global     │     │ (Factor Graphs, GTSAM,     │     │ (Occupancy Grid,        │
+│ Cloud Registration)     │     │ Descriptors, Deep Net)    │     │ Ceres, Pose Graph L-M)     │     │ OctoMap, Surfel, Point) │
+└─────────────────────────┘     └───────────────────────────┘     └────────────────────────────┘     └─────────────────────────┘
+```
+
+1. **Front-End Scan Matching**: Menghitung estimasi perubahan pose relatif antarkerangka data (*inter-frame odometry*) menggunakan algoritma registrasi awan titik (ICP, NDT, atau fitur kelengkungan LOAM).
+2. **Loop Closure Detection (*Deteksi Siklus Tertutup*)**: Mengidentifikasi apakah robot telah mengunjungi kembali area yang sama di masa lalu untuk menambahkan kendala global (*global loop constraint*) dan mencegah akumulasi galat tak terbatas.
+3. **Back-End Optimization**: Mengoptimalkan lintasan historis robot secara global dengan meminimalkan galat seluruh kendala graf (*Factor Graph Non-linear Least Squares*):
+   $$\min_{\mathcal{X}} \sum_{(i,j) \in \mathcal{E}} \|\mathbf{z}_{ij} - h(\mathbf{x}_i, \mathbf{x}_j)\|_{\mathbf{\Omega}_{ij}}^2$$
+4. **Map Construction (*Pembangunan Peta*)**: Menghasilkan representasi lingkungan yang dapat digunakan untuk perencanaan gerak (Grid 2D, OctoMap 3D, Mesh, atau Peta Semantik).
+
+---
+
+## 2. Komparasi Sensor Utama dalam SLAM (Tinjauan MDPI 2025)
+
+```text
+┌──────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Sensor           │ Keunggulan Utama                         │ Kelemahan / Keterbatasan                               │
+├──────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 2D LiDAR         │ Cepat, murah, ideal untuk robot indoor   │ Tidak memiliki informasi ketinggian (sumbu Z)          │
+│ 3D LiDAR         │ Rekonstruksi 3D akurat, kebal cahaya     │ Mahal, data sangat masif, rentan cuaca kabut/hujan     │
+│ Kamera Monokular │ Sangat murah, tekstur visual kaya        │ Skala metrik tidak diketahui (Scale Ambiguity)         │
+│ Kamera Stereo/D  │ Menghasilkan data kedalaman instan       │ Rentan pencahayaan ekstrem & area minim tekstur        │
+│ IMU (Inersial)   │ Frekuensi tinggi (100-1000 Hz), mandiri  │ Drift integrasi kuadratik seiring bertambahnya waktu   │
+└──────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Simulator Interaktif: Deteksi Loop Closure & Optimasi Graf Pose
+
+Amati bagaimana galat drift odometri yang melenceng berhasil ditarik kembali secara sempurna saat kendala *Loop Closure* terdeteksi dan dioptimasi:
+
+<LoopClosureOptimizationSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-slam-fundamentals"
+  question="Mengapa deteksi Loop Closure mutlak diperlukan pada sistem SLAM skala besar?"
+  options={[
+    {
+      id: "A",
+      text: "Karena tanpa Loop Closure, galat integrasi scan matching front-end akan berakumulasi monotonik tanpa batas (drift), sehingga peta menjadi terdistorsi dan tidak konsisten.",
+      isCorrect: true,
+      explanation: "Tepat! Loop closure memperkenalkan ikatan kendala global antara simpul awal dan akhir untuk mengoreksi drift secara serempak di back-end optimizer."
+    },
+    {
+      id: "B",
+      text: "Untuk mempercepat putaran motor roda robot.",
+      isCorrect: false,
+      explanation: "Salah. Loop closure adalah modul estimasi spasial algoritmik, bukan pengatur mekanikal aktuator."
+    },
+    {
+      id: "C",
+      text: "Hanya untuk mewarnai tampilan GUI di monitor pengguna.",
+      isCorrect: false,
+      explanation: "Salah. Loop closure adalah inti pemulihan konsistensi topologi dan metrik peta global."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi jika robot berputar satu putaran penuh sejauh 1 kilometer dan kembali ke titik mula dengan drift odometri 5 meter."
+/>

@@ -44,6 +44,8 @@ import { KMeansClusteringSimulator } from '@/components/simulation/KMeansCluster
 import { RectangleFittingSimulator } from '@/components/simulation/RectangleFittingSimulator';
 import { EkfLocalizationSimulator } from '@/components/simulation/EkfLocalizationSimulator';
 import { HistogramFilterSimulator } from '@/components/simulation/HistogramFilterSimulator';
+import { FastSlamSimulator } from '@/components/simulation/FastSlamSimulator';
+import { LoopClosureOptimizationSimulator } from '@/components/simulation/LoopClosureOptimizationSimulator';
 import { ConceptCheck, QuizOption } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { CodeBlock } from '@/components/mdx/CodeBlock';
@@ -483,6 +485,16 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<HistogramFilterSimulator')) {
         nodes.push(<HistogramFilterSimulator key={`comp-hfs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<FastSlamSimulator')) {
+        nodes.push(<FastSlamSimulator key={`comp-fss-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<LoopClosureOptimizationSimulator')) {
+        nodes.push(<LoopClosureOptimizationSimulator key={`comp-lcos-${i}`} />);
         i++;
         continue;
       }

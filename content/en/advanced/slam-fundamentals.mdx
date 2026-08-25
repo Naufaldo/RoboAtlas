@@ -1,0 +1,105 @@
+---
+id: slam-fundamentals
+title: "Simultaneous Localization & Mapping (SLAM) Foundations & Architecture"
+slug: slam-fundamentals
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - ekf-localization
+  - occupancy-grid-mapping
+  - lidar-raycasting
+references:
+  - Yong Li et al. (2025). A Review of Simultaneous Localization and Mapping Algorithms Based on Lidar. World Electric Vehicle Journal (MDPI), 16(2), 56.
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics. MIT Press.
+components:
+  - LoopClosureOptimizationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Simultaneous Localization & Mapping (SLAM) Foundations & Architecture
+
+> "How can an autonomous robot build a map of an unknown environment when it needs that very map to determine its current position? This is the classic 'Chicken-and-Egg' dilemma of SLAM."
+
+**Simultaneous Localization and Mapping (SLAM)** is the foundational technology enabling mobile robots and autonomous vehicles to navigate previously unseen environments in real-time while constructing globally consistent 2D or 3D spatial models.
+
+Grounded in the latest comprehensive survey (*World Electric Vehicle Journal / MDPI 2025*), state-of-the-art LiDAR, Visual, and Inertial SLAM systems are structured around 4 primary modular pipelines:
+
+![SLAM System Architecture 2025](/images/sensors/slam-system-architecture.jpg)
+
+---
+
+## 1. The Four Core Modules of Modern SLAM Architectures
+
+```text
+┌─────────────────────────┐     ┌───────────────────────────┐     ┌────────────────────────────┐     ┌─────────────────────────┐
+│ 1. Front-End Matching   │ ──> │ 2. Loop Closure Detection │ ──> │ 3. Back-End Optimization   │ ──> │ 4. Map Construction     │
+│ (ICP, NDT, LOAM Point   │     │ (Scan Context, Global     │     │ (Factor Graphs, GTSAM,     │     │ (Occupancy Grid,        │
+│ Cloud Registration)     │     │ Descriptors, Deep Net)    │     │ Ceres, Pose Graph L-M)     │     │ OctoMap, Surfel, Point) │
+└─────────────────────────┘     └───────────────────────────┘     └────────────────────────────┘     └─────────────────────────┘
+```
+
+1. **Front-End Scan Matching**: Estimates incremental relative transformation (*inter-frame odometry*) between consecutive sensor frames using point cloud registration (Point-to-Point/Plane ICP, NDT, or LOAM curvature features).
+2. **Loop Closure Detection**: Recognizes when the vehicle revisits previously mapped areas (via Scan Context descriptors or deep embeddings) to insert loopback edges that prevent unbounded drift accumulation.
+3. **Back-End Optimization**: Solves a global non-linear least squares factor graph optimization problem over all poses and landmarks:
+   $$\min_{\mathcal{X}} \sum_{(i,j) \in \mathcal{E}} \|\mathbf{z}_{ij} - h(\mathbf{x}_i, \mathbf{x}_j)\|_{\mathbf{\Omega}_{ij}}^2$$
+4. **Map Construction**: Generates volumetric structures tailored for downstream autonomous motion planning (2D Occupancy Grids, 3D OctoMaps, Surfel meshes, or Semantic Maps).
+
+---
+
+## 2. Sensor Modality Trade-Offs (MDPI 2025 Review Summary)
+
+```text
+┌──────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Sensor Type      │ Primary Advantages                       │ Inherent Limitations                                   │
+├──────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 2D LiDAR         │ Fast scan rates, cost-effective          │ Lacks vertical (Z-axis) elevation geometric data       │
+│ 3D LiDAR         │ Accurate metric range, light-invariant   │ High cost, large data bandwidth, rain/dust reflection  │
+│ Monocular Camera │ Low hardware cost, rich photometric info │ Monocular scale ambiguity ($SE(3)$ up to scale factor) │
+│ Stereo / RGB-D   │ Direct depth retrieval per pixel         │ Degradation under extreme lighting or textureless walls│
+│ IMU (Inertial)   │ High frequency (100–1000 Hz), passive    │ Unbounded quadratic integration drift over long trials │
+└──────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Interactive Simulator: Loop Closure & Pose Graph Optimization
+
+Observe how open-loop odometry trajectory errors accumulate until a Loop Closure constraint edge is recognized, snapping the entire graph into alignment:
+
+<LoopClosureOptimizationSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-slam-fundamentals"
+  question="Why is Loop Closure Detection indispensable for large-scale SLAM deployments?"
+  options={[
+    {
+      id: "A",
+      text: "Because without loop closure, front-end incremental scan matching errors accumulate monotonically without bound (drift), resulting in map distortion and topological inconsistency.",
+      isCorrect: true,
+      explanation: "Correct! Loop closure adds global constraint edges connecting past and present poses, enabling the back-end optimizer to relax and eliminate accumulated drift."
+    },
+    {
+      id: "B",
+      text: "To accelerate the vehicle's maximum wheel rotational speed.",
+      isCorrect: false,
+      explanation: "Incorrect. Loop closure is a state estimation algorithm, not a motor actuator controller."
+    },
+    {
+      id: "C",
+      text: "It is solely used to apply color palettes to the visualization screen.",
+      isCorrect: false,
+      explanation: "Incorrect. Loop closure is essential for global topological and metric spatial consistency."
+    }
+  ]}
+  hint="Consider what happens when a robot drives a 1-kilometer closed circuit and returns to the starting point with 5 meters of odometric drift."
+/>

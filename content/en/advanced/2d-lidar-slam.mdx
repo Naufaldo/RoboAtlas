@@ -1,0 +1,99 @@
+---
+id: 2d-lidar-slam
+title: "2D LiDAR SLAM Paradigms: Gmapping, Hector & Google Cartographer"
+slug: 2d-lidar-slam
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - slam-fundamentals
+  - fastslam-1
+  - occupancy-grid-mapping
+references:
+  - Wolfgang Hess, Damon Kohler, Holger Rapp, Daniel Andor (2016). Real-Time Loop Closure in 2D LIDAR SLAM (Cartographer). IEEE ICRA.
+  - Giorgio Grisetti, Cyrill Stachniss, Wolfram Burgard (2007). Improved Techniques for Grid Mapping with Rao-Blackwellized Particle Filters (Gmapping). IEEE TRO.
+  - Stefan Kohlbrecher et al. (2011). A Flexible and Scalable SLAM System with Full 3D Motion Estimation (Hector SLAM).
+components:
+  - LoopClosureOptimizationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# 2D LiDAR SLAM Paradigms: Gmapping, Hector & Google Cartographer
+
+> "How did 2D mobile SLAM evolve from monolithic particle-grid filters (Gmapping) into hierarchical submap-based pose graph optimization with branch-and-bound scan matching (Google Cartographer)?"
+
+In the domain of autonomous ground vehicles (AGVs, warehouse mobile robots, robotic vacuum cleaners), **2D planar LiDAR SLAM** represents the gold-standard baseline for real-time indoor navigation. Based on the comprehensive review (*MDPI 2025*), 2D LiDAR SLAM paradigms are organized across three distinct algorithmic generations:
+
+![2D LiDAR SLAM Paradigms](/images/sensors/2d-lidar-slam-cartographer.jpg)
+
+---
+
+## 1. Systematic Comparison of 4 Major 2D SLAM Schemes
+
+```text
+┌─────────────────────┬───────────────────────────┬────────────────────┬────────────────────────────────────────────────────────┐
+│ SLAM Algorithm      │ Underlying Framework      │ Loop Closure       │ Key Features & Inherent Limitations                    │
+├─────────────────────┼───────────────────────────┼────────────────────┼────────────────────────────────────────────────────────┤
+│ Gmapping (2007)     │ RBPF Particle Filter      │ Implicit only      │ Accurate particle filtering; memory scales with size   │
+│ Hector SLAM (2011)  │ Gauss-Newton Scan-to-Map  │ None               │ Operates without odometry; prone to rotational slip    │
+│ Karto SLAM (2010)   │ Graph Optimization (SPA)  │ Yes (Scan-to-Scan) │ Leverages system sparsity; moderate CPU overhead       │
+│ Cartographer (2016) │ Submaps + Branch-&-Bound  │ Yes (Global Ceres) │ Exceptional precision; submap modularity; production standard│
+└─────────────────────┴───────────────────────────┴────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Google Cartographer Architectural Breakdown
+
+Google Cartographer solves the scalability bottleneck of pose-graph SLAM via a two-tier hierarchical framework:
+
+### Tier 1: Local SLAM & Submaps
+- Time-synchronized, motion-undistorted laser scans are registered into an **active local submap** using *Real-Time Correlative Scan Matching (CSM)* followed by Ceres non-linear gradient optimization.
+- Because each submap aggregates only a small window of scans, local construction is computationally cheap and drift-free.
+
+### Tier 2: Global SLAM & Loop Closure Optimization
+- Once a submap is finalized (*frozen*), a multi-resolution **Branch-and-Bound (B&B)** search identifies scan-to-submap matches across all historical submaps.
+- When valid loop closure constraint edges are discovered, a sparse **Levenberg-Marquardt / Ceres Solver** globally relaxes all pose nodes and submap origins to eliminate accumulated odometry drift.
+
+---
+
+## 3. Interactive Simulator: Loop Closure & Submap Factor Graph Optimization
+
+Observe how identifying a loop closure constraint edge triggers a non-linear graph relaxation that eliminates open-loop drift:
+
+<LoopClosureOptimizationSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-2d-lidar-slam"
+  question="What is the primary advantage of utilizing Local Submaps in Google Cartographer rather than updating a single global occupancy grid directly?"
+  options={[
+    {
+      id: "A",
+      text: "Submaps isolate local odometry errors to small spatial windows and enable efficient parallel Branch-and-Bound search for global loop closure verification.",
+      isCorrect: true,
+      explanation: "Correct! The submap abstraction allows Cartographer to map vast multi-building complexes without memory explosions or cumulative spatial warping."
+    },
+    {
+      id: "B",
+      text: "Submaps allow wheeled robots to fly above ceiling obstacles.",
+      isCorrect: false,
+      explanation: "Incorrect. Submaps are a 2D/3D spatial partitioning data structure for SLAM."
+    },
+    {
+      id: "C",
+      text: "Submaps remove the requirement for laser sensors entirely.",
+      isCorrect: false,
+      explanation: "Incorrect. Submaps are constructed directly from raw LiDAR scan beams."
+    }
+  ]}
+  hint="Consider the efficiency of matching laser scans against a local 10-meter patch versus a 500-meter global grid."
+/>

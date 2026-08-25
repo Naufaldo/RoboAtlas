@@ -1,0 +1,114 @@
+---
+id: fastslam-1
+title: "FastSLAM 1.0: Rao-Blackwellized Particle Filtering SLAM"
+slug: fastslam-1
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mcl-particle-filter
+  - ekf-localization
+references:
+  - Michael Montemerlo, Sebastian Thrun, Daphne Koller, Ben Wegbreit (2002). FastSLAM: A Factored Solution to the Simultaneous Localization and Mapping Problem. AAAI.
+  - Atsushi Sakai (2020). PythonRobotics: FastSLAM 1.0.
+components:
+  - FastSlamSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# FastSLAM 1.0: Rao-Blackwellized Particle Filtering SLAM
+
+> "If an environmental map contains 10,000 landmarks, a monolithic EKF-SLAM covariance matrix requires a $(20,003 \times 20,003)$ matrix with $O(K^2)$ computational complexity per update. How does FastSLAM factorize this into a scalable $O(M \log K)$ solution?"
+
+**FastSLAM 1.0** leverages a mathematical factorization theorem known as **Rao-Blackwellized Particle Filtering (RBPF)**. The core insight is: *Given the true robot trajectory history $\mathbf{x}_{0:t}$, individual landmark positions $\mathbf{m}_k$ become conditionally independent of one another*.
+
+![FastSLAM 1.0 Rao-Blackwellized Factorization](/images/sensors/fastslam-rao-blackwellized.jpg)
+
+---
+
+## 1. Mathematical Factorization of the Full SLAM Posterior
+
+The joint posterior probability distribution over the vehicle trajectory and all $K$ landmarks factors exactly as:
+
+$$
+p(\mathbf{x}_{0:t}, \mathbf{m} \mid \mathbf{z}_{1:t}, \mathbf{u}_{1:t}) = p(\mathbf{x}_{0:t} \mid \mathbf{z}_{1:t}, \mathbf{u}_{1:t}) \prod_{k=1}^K p(\mathbf{m}_k \mid \mathbf{x}_{0:t}, \mathbf{z}_{1:t})
+$$
+
+### The Particle Structure in FastSLAM 1.0:
+Each particle $m \in \{1, \dots, M\}$ contains:
+1. A path trajectory hypothesis: $\mathbf{x}_t^{[m]} = [x, y, \theta]^T$
+2. An array of $K$ independent low-dimensional $(2 \times 2)$ EKF Gaussian estimators: $(\boldsymbol{\mu}_{k}^{[m]}, \mathbf{\Sigma}_{k}^{[m]})$ for each landmark.
+
+---
+
+## 2. Four Algorithmic Steps of FastSLAM 1.0
+
+### Step 1: Robot Pose Motion Sampling
+Each particle samples an updated pose from the forward unicycle kinematic motion model:
+
+$$
+\mathbf{x}_t^{[m]} \sim p(\mathbf{x}_t \mid \mathbf{u}_t, \mathbf{x}_{t-1}^{[m]})
+$$
+
+### Step 2: Independent 2D Landmark EKF Updates
+For each observed landmark $k$ with measurement vector $\mathbf{z}_t = [r_t, \phi_t]^T$:
+1. Predicted measurement: $\hat{\mathbf{z}}^{[m]} = h(\mathbf{x}_t^{[m]}, \boldsymbol{\mu}_{k, t-1}^{[m]})$
+2. Measurement Jacobian with respect to landmark state: $\mathbf{H}_k^{[m]} = \left. \nabla_{\mathbf{m}_k} h \right|_{\boldsymbol{\mu}_{k, t-1}^{[m]}}$
+3. Innovation covariance: $\mathbf{S}_k^{[m]} = \mathbf{H}_k^{[m]} \mathbf{\Sigma}_{k, t-1}^{[m]} (\mathbf{H}_k^{[m]})^T + \mathbf{R}_t$
+4. Kalman gain: $\mathbf{K}_k^{[m]} = \mathbf{\Sigma}_{k, t-1}^{[m]} (\mathbf{H}_k^{[m]})^T (\mathbf{S}_k^{[m]})^{-1}$
+5. Landmark mean & covariance update:
+   $$\boldsymbol{\mu}_{k, t}^{[m]} = \boldsymbol{\mu}_{k, t-1}^{[m]} + \mathbf{K}_k^{[m]} (\mathbf{z}_t - \hat{\mathbf{z}}^{[m]})$$
+   $$\mathbf{\Sigma}_{k, t}^{[m]} = (\mathbf{I} - \mathbf{K}_k^{[m]} \mathbf{H}_k^{[m]}) \mathbf{\Sigma}_{k, t-1}^{[m]}$$
+
+### Step 3: Importance Weight Computation
+Each particle's importance weight is updated by the Gaussian observation likelihood:
+
+$$
+w^{[m]} = |2\pi \mathbf{S}_k^{[m]}|^{-\frac{1}{2}} \exp\left( -\frac{1}{2} (\mathbf{z}_t - \hat{\mathbf{z}}^{[m]})^T (\mathbf{S}_k^{[m]})^{-1} (\mathbf{z}_t - \hat{\mathbf{z}}^{[m]}) \right)
+$$
+
+### Step 4: Systematic Resampling
+Executed when the effective particle count $N_{\text{eff}} = \frac{1}{\sum (w^{[m]})^2} < \frac{M}{2}$ to eliminate divergent hypotheses while multiplying consistent particles.
+
+---
+
+## 3. Interactive Simulator: FastSLAM 1.0 & Per-Particle Landmark Ellipses
+
+Explore real-time particle trajectory dispersion, landmark discovery, and uncertainty contraction:
+
+<FastSlamSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-fastslam-1"
+  question="What is the key architectural difference between standard full EKF-SLAM and FastSLAM 1.0?"
+  options={[
+    {
+      id: "A",
+      text: "Full EKF-SLAM maintains a single giant (3+2K)x(3+2K) covariance matrix with full inter-landmark correlations, while FastSLAM factors landmarks into K independent 2x2 EKFs per particle given the path history.",
+      isCorrect: true,
+      explanation: "Correct! This Rao-Blackwellized conditional independence factorization dramatically reduces complexity from O(K^2) down to O(M log K)."
+    },
+    {
+      id: "B",
+      text: "FastSLAM cannot operate with more than two physical landmarks.",
+      isCorrect: false,
+      explanation: "Incorrect. FastSLAM was designed specifically to scale to tens of thousands of landmarks."
+    },
+    {
+      id: "C",
+      text: "EKF-SLAM uses random particles while FastSLAM uses zero probability math.",
+      isCorrect: false,
+      explanation: "Incorrect. FastSLAM is a particle filter approach, while EKF-SLAM is a parametric Gaussian filter."
+    }
+  ]}
+  hint="Recall the Rao-Blackwellization factorization: p(x, m | z, u) = p(x | z, u) * product p(m_k | x, z)."
+/>

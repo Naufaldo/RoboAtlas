@@ -1,0 +1,113 @@
+---
+id: 3d-lidar-and-vslam
+title: "3D LiDAR SLAM (LOAM/FAST-LIO) & Visual SLAM (VSLAM)"
+slug: 3d-lidar-and-vslam
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - slam-fundamentals
+  - icp-scan-matching
+  - 2d-lidar-slam
+references:
+  - "Ji Zhang, Sanjiv Singh (2014). LOAM: Lidar Odometry and Mapping in Real-Time. Robotics: Science and Systems."
+  - "Wei Xu, Fu Zhang (2022). FAST-LIO2: Fast Direct LiDAR-Inertial Odometry. IEEE Transactions on Robotics."
+  - "Carlos Campos et al. (2021). ORB-SLAM3: An Accurate Open-Source Library for Visual, Visual-Inertial, and Multi-Map SLAM. IEEE TRO."
+  - "Yong Li et al. (2025). A Review of Simultaneous Localization and Mapping Algorithms Based on Lidar. World Electric Vehicle Journal (MDPI)."
+components:
+  - SlamSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# 3D LiDAR SLAM (LOAM/FAST-LIO) & Visual SLAM (VSLAM)
+
+> "How do high-speed autonomous vehicles and aerial drones map the real world in full 6-DOF ($SE(3)$) using high-curvature 3D LiDAR point clouds and tightly-coupled visual-inertial camera streams?"
+
+Three-dimensional autonomous robot navigation requires full 6-Degrees-of-Freedom state estimation ($\mathbf{x} = [x, y, z, \phi, \theta, \psi]^T \in SE(3)$). The two foremost paradigms powering modern spatial autonomy are **3D LiDAR SLAM** and **Visual SLAM (VSLAM)**.
+
+![Comparison of 3D LiDAR SLAM and Visual SLAM](/images/sensors/3d-lidar-loam-fastlio-vslam.jpg)
+
+---
+
+## 1. 3D LiDAR SLAM: From LOAM to FAST-LIO2
+
+### A. LOAM Geometric Curvature Feature Extraction
+For point $\mathbf{p}_{(k,i)}$ in LiDAR scan frame $k$ with local neighborhood set $S$:
+
+$$
+c = \frac{1}{|S| \cdot \|\mathbf{p}_{(k,i)}\|} \left\| \sum_{j \in S, j \neq i} (\mathbf{p}_{(k,i)} - \mathbf{p}_{(k,j)}) \right\|
+$$
+
+- High curvature $c \to$ **Edge / Corner Features** $\to$ matched against nearest line segments.
+- Low curvature $c \to$ **Planar / Flat Surface Features** $\to$ matched against nearest tangent planes.
+
+### B. FAST-LIO2 & Incremental KD-Tree (`ikd-Tree`)
+- Eliminates manual feature extraction overhead by matching raw laser points directly (*direct point-to-plane residual registration*).
+- Uses an **`ikd-Tree` (Incremental KD-Tree)** data structure supporting dynamic point insertions, deletions, and $k$-NN searches in $O(\log N)$ time, enabling direct LiDAR odometry updates at rates exceeding $100\text{ Hz}$.
+
+---
+
+## 2. Visual SLAM (VSLAM): Epipolar Geometry & Triangulation
+
+### A. Monocular Cameras & The Essential Matrix ($\mathbf{E}$)
+Calibrated normalized image coordinates $\mathbf{x}_1, \mathbf{x}_2$ satisfy the fundamental epipolar constraint:
+
+$$
+\mathbf{x}_2^T \mathbf{E} \mathbf{x}_1 = 0, \quad \text{where } \mathbf{E} = [\mathbf{t}]_{\times} \mathbf{R}
+$$
+
+*(Monocular visual SLAM exhibits scale ambiguity; metric scale is unobservable without IMU pre-integration or known external fiducials).*
+
+### B. Stereo Cameras & Disparity Triangulation
+For a calibrated stereo rig with focal length $f$ and baseline distance $B$:
+
+$$
+Z = \frac{f \cdot B}{d}, \quad \text{where } d = u_L - u_R \text{ (pixel disparity)}
+$$
+
+### C. Tightly-Coupled Multi-Sensor Fusion (LVI-SAM & R3LIVE)
+- **LVI-SAM**: Integrates a LiDAR-Inertial subsystem (LIS) and Visual-Inertial subsystem (VIS) into a joint factor graph with cross-system initialization and loop closure.
+- **R3LIVE**: Fuses LiDAR and IMU measurements with an Iterated Error-State Kalman Filter (IESKF) at high frequency, using photometric bundle adjustment to colorize 3D point cloud maps with real-time RGB textures.
+
+---
+
+## 3. Interactive Simulator: Real-Time SLAM Trajectory Estimation
+
+Run interactive SLAM mapping experiments tracking landmark observations and maintaining consistent map graphs:
+
+<SlamSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-3d-lidar-vslam"
+  question="What is the breakthrough advantage of the ikd-Tree structure in the FAST-LIO2 algorithm compared to traditional static KD-Trees?"
+  options={[
+    {
+      id: "A",
+      text: "The ikd-Tree allows incremental dynamic insertion and box deletion of point cloud voxels without rebuilding the entire tree from scratch, drastically reducing runtime latency.",
+      isCorrect: true,
+      explanation: "Correct! The ikd-Tree maintains tree balance incrementally, enabling FAST-LIO2 to achieve direct LiDAR-inertial odometry at 100+ Hz."
+    },
+    {
+      id: "B",
+      text: "It converts optical LiDAR lasers into wireless Wi-Fi routers.",
+      isCorrect: false,
+      explanation: "Incorrect. The ikd-Tree is an algorithmic spatial indexing data structure."
+    },
+    {
+      id: "C",
+      text: "It limits LiDAR systems to only 10 points per scan.",
+      isCorrect: false,
+      explanation: "Incorrect. ikd-Tree is designed to scale effortlessly to hundreds of thousands of active points."
+    }
+  ]}
+  hint="Consider the CPU cost of reconstructing a KD-Tree containing 500,000 points on every single laser frame."
+/>

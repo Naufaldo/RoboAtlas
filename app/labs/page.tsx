@@ -42,6 +42,8 @@ import { KMeansClusteringSimulator } from '@/components/simulation/KMeansCluster
 import { RectangleFittingSimulator } from '@/components/simulation/RectangleFittingSimulator';
 import { EkfLocalizationSimulator } from '@/components/simulation/EkfLocalizationSimulator';
 import { HistogramFilterSimulator } from '@/components/simulation/HistogramFilterSimulator';
+import { FastSlamSimulator } from '@/components/simulation/FastSlamSimulator';
+import { LoopClosureOptimizationSimulator } from '@/components/simulation/LoopClosureOptimizationSimulator';
 import {
   Compass,
   Cpu,
@@ -570,6 +572,32 @@ export default function LabsPage() {
       icon: '📊',
       lessonHref: '/learn/estimation/histogram-filter-localization',
       component: <HistogramFilterSimulator />,
+    },
+    {
+      id: 'fastslam-1',
+      category: 'advanced',
+      paths: ['slam'],
+      titleEn: 'FastSLAM 1.0 Rao-Blackwellized Particle Filtering Lab',
+      titleId: 'Laboratorium FastSLAM 1.0 & Elips Landmark Partikel',
+      descEn: 'Track multi-hypothesis robot paths with individual 2x2 EKF landmark Gaussian estimators per particle.',
+      descId: 'Lacak lintasan multi-hipotesis dengan estimator Gaussian EKF landmark 2x2 terpisah pada setiap partikel.',
+      levelBadge: 'Level 10',
+      icon: '✨',
+      lessonHref: '/learn/advanced/fastslam-1',
+      component: <FastSlamSimulator />,
+    },
+    {
+      id: 'loop-closure-graph',
+      category: 'advanced',
+      paths: ['slam'],
+      titleEn: 'Pose Graph SLAM & Loop Closure Optimization Lab',
+      titleId: 'Laboratorium Graf Pose SLAM & Optimasi Loop Closure',
+      descEn: 'Observe open-loop odometry trajectory drift snap into consistency when loop closure edges are optimized.',
+      descId: 'Amati drift odometri tereliminasi seketika saat kendala loop closure dioptimasi menggunakan graf faktor.',
+      levelBadge: 'Level 10',
+      icon: '🔗',
+      lessonHref: '/learn/advanced/2d-lidar-slam',
+      component: <LoopClosureOptimizationSimulator />,
     },
   ];
 

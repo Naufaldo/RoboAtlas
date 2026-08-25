@@ -1,0 +1,99 @@
+---
+id: 2d-lidar-slam
+title: "Paradigma SLAM LiDAR 2D: Gmapping, Hector & Google Cartographer"
+slug: 2d-lidar-slam
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - slam-fundamentals
+  - fastslam-1
+  - occupancy-grid-mapping
+references:
+  - Wolfgang Hess, Damon Kohler, Holger Rapp, Daniel Andor (2016). Real-Time Loop Closure in 2D LIDAR SLAM (Cartographer). IEEE ICRA.
+  - Giorgio Grisetti, Cyrill Stachniss, Wolfram Burgard (2007). Improved Techniques for Grid Mapping with Rao-Blackwellized Particle Filters (Gmapping). IEEE TRO.
+  - Stefan Kohlbrecher et al. (2011). A Flexible and Scalable SLAM System with Full 3D Motion Estimation (Hector SLAM).
+components:
+  - LoopClosureOptimizationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Paradigma SLAM LiDAR 2D: Gmapping, Hector & Google Cartographer
+
+> "Bagaimana algoritma SLAM 2D berevolusi dari era partikel grid raksasa (Gmapping) menjadi optimasi graf pose berbasis submap dengan branch-and-bound scan matching (Google Cartographer)?"
+
+Dalam ekosistem robotika bergerak dalam ruangan (*indoor mobile robots* seperti AGV pabrik, robot vacuum cleaner, dan robot riset), **SLAM LiDAR 2D** adalah tulang punggung navigasi otonom. Berdasarkan tinjauan literatur (*MDPI 2025*), algoritma SLAM 2D terbagi menjadi tiga generasi arsitektur utama:
+
+![Paradigma Algoritma SLAM LiDAR 2D](/images/sensors/2d-lidar-slam-cartographer.jpg)
+
+---
+
+## 1. Komparasi 4 Algoritma SLAM LiDAR 2D Utama
+
+```text
+┌─────────────────────┬───────────────────────────┬────────────────────┬────────────────────────────────────────────────────────┐
+│ Algoritma SLAM 2D   │ Kerangka Kerja Dasar      │ Loop Closure       │ Karakteristik & Keterbatasan Utama                     │
+├─────────────────────┼───────────────────────────┼────────────────────┼────────────────────────────────────────────────────────┤
+│ Gmapping (2007)     │ RBPF Particle Filter      │ Tidak Eksplisit    │ Pemfilteran partikel grid akurat di area kecil/sedang  │
+│ Hector SLAM (2011)  │ Gauss-Newton Scan-to-Map  │ Tidak Ada          │ Tidak butuh odometri, tapi mudah drift saat rotasi     │
+│ Karto SLAM (2010)   │ Graph Optimization (SPA)  │ Ya (Scan-to-Scan)  │ Pemanfaatan matriks jarang graf, komputasi agak berat  │
+│ Cartographer (2016) │ Submaps + Branch-&-Bound  │ Ya (Global Ceres)  │ Sangat presisi, submap modular, standar industri       │
+└─────────────────────┴───────────────────────────┴────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Bedah Arsitektur Google Cartographer
+
+Google Cartographer memecahkan masalah komputasi SLAM graf melalui dua level:
+
+### Level 1: Pemetaan Lokal (*Local SLAM & Submaps*)
+- Sinar laser yang telah dikompensasi waktu (*motion undistortion*) dicocokkan ke dalam **Submap Lokal Aktif** menggunakan *Real-Time Correlative Scan Matching (CSM)* yang dilanjutkan dengan optimasi gradien non-linear Ceres.
+- Setiap submap hanya berisi beberapa puluh frame pindaian sehingga pembuatan submap berjalan sangat cepat dan konsisten secara lokal.
+
+### Level 2: Optimasi Global & Loop Closure (*Global SLAM*)
+- Ketika sebuah submap selesai dibuat (*frozen submap*), algoritma menjalankan pencocokan **Branch-and-Bound (B&B)** multi-resolusi untuk mendeteksi apakah pindaian saat ini cocok dengan submap lama mana pun di seluruh peta.
+- Setelah kendala *loop closure* ditemukan, optimasi **Levenberg-Marquardt / Ceres Solver** merelaksasikan seluruh graf pose untuk menghapus akumulasi drift odometri.
+
+---
+
+## 3. Simulator Interaktif: Deteksi Loop & Optimasi Graf Submap
+
+Amati bagaimana penutupan simpul lintasan memicu penataan ulang seluruh lintasan robot dan peta rintangan:
+
+<LoopClosureOptimizationSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-2d-lidar-slam"
+  question="Apa keunggulan utama penggunaan Submap pada Google Cartographer dibanding membangun satu peta grid global tunggal secara langsung?"
+  options={[
+    {
+      id: "A",
+      text: "Submap membatasi galat lokal ke area kecil dan memungkinkan pencocokan Branch-and-Bound berjalan sangat cepat secara paralel untuk deteksi Loop Closure global.",
+      isCorrect: true,
+      explanation: "Tepat! Pendekatan berbasis submap memungkinkan Cartographer membangun peta gedung bertingkat atau gudang raksasa tanpa kehabisan memori atau mengalami distorsi kumulatif."
+    },
+    {
+      id: "B",
+      text: "Submap mengharuskan robot memiliki sayap terbang.",
+      isCorrect: false,
+      explanation: "Salah. Submap adalah teknik partisi struktur data spasial 2D/3D untuk sistem SLAM."
+    },
+    {
+      id: "C",
+      text: "Submap menghapus kebutuhan sensor LiDAR sama sekali.",
+      isCorrect: false,
+      explanation: "Salah. Submap justru dibangun dari data pindaian berkas LiDAR."
+    }
+  ]}
+  hint="Pikirkan tentang efisiensi pencarian kecocokan pindaian laser di area kecil versus area seluas 500 meter."
+/>

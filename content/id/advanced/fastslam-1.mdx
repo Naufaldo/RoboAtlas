@@ -1,0 +1,114 @@
+---
+id: fastslam-1
+title: "FastSLAM 1.0: Pemfilteran Partikel Rao-Blackwellized"
+slug: fastslam-1
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mcl-particle-filter
+  - ekf-localization
+references:
+  - Michael Montemerlo, Sebastian Thrun, Daphne Koller, Ben Wegbreit (2002). FastSLAM: A Factored Solution to the Simultaneous Localization and Mapping Problem. AAAI.
+  - Atsushi Sakai (2020). PythonRobotics: FastSLAM 1.0.
+components:
+  - FastSlamSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# FastSLAM 1.0: Pemfilteran Partikel Rao-Blackwellized
+
+> "Jika sebuah peta memiliki 10.000 landmark, matriks kovariansi EKF-SLAM membutuhkan ukuran $20.000 \times 20.000$ dengan kompleksitas $O(K^2)$ per update. Bagaimana FastSLAM memfaktorkan masalah ini menjadi $O(M \log K)$ yang jauh lebih efisien?"
+
+**FastSLAM 1.0** menggunakan teorema faktorisasi probabilitas cerdas bernama **Rao-Blackwellized Particle Filtering (RBPF)**. Kuncinya adalah observasi matematis penting: *Jika lintasan robot di masa lalu $\mathbf{x}_{0:t}$ diketahui dengan pasti, seluruh landmark $\mathbf{m}_k$ menjadi independen satu sama lain secara kondisional*.
+
+![Faktorisasi FastSLAM 1.0 Rao-Blackwellized](/images/sensors/fastslam-rao-blackwellized.jpg)
+
+---
+
+## 1. Penurunan Matematis Faktorisasi Posterior SLAM Penuh
+
+Distribusi posterior gabungan status robot dan seluruh $K$ landmark difaktorkan secara eksak:
+
+$$
+p(\mathbf{x}_{0:t}, \mathbf{m} \mid \mathbf{z}_{1:t}, \mathbf{u}_{1:t}) = p(\mathbf{x}_{0:t} \mid \mathbf{z}_{1:t}, \mathbf{u}_{1:t}) \prod_{k=1}^K p(\mathbf{m}_k \mid \mathbf{x}_{0:t}, \mathbf{z}_{1:t})
+$$
+
+### Struktur Partikel FastSLAM 1.0:
+Setiap partikel $m \in \{1, \dots, M\}$ menyimpan:
+1. Hipotesis pose robot: $\mathbf{x}_t^{[m]} = [x, y, \theta]^T$
+2. Sekumpulan $K$ Filter Kalman EKF independen berukuran $2\times 2$ untuk setiap landmark: $(\boldsymbol{\mu}_{k}^{[m]}, \mathbf{\Sigma}_{k}^{[m]})$
+
+---
+
+## 2. Empat Langkah Algoritma FastSLAM 1.0 per Time Step
+
+### Langkah 1: Sampling Gerakan Pose Robot
+Setiap partikel menarik pose baru berdasarkan model kinematika robot dengan derau kontrol:
+
+$$
+\mathbf{x}_t^{[m]} \sim p(\mathbf{x}_t \mid \mathbf{u}_t, \mathbf{x}_{t-1}^{[m]})
+$$
+
+### Langkah 2: Pembaruan EKF Landmark Independen
+Untuk setiap landmark $k$ yang diamati dengan pengukuran jarak-sudut $\mathbf{z}_t$:
+1. Prediksi pengukuran: $\hat{\mathbf{z}}^{[m]} = h(\mathbf{x}_t^{[m]}, \boldsymbol{\mu}_{k, t-1}^{[m]})$
+2. Jacobian pengukuran landmark: $\mathbf{H}_k^{[m]} = \left. \nabla_{\mathbf{m}_k} h \right|_{\boldsymbol{\mu}_{k, t-1}^{[m]}}$
+3. Kovariansi inovasi: $\mathbf{S}_k^{[m]} = \mathbf{H}_k^{[m]} \mathbf{\Sigma}_{k, t-1}^{[m]} (\mathbf{H}_k^{[m]})^T + \mathbf{R}_t$
+4. Kalman gain: $\mathbf{K}_k^{[m]} = \mathbf{\Sigma}_{k, t-1}^{[m]} (\mathbf{H}_k^{[m]})^T (\mathbf{S}_k^{[m]})^{-1}$
+5. Pembaruan mean & kovariansi landmark:
+   $$\boldsymbol{\mu}_{k, t}^{[m]} = \boldsymbol{\mu}_{k, t-1}^{[m]} + \mathbf{K}_k^{[m]} (\mathbf{z}_t - \hat{\mathbf{z}}^{[m]})$$
+   $$\mathbf{\Sigma}_{k, t}^{[m]} = (\mathbf{I} - \mathbf{K}_k^{[m]} \mathbf{H}_k^{[m]}) \mathbf{\Sigma}_{k, t-1}^{[m]}$$
+
+### Langkah 3: Perhitungan Bobot Kepentingan (*Importance Weight*)
+Bobot partikel diperbarui sebanding dengan kemungkinan Gaussian residual:
+
+$$
+w^{[m]} = |2\pi \mathbf{S}_k^{[m]}|^{-\frac{1}{2}} \exp\left( -\frac{1}{2} (\mathbf{z}_t - \hat{\mathbf{z}}^{[m]})^T (\mathbf{S}_k^{[m]})^{-1} (\mathbf{z}_t - \hat{\mathbf{z}}^{[m]}) \right)
+$$
+
+### Langkah 4: Resampling Partikel Sistematik
+Dilakukan saat jumlah partikel efektif $N_{\text{eff}} = \frac{1}{\sum (w^{[m]})^2} < \frac{M}{2}$ untuk menduplikasi partikel akurat dan mengeliminasi partikel yang melenceng.
+
+---
+
+## 3. Simulator Interaktif: FastSLAM 1.0 & Elips Landmark 2D
+
+Eksperimenkan pelacakan partikel dan estimasi landmark mandiri pada setiap partikel secara real-time:
+
+<FastSlamSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-fastslam-1"
+  question="Apa perbedaan mendasar antara representasi landmark pada EKF-SLAM konvensional dan FastSLAM 1.0?"
+  options={[
+    {
+      id: "A",
+      text: "EKF-SLAM memelihara satu matriks kovariansi raksasa berukuran (3+2K)x(3+2K) dengan korelasi penuh antar landmark, sedangkan FastSLAM membagi setiap landmark menjadi K filter EKF terpisah 2x2 pada masing-masing partikel.",
+      isCorrect: true,
+      explanation: "Tepat! Faktorisasi ini memangkas kompleksitas komputasi dari O(K^2) menjadi O(M log K) menggunakan struktur pohon biner."
+    },
+    {
+      id: "B",
+      text: "FastSLAM tidak dapat digunakan untuk mendeteksi rintangan lebih dari 2 buah.",
+      isCorrect: false,
+      explanation: "Salah. FastSLAM mampu memetakan puluhan ribu landmark di dunia nyata secara efisien."
+    },
+    {
+      id: "C",
+      text: "EKF-SLAM menggunakan partikel sedangkan FastSLAM hanya menggunakan kalkulator biasa.",
+      isCorrect: false,
+      explanation: "Salah. FastSLAM justru adalah filter berbasis partikel (Rao-Blackwellized Particle Filter)."
+    }
+  ]}
+  hint="Pikirkan tentang korelasi bersyarat antar landmark jika lintasan robot diketahui."
+/>
