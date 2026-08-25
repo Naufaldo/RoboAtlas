@@ -1,0 +1,108 @@
+---
+id: histogram-filter-localization
+title: Lokalisasi Grid Diskret & Filter Histogram Topologis
+slug: histogram-filter-localization
+domain: estimation
+level: 8
+tier: Core Autonomy
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - localization-fundamentals
+  - probability-for-robotics
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 7 & 8). MIT Press.
+  - Stuart Russell, Peter Norvig (2020). Artificial Intelligence: A Modern Approach. Pearson.
+components:
+  - HistogramFilterSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Lokalisasi Grid Diskret & Filter Histogram Topologis
+
+> "Bagaimana jika distribusi keyakinan posisi robot memiliki banyak kemungkinan puncak (*multi-modal*) yang tidak dapat dimodelkan oleh satu fungsi Gaussian kurva lonceng tunggal?"
+
+Filter Kalman mengasumsikan distribusi posisi selalu berupa kurva Gaussian tunggal (*unimodal*). Namun pada masalah **Lokalisasi Global**, robot yang mendeteksi pintu di lorong dengan tiga pintu identik akan memiliki **tiga hipotesis posisi sekaligus**. **Filter Histogram (*Discrete Grid-Based / Histogram Filter*)** membagi ruang status kontinu menjadi sel-sel kisi diskret $\{x_1, x_2, \dots, x_N\}$ dan memelihara massa probabilitas diskrit pada masing-masing sel tanpa batasan asumsi Gaussian.
+
+![Filter Histogram dan Filter Bayesian Diskret 1D](/images/sensors/histogram-filter-discrete.jpg)
+
+---
+
+## 1. Formulasi Matematis Filter Bayesian Diskret
+
+Ruang posisi robot didiskritisasi menjadi $N$ sel status. Vektor keyakinan didefinisikan sebagai:
+
+$$
+\mathbf{p}_t = [p_t(x_1), p_t(x_2), \dots, p_t(x_N)]^T, \quad \text{di mana } \sum_{i=1}^N p_t(x_i) = 1.0
+$$
+
+### Langkah 1: Prediksi Gerak (Konvolusi Matriks Transisi Diskret)
+Ketika robot menjalankan perintah gerak $u_t$, probabilitas berpindah dari sel $x_j$ ke sel $x_i$ dimodelkan dengan probabilitas transisi $P(x_i \mid u_t, x_j)$:
+
+$$
+\bar{p}_t(x_i) = \sum_{j=1}^N P(x_i \mid u_t, x_j) \, p_{t-1}(x_j)
+$$
+
+*(Gerakan fisik yang mengandung derau menyebabkan massa probabilitas mengalami difusi/konvolusi dan menyebar ke sel tetangga).*
+
+### Langkah 2: Koreksi Pengukuran Sensor (Perkalian Likelihood & Normalisasi)
+Ketika sensor mendeteksi pengamatan $z_t$ dengan model kemungkinan $P(z_t \mid x_i)$:
+
+$$
+p_t(x_i) = \eta \cdot P(z_t \mid x_i) \cdot \bar{p}_t(x_i)
+$$
+
+Di mana faktor normalisasi $\eta$ menjamin total probabilitas tetap sama dengan 1:
+
+$$
+\eta = \frac{1}{\sum_{k=1}^N P(z_t \mid x_k) \bar{p}_t(x_k)}
+$$
+
+---
+
+## 2. Keunggulan Representasi Non-Parametrik Multi-Modal
+
+1. **Mendukung Multi-Modalitas Sejati**: Dapat memelihara ratusan hipotesis posisi secara simultan (misalnya saat mendeteksi pintu yang berulang).
+2. **Bebas Asumsi Linearitas**: Tidak memerlukan diferensiasi turunan atau Matriks Jacobian.
+3. **Konvergensi Alami ke Unimodal**: Seiring robot bergerak dan mengamati urutan rintangan berikutnya, hipotesis yang salah akan otomatis tereliminasi hingga menyisakan satu puncak dominan (*true pose*).
+
+---
+
+## 3. Simulator Interaktif: Filter Histogram 1D pada Lorong Pintu
+
+Gerakkan robot ke kanan/kiri atau jalankan pemindaian sensor untuk melihat evolusi diagram batang probabilitas:
+
+<HistogramFilterSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-histogram-filter-localization"
+  question="Apa kompromi (trade-off) utama dari penggunaan Filter Histogram dibanding Extended Kalman Filter?"
+  options={[
+    {
+      id: "A",
+      text: "Filter Histogram mampu menangani distribusi multi-modal apa pun, tetapi kompleksitas memori dan komputasinya meledak secara eksponensial terhadap dimensi ruang status (Curse of Dimensionality).",
+      isCorrect: true,
+      explanation: "Tepat! Untuk grid 3D (x, y, theta) dengan 100 divisi per sumbu, filter membutuhkan 1.000.000 sel yang harus dihitung pada setiap langkah."
+    },
+    {
+      id: "B",
+      text: "Filter Histogram tidak dapat dijalankan jika probabilitas bernilai positif.",
+      isCorrect: false,
+      explanation: "Salah. Probabilitas dalam filter histogram selalu bernilai non-negatif di dalam rentang [0, 1]."
+    },
+    {
+      id: "C",
+      text: "Filter Histogram hanya bisa digunakan untuk robot terbang di luar angkasa.",
+      isCorrect: false,
+      explanation: "Salah. Filter histogram adalah algoritma estimasi diskrit umum untuk semua platform otonom."
+    }
+  ]}
+  hint="Pikirkan berapa jumlah sel yang dibutuhkan jika kita membagi ruang 3D (x, y, theta) menjadi kisi 100 x 100 x 100 sel."
+/>

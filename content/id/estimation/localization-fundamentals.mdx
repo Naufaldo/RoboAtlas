@@ -1,0 +1,112 @@
+---
+id: localization-fundamentals
+title: Prinsip Dasar Lokalisasi Robot Mobile & Prasyarat Keilmuan
+slug: localization-fundamentals
+domain: estimation
+level: 8
+tier: Core Autonomy
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 35
+prerequisites:
+  - differential-drive-kinematics
+  - lidar-raycasting
+  - bayes-filter-and-kalman
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 7). MIT Press.
+  - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots. MIT Press.
+components:
+  - LocalizationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Prinsip Dasar Lokalisasi Robot Mobile & Prasyarat Keilmuan
+
+> "Jika sebuah robot hanya mengandalkan putaran rodanya sendiri, posisinya dijamin akan tersesat dalam hitungan detik. Mengapa lokalisasi berbasis peta mutlak diperlukan?"
+
+**Lokalisasi Robot (*Robot Localization*)** adalah proses mendasar untuk memperkirakan posisi dan orientasi (*pose*) robot $\mathbf{x} = [x, y, \theta]^T$ relatif terhadap kerangka acuan peta global yang diketahui. Tanpa lokalisasi yang andal, navigasi otonom tidak mungkin dilakukan.
+
+![Prinsip Dasar Lokalisasi Robot Mobile](/images/sensors/localization-fundamentals.jpg)
+
+---
+
+## 1. Mengapa Dead-Reckoning (Odometri Saja) Pasti Gagal?
+
+Ketika robot hanya mengintegrasikan sensor proprioseptif internal (seperti *wheel encoder* atau *IMU*):
+- Galat kecil pada radius roda atau selip ban $\delta s$ berakumulasi secara monotonik seiring waktu.
+- Galat orientasi $\Delta \theta$ bertindak sebagai pengungkit yang melipatgandakan galat posisi lateral secara linear terhadap jarak tempuh ($e_{\text{lat}} \propto d \cdot \sin \Delta \theta$).
+- **Distribusi probabilitas posisi menyebar tanpa batas (*divergence*)** membentuk kerucut ketidakpastian (*drift cone*).
+
+**Solusinya**: Menggunakan sensor eksteroseptif (LiDAR, Kamera, Sonar) untuk mencocokkan pengamatan fitur lingkungan $z_t$ dengan peta lingkungan yang diketahui (*Map Matching & Data Association*).
+
+---
+
+## 2. Taksonomi Masalah Lokalisasi
+
+1. **Pelacakan Posisi (*Position Tracking / Local Localization*)**:
+   - Robot mengetahui pose awal $\mathbf{x}_0$ dengan pasti.
+   - Tugas: Mengkompensasi derau gerakan inkremental kecil saat robot berjalan.
+2. **Lokalisasi Global (*Global Localization*)**:
+   - Robot tidak mengetahui pose awalnya (*zero prior knowledge* / distribusi seragam).
+   - Tugas: Menemukan posisi robot di seluruh area peta dari sekumpulan pengamatan pertama.
+3. **Masalah Robot Terculik (*Kidnapped Robot Problem*)**:
+   - Robot yang sedang beroperasi dipindahkan secara tiba-tiba ke lokasi lain tanpa sepengetahuannya.
+   - Ujian ketahanan terberat bagi filter estimasi status untuk memulihkan diri dari galat keyakinan fatal (*belief recovery*).
+
+---
+
+## 3. Peta Prasyarat Keilmuan (*Prerequisites Map*)
+
+Untuk menguasai seluruh algoritma lokalisasi (EKF, Histogram, MCL), pemahaman berikut harus dikuasai terlebih dahulu:
+
+```text
+┌────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────┐
+│ Pilar Keilmuan Prasyarat               │ Peran & Formula Inti dalam Lokalisasi                                  │
+├────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ 1. Aljabar Linier & Matriks SE(2)      │ Transformasi kerangka acuan robot ke dunia: p^W = R(theta) p^R + t     │
+│ 2. Teori Probabilitas & Aturan Bayes   │ Fusi sensor rekursif: P(x|z) = eta * P(z|x) * P(x)                     │
+│ 3. Asumsi Markov                       │ Status saat ini x_t merangkum seluruh riwayat masa lalu                │
+│ 4. Kinematika Diferensial Robot        │ Model gerak unicycle f(x, u): x_{t} = x_{t-1} + v dt cos(theta)        │
+│ 5. Model Derau Sensor (Gaussian/Ray)   │ Menghitung kemungkinan (likelihood) observasi p(z_t | x_t)             │
+└────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Simulator Interaktif: Monte Carlo Localization & Peta Rintangan
+
+Amati bagaimana partikel keyakinan yang tersebar secara acak konvergen menuju posisi robot nyata saat pemindaian sensor mencocokkan rintangan:
+
+<LocalizationSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-localization-fundamentals"
+  question="Apa perbedaan mendasar antara masalah Position Tracking dan Kidnapped Robot Problem?"
+  options={[
+    {
+      id: "A",
+      text: "Position Tracking mengasumsikan pose awal diketahui dan ketidakpastian kecil (unimodal), sedangkan Kidnapped Robot menguji kemampuan filter keluar dari keyakinan salah yang sudah telanjur konvergen.",
+      isCorrect: true,
+      explanation: "Tepat! Kidnapped Robot Problem adalah tolok ukur ketahanan filter untuk mendeteksi anomali observasi dan menyebarkan partikel ulang ke seluruh peta."
+    },
+    {
+      id: "B",
+      text: "Position Tracking hanya menggunakan kamera, sedangkan Kidnapped Robot hanya menggunakan GPS.",
+      isCorrect: false,
+      explanation: "Salah. Taksonomi ini adalah kategori masalah estimasi status probabilistik, bukan klasifikasi perangkat keras sensor."
+    },
+    {
+      id: "C",
+      text: "Position Tracking tidak memerlukan model kinematika robot sama sekali.",
+      isCorrect: false,
+      explanation: "Salah. Position tracking sangat bergantung pada model gerak kinematika untuk langkah prediksi."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi jika filter meyakini 100% robot ada di Ruang A padahal secara fisik dipindahkan ke Ruang B."
+/>

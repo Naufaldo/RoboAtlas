@@ -1,0 +1,108 @@
+---
+id: histogram-filter-localization
+title: Histogram Filter / Discrete Grid-Based Topological Localization
+slug: histogram-filter-localization
+domain: estimation
+level: 8
+tier: Core Autonomy
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - localization-fundamentals
+  - probability-for-robotics
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 7 & 8). MIT Press.
+  - Stuart Russell, Peter Norvig (2020). Artificial Intelligence: A Modern Approach. Pearson.
+components:
+  - HistogramFilterSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Histogram Filter / Discrete Grid-Based Topological Localization
+
+> "What happens when a robot's spatial belief has multiple distinct peaks (multi-modal) that cannot be approximated by a single bell-shaped Gaussian distribution?"
+
+Kalman filters are structurally constrained by their unimodal Gaussian assumption. However, in **Global Localization**, a robot observing a door in a symmetric hallway with three identical doors must maintain **three distinct positional hypotheses simultaneously**. The **Histogram Filter (Discrete Grid-Based Bayes Filter)** quantizes continuous state space into discrete bins $\{x_1, x_2, \dots, x_N\}$ and maintains exact probability masses across all bins without parametric Gaussian restrictions.
+
+![Histogram Filter and Discrete Bayes Filter in 1D Hallway](/images/sensors/histogram-filter-discrete.jpg)
+
+---
+
+## 1. Mathematical Formulation: Discrete Bayesian Filter
+
+The state space is partitioned into $N$ mutually exclusive cells. The belief vector is represented as:
+
+$$
+\mathbf{p}_t = [p_t(x_1), p_t(x_2), \dots, p_t(x_N)]^T, \quad \text{where } \sum_{i=1}^N p_t(x_i) = 1.0
+$$
+
+### Step 1: Motion Prediction (Discrete State Transition Convolution)
+When the robot executes action command $u_t$, the transition probability of moving from cell $x_j$ to cell $x_i$ is governed by $P(x_i \mid u_t, x_j)$:
+
+$$
+\bar{p}_t(x_i) = \sum_{j=1}^N P(x_i \mid u_t, x_j) \, p_{t-1}(x_j)
+$$
+
+*(Actuator motion uncertainty diffuses probability mass across neighboring grid bins).*
+
+### Step 2: Measurement Correction (Likelihood Multiplication & Normalization)
+When exteroceptive measurement $z_t$ is recorded with sensor likelihood model $P(z_t \mid x_i)$:
+
+$$
+p_t(x_i) = \eta \cdot P(z_t \mid x_i) \cdot \bar{p}_t(x_i)
+$$
+
+Where normalization factor $\eta$ guarantees that total probability sums to unity:
+
+$$
+\eta = \frac{1}{\sum_{k=1}^N P(z_t \mid x_k) \bar{p}_t(x_k)}
+$$
+
+---
+
+## 2. Advantages of Non-Parametric Multi-Modal Beliefs
+
+1. **True Multi-Modality**: Naturally represents arbitrary, asymmetric, or multi-peaked probability distributions (e.g., symmetric repetitive buildings).
+2. **Zero Linearization Required**: Does not require differentiability, Taylor series, or Jacobian matrices.
+3. **Natural Disambiguation**: As the robot drives and collects sequential observations, false hypotheses are exponentially suppressed, collapsing the multi-modal belief into a sharp single peak (*true pose*).
+
+---
+
+## 3. Interactive Simulator: 1D Hallway Histogram Filter
+
+Move the robot along the corridor or trigger door sensor scans to observe real-time probability bar updates:
+
+<HistogramFilterSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-histogram-filter-localization"
+  question="What is the primary computational trade-off of using a Histogram Filter compared to an Extended Kalman Filter?"
+  options={[
+    {
+      id: "A",
+      text: "The Histogram Filter handles arbitrary multi-modal distributions seamlessly, but memory and computational costs scale exponentially with state space dimensions (Curse of Dimensionality).",
+      isCorrect: true,
+      explanation: "Correct! Discretizing a 3D pose (x, y, theta) with 100 bins per dimension requires 1,000,000 cells to be updated at every time step."
+    },
+    {
+      id: "B",
+      text: "The Histogram Filter cannot execute if probabilities are positive real numbers.",
+      isCorrect: false,
+      explanation: "Incorrect. Probabilities are strictly non-negative real numbers bounded in [0, 1]."
+    },
+    {
+      id: "C",
+      text: "The Histogram Filter requires specialized cryogenic quantum processors.",
+      isCorrect: false,
+      explanation: "Incorrect. Histogram filters are standard classical algorithms running on conventional CPUs and MCUs."
+    }
+  ]}
+  hint="Consider the number of grid bins required when scaling from 1D to 3D state space (100^3 = 1,000,000)."
+/>

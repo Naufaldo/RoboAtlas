@@ -1,0 +1,120 @@
+---
+id: ekf-localization
+title: Extended Kalman Filter (EKF) Non-Linear 2D Localization
+slug: ekf-localization
+domain: estimation
+level: 8
+tier: Core Autonomy
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - bayes-filter-and-kalman
+  - localization-fundamentals
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 7). MIT Press.
+  - Atsushi Sakai (2020). PythonRobotics: Extended Kalman Filter Localization.
+components:
+  - EkfLocalizationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Extended Kalman Filter (EKF) Non-Linear 2D Localization
+
+> "How can classical linear Kalman filtering be applied to mobile robots where wheel kinematics involve trigonometric functions and range-bearing sensors involve non-linear Euclidean distances and arctangents?"
+
+In mobile robotics, both the kinematic forward motion model (containing trigonometric sines and cosines of heading $\theta$) and the exteroceptive sensor observation model (containing non-linear square roots and $\text{atan2}$ angles) are intrinsically **non-linear**. The **Extended Kalman Filter (EKF)** resolves this non-linearity by executing a **first-order Taylor series expansion** around the current state estimate, utilizing multivariate partial derivative matrices (**Jacobian Matrices $\mathbf{F}_t$ and $\mathbf{H}_t$**).
+
+![Extended Kalman Filter (EKF) Localization Diagram](/images/sensors/ekf-localization-ellipse.jpg)
+
+---
+
+## 1. State Vector & Non-Linear Kinematic Motion Model
+
+The robot state is defined in the $SE(2)$ plane: $\mathbf{x} = [x, y, \theta]^T$.
+
+### Step 1: State & Covariance Prediction (Motion Model)
+Given commanded linear velocity $v_t$ and angular velocity $\omega_t$:
+
+$$
+\hat{\mathbf{x}}_t^- = f(\hat{\mathbf{x}}_{t-1}, \mathbf{u}_t) = \hat{\mathbf{x}}_{t-1} + \begin{bmatrix} v_t \Delta t \cos(\hat{\theta}_{t-1}) \\ v_t \Delta t \sin(\hat{\theta}_{t-1}) \\ \omega_t \Delta t \end{bmatrix}
+$$
+
+The motion model Jacobian matrix $\mathbf{F}_t = \left. \frac{\partial f}{\partial \mathbf{x}} \right|_{\hat{\mathbf{x}}_{t-1}}$:
+
+$$
+\mathbf{F}_t = \begin{bmatrix} 1 & 0 & -v_t \Delta t \sin(\hat{\theta}_{t-1}) \\ 0 & 1 & v_t \Delta t \cos(\hat{\theta}_{t-1}) \\ 0 & 0 & 1 \end{bmatrix}
+$$
+
+A priori covariance prediction incorporating process noise $\mathbf{Q}_t$:
+
+$$
+\mathbf{\Sigma}_t^- = \mathbf{F}_t \mathbf{\Sigma}_{t-1} \mathbf{F}_t^T + \mathbf{Q}_t
+$$
+
+*(The confidence uncertainty ellipse expands along the direction of motion).*
+
+---
+
+## 2. Landmark Observation Measurement Update
+
+When the sensor detects landmark $j$ located at known map coordinates $(m_{jx}, m_{jy})$ with range-bearing observation $\mathbf{z}_t = [r_t, \phi_t]^T$:
+
+$$
+h(\hat{\mathbf{x}}_t^-, \mathbf{m}_j) = \begin{bmatrix} \sqrt{(m_{jx} - \hat{x}_t^-)^2 + (m_{jy} - \hat{y}_t^-)^2} \\ \text{atan2}(m_{jy} - \hat{y}_t^-, m_{jx} - \hat{x}_t^-) - \hat{\theta}_t^- \end{bmatrix}
+$$
+
+The measurement Jacobian matrix $\mathbf{H}_t = \left. \frac{\partial h}{\partial \mathbf{x}} \right|_{\hat{\mathbf{x}}_t^-}$:
+
+$$
+\mathbf{H}_t = \begin{bmatrix} -\frac{m_{jx} - \hat{x}}{q} & -\frac{m_{jy} - \hat{y}}{q} & 0 \\ \frac{m_{jy} - \hat{y}}{q^2} & -\frac{m_{jx} - \hat{x}}{q^2} & -1 \end{bmatrix} \quad \left(q = \sqrt{(m_{jx} - \hat{x})^2 + (m_{jy} - \hat{y})^2}\right)
+$$
+
+### The Full Correction Cycle:
+1. **Innovation Residual**: $\mathbf{y}_t = \mathbf{z}_t - h(\hat{\mathbf{x}}_t^-, \mathbf{m}_j)$
+2. **Innovation Covariance**: $\mathbf{S}_t = \mathbf{H}_t \mathbf{\Sigma}_t^- \mathbf{H}_t^T + \mathbf{R}_t$
+3. **Optimal Kalman Gain**: $\mathbf{K}_t = \mathbf{\Sigma}_t^- \mathbf{H}_t^T \mathbf{S}_t^{-1}$
+4. **Posterior State Estimate**: $\hat{\mathbf{x}}_t = \hat{\mathbf{x}}_t^- + \mathbf{K}_t \mathbf{y}_t$
+5. **Posterior Covariance Update**: $\mathbf{\Sigma}_t = (\mathbf{I} - \mathbf{K}_t \mathbf{H}_t) \mathbf{\Sigma}_t^-$
+
+*(The $3\sigma$ confidence uncertainty ellipse sharply contracts around the true robot pose).*
+
+---
+
+## 3. Interactive Simulator: EKF 2D Localization & 3-Sigma Covariance Ellipse
+
+Observe real-time EKF tracking comparing Ground Truth (green), Drifting Odometry (red dashed), and EKF State (cyan with dynamic uncertainty ellipse):
+
+<EkfLocalizationSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-ekf-localization"
+  question="What is the mathematical purpose of the measurement Jacobian matrix H_t in the Extended Kalman Filter?"
+  options={[
+    {
+      id: "A",
+      text: "It computes the first-order partial derivatives to linearly project state covariance into the non-linear sensor observation space.",
+      isCorrect: true,
+      explanation: "Correct! The Jacobian matrix H_t maps state uncertainties to measurement residuals, allowing the optimal Kalman Gain to be computed analytically."
+    },
+    {
+      id: "B",
+      text: "It calculates the electrical current required for wheel motors.",
+      isCorrect: false,
+      explanation: "Incorrect. The Jacobian is a mathematical multivariable calculus operator, not an electrical power controller."
+    },
+    {
+      id: "C",
+      text: "It eliminates all sensor noise completely without needing covariance matrices.",
+      isCorrect: false,
+      explanation: "Incorrect. Kalman filtering explicitly models sensor covariance R; noise is never completely eliminated."
+    }
+  ]}
+  hint="Recall the first-order Taylor series approximation: f(x) ≈ f(x0) + J * (x - x0)."
+/>

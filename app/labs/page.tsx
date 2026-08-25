@@ -40,6 +40,8 @@ import { RayCastingGridMapSimulator } from '@/components/simulation/RayCastingGr
 import { LidarToGridMapSimulator } from '@/components/simulation/LidarToGridMapSimulator';
 import { KMeansClusteringSimulator } from '@/components/simulation/KMeansClusteringSimulator';
 import { RectangleFittingSimulator } from '@/components/simulation/RectangleFittingSimulator';
+import { EkfLocalizationSimulator } from '@/components/simulation/EkfLocalizationSimulator';
+import { HistogramFilterSimulator } from '@/components/simulation/HistogramFilterSimulator';
 import {
   Compass,
   Cpu,
@@ -542,6 +544,32 @@ export default function LabsPage() {
       icon: '📦',
       lessonHref: '/learn/perception/rectangle-fitting',
       component: <RectangleFittingSimulator />,
+    },
+    {
+      id: 'ekf-localization',
+      category: 'estimation',
+      paths: ['slam'],
+      titleEn: 'Extended Kalman Filter (EKF) 2D Localization Lab',
+      titleId: 'Laboratorium Lokalisasi EKF 2D & Elips Kovariansi',
+      descEn: 'Fuse non-linear motion prediction with landmark range-bearing measurements with live 3-sigma error ellipses.',
+      descId: 'Padukan prediksi gerak non-linear dengan observasi landmark untuk menekan drift dalam elips 3-sigma.',
+      levelBadge: 'Level 8',
+      icon: '🎯',
+      lessonHref: '/learn/estimation/ekf-localization',
+      component: <EkfLocalizationSimulator />,
+    },
+    {
+      id: 'histogram-filter',
+      category: 'estimation',
+      paths: ['slam'],
+      titleEn: 'Histogram Filter & Discrete Grid Localization Lab',
+      titleId: 'Laboratorium Filter Histogram & Lokalisasi Diskret',
+      descEn: 'Step through discrete motion diffusion convolutions and landmark sensor likelihood multiplications.',
+      descId: 'Jalankan konvolusi difusi gerak diskret dan perkalian likelihood sensor untuk melokalisasi robot di lorong.',
+      levelBadge: 'Level 8',
+      icon: '📊',
+      lessonHref: '/learn/estimation/histogram-filter-localization',
+      component: <HistogramFilterSimulator />,
     },
   ];
 

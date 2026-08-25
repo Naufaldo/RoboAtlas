@@ -42,6 +42,8 @@ import { RayCastingGridMapSimulator } from '@/components/simulation/RayCastingGr
 import { LidarToGridMapSimulator } from '@/components/simulation/LidarToGridMapSimulator';
 import { KMeansClusteringSimulator } from '@/components/simulation/KMeansClusteringSimulator';
 import { RectangleFittingSimulator } from '@/components/simulation/RectangleFittingSimulator';
+import { EkfLocalizationSimulator } from '@/components/simulation/EkfLocalizationSimulator';
+import { HistogramFilterSimulator } from '@/components/simulation/HistogramFilterSimulator';
 import { ConceptCheck, QuizOption } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { CodeBlock } from '@/components/mdx/CodeBlock';
@@ -471,6 +473,16 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<RectangleFittingSimulator')) {
         nodes.push(<RectangleFittingSimulator key={`comp-rfs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<EkfLocalizationSimulator')) {
+        nodes.push(<EkfLocalizationSimulator key={`comp-ekfls-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<HistogramFilterSimulator')) {
+        nodes.push(<HistogramFilterSimulator key={`comp-hfs-${i}`} />);
         i++;
         continue;
       }

@@ -1,0 +1,112 @@
+---
+id: localization-fundamentals
+title: Mobile Robot Localization Fundamentals & Prerequisites
+slug: localization-fundamentals
+domain: estimation
+level: 8
+tier: Core Autonomy
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 35
+prerequisites:
+  - differential-drive-kinematics
+  - lidar-raycasting
+  - bayes-filter-and-kalman
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 7). MIT Press.
+  - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots. MIT Press.
+components:
+  - LocalizationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Mobile Robot Localization Fundamentals & Prerequisites
+
+> "If a mobile robot relies purely on wheel rotation counters, its position estimate is guaranteed to diverge within seconds. Why is map-based localization indispensable?"
+
+**Robot Localization** is the fundamental problem of estimating a robot's pose $\mathbf{x} = [x, y, \theta]^T$ relative to a known global environmental map. Without continuous, consistent localization, collision-free autonomous path planning and goal navigation are mathematically impossible.
+
+![Mobile Robot Localization Fundamentals](/images/sensors/localization-fundamentals.jpg)
+
+---
+
+## 1. Why Dead-Reckoning (Odometry Alone) Inevitably Fails
+
+When a vehicle integrates only internal proprioceptive sensor measurements (such as optical wheel encoders or IMUs):
+- Minor wheel radius errors or micro-slippage $\delta s$ accumulate monotonically over time.
+- Heading errors $\Delta \theta$ act as an angular lever arm, amplifying lateral position errors linearly with travel distance ($e_{\text{lat}} \propto d \cdot \sin \Delta \theta$).
+- **The probability distribution of robot pose expands indefinitely**, forming a diverging uncertainty drift cone.
+
+**The Solution**: Use exteroceptive sensors (LiDAR, Cameras, Sonar) to match observed environmental landmark features $z_t$ against a known prior map (*Map Matching & Data Association*).
+
+---
+
+## 2. Taxonomy of Localization Problems
+
+1. **Position Tracking (*Local Localization*)**:
+   - The initial robot pose $\mathbf{x}_0$ is known with high certainty.
+   - Objective: Compensate for incremental motion noise as the robot drives along its path.
+2. **Global Localization**:
+   - The initial robot pose is completely unknown (*uniform prior distribution* across entire map).
+   - Objective: Estimate robot pose from scratch using initial sensor scans.
+3. **The Kidnapped Robot Problem**:
+   - A robot operating normally is teleported or displaced to another location without sensor notification.
+   - The most rigorous benchmark for probabilistic state estimators to recover from a confident but incorrect belief (*multi-modal recovery*).
+
+---
+
+## 3. Mathematical Prerequisites Roadmap
+
+To master state estimation algorithms (EKF, Histogram Filter, Particle Filter/MCL), the following foundational pillars are required:
+
+```text
+┌────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────┐
+│ Prerequisite Knowledge Pillar          │ Role & Core Formulation in Localization                                │
+├────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ 1. Linear Algebra & SE(2) Matrices     │ Frame transformation: p^W = R(theta) p^R + t                           │
+│ 2. Probability Theory & Bayes' Rule    │ Recursive sensor fusion: P(x|z) = eta * P(z|x) * P(x)                  │
+│ 3. The Markov Assumption               │ The current state x_t encapsulates all past measurement history        │
+│ 4. Differential-Drive Kinematics       │ Unicycle motion model f(x, u): x_t = x_{t-1} + v dt cos(theta)         │
+│ 5. Sensor Measurement Likelihood Models│ Computing observation likelihood p(z_t | x_t)                          │
+└────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Interactive Simulator: Monte Carlo Particle Filter Localization
+
+Observe how randomly scattered pose hypotheses rapidly converge onto the true robot pose as laser beams intersect known walls:
+
+<LocalizationSimulator />
+
+---
+
+## 5. Concept Verification
+
+<ConceptCheck
+  id="quiz-localization-fundamentals"
+  question="What is the key difference between Position Tracking and the Kidnapped Robot Problem?"
+  options={[
+    {
+      id: "A",
+      text: "Position Tracking assumes a known initial pose with unimodal local uncertainty, whereas Kidnapped Robot tests whether a filter can escape an entrenched incorrect belief and re-converge globally.",
+      isCorrect: true,
+      explanation: "Correct! The Kidnapped Robot problem evaluates a filter's ability to detect anomalous observations and trigger global hypothesis recovery."
+    },
+    {
+      id: "B",
+      text: "Position Tracking operates exclusively with cameras, while Kidnapped Robot requires satellite GPS.",
+      isCorrect: false,
+      explanation: "Incorrect. These terms categorize probabilistic state estimation problem formulations, not sensor hardware selection."
+    },
+    {
+      id: "C",
+      text: "Position Tracking does not utilize robot kinematic motion models.",
+      isCorrect: false,
+      explanation: "Incorrect. Position tracking relies heavily on kinematic forward models during the prediction step."
+    }
+  ]}
+  hint="Consider what happens when a filter is 100% confident it is in Room A, but is physically transported to Room B."
+/>

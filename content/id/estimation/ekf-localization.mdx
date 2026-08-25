@@ -1,0 +1,120 @@
+---
+id: ekf-localization
+title: Lokalisasi 2D Non-Linear Extended Kalman Filter (EKF)
+slug: ekf-localization
+domain: estimation
+level: 8
+tier: Core Autonomy
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - bayes-filter-and-kalman
+  - localization-fundamentals
+references:
+  - Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics (Chapter 7). MIT Press.
+  - Atsushi Sakai (2020). PythonRobotics: Extended Kalman Filter Localization.
+components:
+  - EkfLocalizationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Lokalisasi 2D Non-Linear Extended Kalman Filter (EKF)
+
+> "Bagaimana Filter Kalman yang linear dapat diterapkan pada robot bergerak nyata di mana fungsi trigonometri kinematika roda dan sensor jarak-sudut bersifat sangat non-linear?"
+
+Pada robotika bergerak, fungsi gerakan robot (berisi sinus dan kosinus orientasi) serta fungsi pengamatan sensor (berisi akar kuadrat jarak Euclidean dan fungsi $\text{atan2}$) bersifat sangat **non-linear**. **Extended Kalman Filter (EKF)** memecahkan masalah ini dengan melakukan **linearisasi Taylor orde pertama** pada titik estimasi saat ini menggunakan matriks turunan parsial (**Matriks Jacobian $\mathbf{F}_t$ dan $\mathbf{H}_t$**).
+
+![Diagram Lokalisasi Extended Kalman Filter (EKF)](/images/sensors/ekf-localization-ellipse.jpg)
+
+---
+
+## 1. Vektor Status & Model Kinematika Non-Linear
+
+Status robot didefinisikan sebagai pose 2D: $\mathbf{x} = [x, y, \theta]^T$.
+
+### Tahap 1: Prediksi Status & Kovariansi (Model Gerak)
+Diberikan perintah kecepatan linier $v_t$ dan kecepatan sudut $\omega_t$:
+
+$$
+\hat{\mathbf{x}}_t^- = f(\hat{\mathbf{x}}_{t-1}, \mathbf{u}_t) = \hat{\mathbf{x}}_{t-1} + \begin{bmatrix} v_t \Delta t \cos(\hat{\theta}_{t-1}) \\ v_t \Delta t \sin(\hat{\theta}_{t-1}) \\ \omega_t \Delta t \end{bmatrix}
+$$
+
+Matriks Jacobian dari model gerak $\mathbf{F}_t = \left. \frac{\partial f}{\partial \mathbf{x}} \right|_{\hat{\mathbf{x}}_{t-1}}$:
+
+$$
+\mathbf{F}_t = \begin{bmatrix} 1 & 0 & -v_t \Delta t \sin(\hat{\theta}_{t-1}) \\ 0 & 1 & v_t \Delta t \cos(\hat{\theta}_{t-1}) \\ 0 & 0 & 1 \end{bmatrix}
+$$
+
+Pembaruan kovariansi apriori dengan matriks derau proses $\mathbf{Q}_t$:
+
+$$
+\mathbf{\Sigma}_t^- = \mathbf{F}_t \mathbf{\Sigma}_{t-1} \mathbf{F}_t^T + \mathbf{Q}_t
+$$
+
+*(Kurva elips ketidakpastian memanjang ke arah gerak robot).*
+
+---
+
+## 2. Tahap Pembaruan Pengukuran Sensor Landmark
+
+Ketika sensor mendeteksi *landmark* ke-$j$ pada posisi peta $(m_{jx}, m_{jy})$ dengan pengukuran jarak dan sudut $\mathbf{z}_t = [r_t, \phi_t]^T$:
+
+$$
+h(\hat{\mathbf{x}}_t^-, \mathbf{m}_j) = \begin{bmatrix} \sqrt{(m_{jx} - \hat{x}_t^-)^2 + (m_{jy} - \hat{y}_t^-)^2} \\ \text{atan2}(m_{jy} - \hat{y}_t^-, m_{jx} - \hat{x}_t^-) - \hat{\theta}_t^- \end{bmatrix}
+$$
+
+Matriks Jacobian pengukuran $\mathbf{H}_t = \left. \frac{\partial h}{\partial \mathbf{x}} \right|_{\hat{\mathbf{x}}_t^-}$:
+
+$$
+\mathbf{H}_t = \begin{bmatrix} -\frac{m_{jx} - \hat{x}}{q} & -\frac{m_{jy} - \hat{y}}{q} & 0 \\ \frac{m_{jy} - \hat{y}}{q^2} & -\frac{m_{jx} - \hat{x}}{q^2} & -1 \end{bmatrix} \quad \left(q = \sqrt{(m_{jx} - \hat{x})^2 + (m_{jy} - \hat{y})^2}\right)
+$$
+
+### Siklus Pembaruan Koreksi:
+1. **Inovasi (*Measurement Residual*)**: $\mathbf{y}_t = \mathbf{z}_t - h(\hat{\mathbf{x}}_t^-, \mathbf{m}_j)$
+2. **Kovariansi Inovasi**: $\mathbf{S}_t = \mathbf{H}_t \mathbf{\Sigma}_t^- \mathbf{H}_t^T + \mathbf{R}_t$
+3. **Kalman Gain Optimal**: $\mathbf{K}_t = \mathbf{\Sigma}_t^- \mathbf{H}_t^T \mathbf{S}_t^{-1}$
+4. **Pembaruan Status Posterior**: $\hat{\mathbf{x}}_t = \hat{\mathbf{x}}_t^- + \mathbf{K}_t \mathbf{y}_t$
+5. **Pembaruan Kovariansi Posterior**: $\mathbf{\Sigma}_t = (\mathbf{I} - \mathbf{K}_t \mathbf{H}_t) \mathbf{\Sigma}_t^-$
+
+*(Elips ketidakpastian $3\sigma$ mengecil tajam di sekitar posisi robot sebenarnya).*
+
+---
+
+## 3. Simulator Interaktif: EKF 2D & Elips Kovariansi 3-Sigma
+
+Eksperimenkan pelacakan EKF dengan mengamati perbandingan robot ground truth (hijau), odometri melayang (merah putus-putus), dan estimasi EKF (sian dengan elips kovariansi):
+
+<EkfLocalizationSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-ekf-localization"
+  question="Apa peran penting Matriks Jacobian H_t dalam algoritma Extended Kalman Filter?"
+  options={[
+    {
+      id: "A",
+      text: "Sebagai matriks turunan parsial orde pertama yang melinearisasikan model pengukuran non-linear di sekitar titik estimasi status saat ini.",
+      isCorrect: true,
+      explanation: "Tepat! Jacobian H memproyeksikan kovariansi status ke ruang observasi sensor sehingga Kalman Gain dapat dihitung secara analitik."
+    },
+    {
+      id: "B",
+      text: "Sebagai pengatur voltase daya motor robot.",
+      isCorrect: false,
+      explanation: "Salah. Jacobian adalah operator kalkulus diferensial multivariat matematis, bukan pengendali catu daya perangkat keras."
+    },
+    {
+      id: "C",
+      text: "Untuk mengubah format citra kamera menjadi format JPEG.",
+      isCorrect: false,
+      explanation: "Salah. H_t adalah matriks sensitivitas pengukuran status dalam filter estimasi."
+    }
+  ]}
+  hint="Perhatikan ekspansi deret Taylor orde pertama: f(x) ≈ f(x0) + J * (x - x0)."
+/>
