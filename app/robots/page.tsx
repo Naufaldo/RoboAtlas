@@ -77,7 +77,7 @@ const ROBOT_PLATFORMS: RobotPlatform[] = [
     fundamentalsUsed: [
       { name: '2D Geometry & Planar Transforms', href: '/learn/geometry/2d-geometry' },
       { name: 'Differential Drive Kinematics', href: '/learn/kinematics/differential-drive-kinematics' },
-      { name: 'A* Path Planning', href: '/learn/planning/a-star' },
+      { name: 'A* Path Planning', href: '/learn/planning/astar-vs-dijkstra-search' },
       { name: 'Pure Pursuit & Stanley Control', href: '/learn/control/pure-pursuit-and-stanley' },
       { name: 'Extended Kalman Filter (EKF)', href: '/learn/estimation/ekf-localization' },
       { name: 'Occupancy Grid Mapping', href: '/learn/perception/occupancy-grid-mapping' },

@@ -61,7 +61,7 @@ export default function ProjectsPage() {
         '3. Discrete A* grid shortest path planning',
         '4. Pure Pursuit lookahead steering controller execution loop (50 Hz)',
       ],
-      theoryHref: '/learn/fundamentals/velocity-kinematics-2d',
+      theoryHref: '/learn/kinematics/velocity-kinematics-2d',
       labHref: '/labs',
     },
     {
@@ -76,16 +76,16 @@ export default function ProjectsPage() {
       icon: '🦾',
       stack: ['DH Parameters', 'Forward/Inverse Kinematics', 'Jacobian Matrix', 'Trajectory Splines'],
       descriptionEn:
-        'Build a closed-loop trajectory tracking controller for an articulated robot arm. Calculate analytical inverse kinematics for target end-effector coordinates $(x, y, \theta)$ and smooth quintic polynomial joint trajectory profiles.',
+        'Build a closed-loop trajectory tracking controller for an articulated robot arm. Calculate analytical inverse kinematics for target end-effector coordinates $(x, y, \\theta)$ and smooth quintic polynomial joint trajectory profiles.',
       descriptionId:
-        'Bangun kontroler pelacakan trajektori untuk lengan robotik bersendi. Hitung kinematika invers analitik untuk posisi end-effector target $(x, y, \theta)$ dan trajektori sambungan polinomial kuintik yang mulus.',
+        'Bangun kontroler pelacakan trajektori untuk lengan robotik bersendi. Hitung kinematika invers analitik untuk posisi end-effector target $(x, y, \\theta)$ dan trajektori sambungan polinomial kuintik yang mulus.',
       architectureSteps: [
         '1. Denavit-Hartenberg (DH) parameter table & frame transformations',
         '2. Law of Cosines geometric Inverse Kinematics solver',
         '3. Manipulator Jacobian singular velocity avoidance',
         '4. Cubic / Quintic joint trajectory interpolator',
       ],
-      theoryHref: '/learn/fundamentals/2d-geometry',
+      theoryHref: '/learn/geometry/2d-geometry',
       labHref: '/robots',
     },
     {
@@ -109,7 +109,7 @@ export default function ProjectsPage() {
         '3. Cascaded PID altitude and attitude stabilization loops',
         '4. Minimum-snap polynomial 3D waypoint generator',
       ],
-      theoryHref: '/learn/fundamentals/3d-geometry',
+      theoryHref: '/learn/geometry/3d-geometry',
       labHref: '/robots',
     },
     {
@@ -133,7 +133,7 @@ export default function ProjectsPage() {
         '3. Moore-Penrose pseudo-inverse thruster allocation solver',
         '4. Depth-hold PID pressure sensor feedback loop',
       ],
-      theoryHref: '/robots',
+      theoryHref: '/learn/fundamentals/marine-robotics-fundamentals',
       labHref: '/robots',
     },
     {
@@ -157,7 +157,7 @@ export default function ProjectsPage() {
         '3. Keyframe insertion and pose-graph edge constraint generation',
         '4. Log-odds occupancy grid integration',
       ],
-      theoryHref: '/learn/slam/icp-scan-matching',
+      theoryHref: '/learn/advanced/icp-scan-matching',
       labHref: '/labs',
     },
     {
@@ -181,7 +181,7 @@ export default function ProjectsPage() {
         '3. Distributed linear consensus control law execution',
         '4. Reynolds flocking rules (Separation, Alignment, Cohesion)',
       ],
-      theoryHref: '/learn/multi-agent/laplacian-consensus',
+      theoryHref: '/learn/advanced/formation-control-and-swarms',
       labHref: '/labs',
     },
   ];
