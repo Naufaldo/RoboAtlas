@@ -11,14 +11,14 @@
 
 <p align="center">
   <a href="https://naufaldo.github.io/RoboAtlas/"><img src="https://img.shields.io/badge/Live_Demo-GitHub_Pages-06b6d4?style=for-the-badge&logo=githubpages&logoColor=white" alt="Live Demo" /></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-v0.5.0-10b981?style=for-the-badge" alt="Version 0.5.0" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-v0.6.0-10b981?style=for-the-badge" alt="Version 0.6.0" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License MIT" /></a>
   <img src="https://img.shields.io/badge/Bilingual-EN%20%7C%20ID-8b5cf6?style=for-the-badge" alt="Bilingual EN | ID" />
   <img src="https://img.shields.io/badge/Theme-Dark%20%2F%20Light-f59e0b?style=for-the-badge" alt="Dual Theme" />
-  <img src="https://img.shields.io/badge/Curriculum-21_Levels_(0--20)-cyan?style=for-the-badge" alt="21-Level Master Curriculum" />
-  <img src="https://img.shields.io/badge/Learning_Paths-SLAM_%7C_Arms_%7C_Control-06b6d4?style=for-the-badge" alt="Guided Learning Paths" />
-  <img src="https://img.shields.io/badge/Simulators-28_Interactive_Labs-3b82f6?style=for-the-badge" alt="28 Interactive Simulators" />
-  <img src="https://img.shields.io/badge/Mobile-Touch_Optimized-ec4899?style=for-the-badge" alt="Mobile Touch Optimized" />
+  <img src="https://img.shields.io/badge/Curriculum-74_Lessons_(21_Levels)-cyan?style=for-the-badge" alt="74-Lesson Master Curriculum" />
+  <img src="https://img.shields.io/badge/Embodiments-5_Robot_Platforms-ec4899?style=for-the-badge" alt="5 Cross-Platform Embodiments" />
+  <img src="https://img.shields.io/badge/Simulators-35+_Interactive_Labs-3b82f6?style=for-the-badge" alt="35+ Interactive Simulators" />
+  <img src="https://img.shields.io/badge/Roadmap-12_Milestones_Completed-emerald?style=for-the-badge" alt="12 Milestones Completed" />
 </p>
 
 ---
@@ -122,43 +122,58 @@ Level 20: Robotics Research & Emerging Topics (NeRF SLAM, Soft Continuum)
 
 ---
 
-## 🎮 28 In-Browser 60 FPS Interactive Simulators
+## 🎮 35+ In-Browser 60 FPS Interactive Simulators
 
 Explore the full laboratory workstation at **[`/labs`](https://naufaldo.github.io/RoboAtlas/labs/)**:
 
 - **Math & Spatial Geometry**:
+  - `LieGroupAlgebraSimulator.tsx`: Matrix Lie Groups $SO(3)$ manifold & Lie algebra $\mathfrak{so}(3)$ tangent space with Rodrigues exponential map $\exp([\boldsymbol{\omega}]_\times)$.
   - `TransformSandbox.tsx`: $SE(2)$ Homogeneous Matrix & Coordinate Frame Gizmo.
   - `SpatialRotation3D.tsx`: 3D $SO(3)$ Euler Angle Roll-Pitch-Yaw Simulator.
   - `TransformChainSimulator.tsx`: Transform Composition & Matrix Non-Commutativity ($T_1 T_2 \neq T_2 T_1$).
   - `VectorVisualizer.tsx`, `DotProductExplorer.tsx`, `CoordinateFrameExplorer.tsx`: Geometric vector operations and projection.
+  - `NumericalIntegrationSimulator.tsx`: Numerical stability comparing Explicit Euler, Symplectic Semi-Implicit Euler, and 4th-Order Runge-Kutta (RK4) $\mathcal{O}(h^4)$.
   - `CspaceInflationSimulator.tsx`: Minkowski obstacle expansion ($C_{\text{obs}} = \mathcal{O} \oplus \mathcal{B}_r$).
   - `BayesianRoomSimulator.tsx`: Discrete room localization and Bayes rule updates.
-- **Kinematics & Dynamics**:
+- **Robot Embodiments & Flight/Marine/Legged Dynamics**:
+  - `QuadrotorDynamicsSimulator.tsx`: 6-DOF Multirotor Flight Dynamics & Rotor Thrust Allocation Matrix ($F_{\text{total}}, \tau_\phi, \tau_\theta, \tau_\psi$).
+  - `MarineHydrodynamicsSimulator.tsx`: Subsea AUV Hydrodynamics, Archimedes Buoyancy Equilibrium, Added Mass, and Fossen 6-DOF Equations.
+  - `LeggedZmpSimulator.tsx`: Legged Bipedal/Quadruped Zero Moment Point (ZMP) & Linear Inverted Pendulum Model (LIPM) balance.
   - `KinematicsSimulator.tsx`: Differential-drive velocity integrator with Instantaneous Center of Curvature (ICC).
-  - `HolonomicConstraintSimulator.tsx`: Pfaffian non-holonomic no-slip constraints.
   - `ArmForwardKinematicsSimulator.tsx`: 2-DOF planar arm forward kinematics & workspace annulus limits.
   - `ArmInverseKinematicsSimulator.tsx`: Analytical inverse kinematics solver (Elbow-Up vs. Elbow-Down).
   - `JacobianSingularitySimulator.tsx`: Velocity manipulability ellipse and singularity detection ($\det(J) \to 0$).
-- **Perception & Sensors**:
+- **Perception, Sensors & Mapping**:
+  - `SensorFusionSimulator.tsx`: Multi-sensor fusion combining high-rate Wheel Odometry, IMU gyro integration, and low-rate absolute GPS multipath fixes via Kalman filtering.
   - `LidarRaycastSimulator.tsx`: 360° LiDAR Raycaster with parametric segment intersections and point cloud generation.
+  - `GaussianGridMapSimulator.tsx`: Gaussian kernel density decay mapping for continuous spatial occupancy.
+  - `RayCastingGridMapSimulator.tsx`: Bresenham raycasting occupancy grid updating.
+  - `LidarToGridMapSimulator.tsx`: Coordinate frame sensor-to-world point-cloud-to-grid transformation.
+  - `KMeansClusteringSimulator.tsx`: Unsupervised point cloud spatial object clustering with iterative Voronoi centroid convergence.
+  - `RectangleFittingSimulator.tsx`: Minimum Area Bounding Box fitting & L-shape search for vehicular obstacle classification.
   - `SensorNoiseSimulator.tsx`: Gaussian sensor noise modeling and histogram density functions.
   - `OdometryDriftSimulator.tsx`: Wheel radius bias and dead reckoning divergence.
   - `MappingSimulator.tsx`: Log-Odds recursive Bayesian Occupancy Grid Mapping.
-- **Planning & Trajectory Generation**:
+- **State Estimation & SLAM**:
+  - `FactorGraphOptimizerSimulator.tsx`: Factor Graph SLAM & Non-Linear Least Squares with Gauss-Newton sparse normal equations solver.
+  - `GaussianSplattingSlamSimulator.tsx`: 3D Gaussian Splatting SLAM (3DGS-SLAM) & volumetric radiance field differentiable rasterization.
+  - `EkfLocalizationSimulator.tsx`: Extended Kalman Filter (EKF) 2D non-linear state estimation with live covariance error ellipses.
+  - `HistogramFilterSimulator.tsx`: Discrete grid Markov localization belief propagation.
+  - `FastSlamSimulator.tsx`: FastSLAM 1.0 Rao-Blackwellized particle filter with individual landmark EKFs.
+  - `LoopClosureOptimizationSimulator.tsx`: Pose graph loop closure optimization with Cartographer submap constraints.
+  - `SlamSimulator.tsx`: Iterative Closest Point (ICP) point cloud alignment via SVD rotation estimation.
+  - `LocalizationSimulator.tsx`: Monte Carlo Localization (MCL) particle filter with sensor updates.
+- **Planning, Control & Multi-Agent Swarms**:
+  - `AutonomousExplorationSimulator.tsx`: Look-Ahead Guided Sampling (LAGS) frontier-based autonomous exploration.
+  - `SafeCorridorExplorationSimulator.tsx`: 3D MAV Safe Flight Corridor (SFC) obstacle-free polyhedral path optimization.
+  - `FormationControlSimulator.tsx`: Decentralized multi-agent formation control (Triangle, V-Wedge, Line) via graph Laplacian consensus and leader-follower flocking.
+  - `DiffusionPolicyVlaSimulator.tsx`: Vision-Language-Action (VLA) & Denoising Diffusion Policy continuous action trajectory synthesis.
   - `PathPlanningSimulator.tsx`: Custom obstacle drawing with $A^*$ and Dijkstra graph search.
   - `AStarVsDijkstraSimulator.tsx`: Uniform wavefront vs. heuristic search comparison.
   - `RrtSimulator.tsx` & `RrtExplorationSimulator.tsx`: Randomized rapidly-exploring tree growth and $RRT^*$ neighborhood rewiring.
-- **State Estimation & SLAM**:
-  - `BayesianFilterSimulator.tsx`: 1D Recursive Bayes & Kalman filter prediction-correction.
-  - `LocalizationSimulator.tsx`: Monte Carlo Localization (MCL) particle filter with sensor updates.
-  - `SlamSimulator.tsx`: Iterative Closest Point (ICP) point cloud alignment via Singular Value Decomposition (SVD).
-- **Motion Control & Swarms**:
   - `ControlSimulator.tsx`: Pure Pursuit lookahead geometry vs. Stanley non-linear feedback.
   - `PurePursuitSimulator.tsx`: Pure Pursuit lookahead distance tuning ($L_d$).
   - `TrackingErrorGeometrySimulator.tsx`: Frenet-Serret cross-track lateral error ($e_{\text{lat}}$) and heading error ($e_\theta$).
-  - `PidTuningSimulator.tsx`: PID loop tuning with transient step response analysis.
-  - `StateSpaceSimulator.tsx`: Continuous state-space dynamics ($\dot{\mathbf{x}} = \mathbf{A}\mathbf{x} + \mathbf{B}\mathbf{u}$) and phase portraits.
-  - `NumericalDiscretizationSimulator.tsx`: Numerical solver comparison (Euler vs. Midpoint vs. Runge-Kutta 4).
   - `MultiAgentSimulator.tsx`: Graph Laplacian swarm consensus and decentralized formation control.
 
 ---

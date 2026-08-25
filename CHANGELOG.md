@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0] - 2026-08-25
+
+### Added
+- **Full Roadmap Milestones 11 & 12 Completion** (`docs/ROADMAP.md`):
+  - **Milestone 11 (Lie Groups & Factor Graph Optimization)**:
+    - `LieGroupAlgebraSimulator.tsx`: Interactive $SO(3)$ manifold & $\mathfrak{so}(3)$ tangent space with Rodrigues exponential map $\exp([\boldsymbol{\omega}]_\times)$ and geodesic perturbation retraction.
+    - `FactorGraphOptimizerSimulator.tsx`: Bipartite factor graph SLAM with live Gauss-Newton sparse normal equations solver $\mathbf{H}\Delta\Theta = -\mathbf{b}$.
+    - Bilingual MDX Lessons: `content/{en,id}/geometry/lie-groups-and-lie-algebras.mdx` & `content/{en,id}/advanced/factor-graph-optimization.mdx`.
+  - **Milestone 12 (Frontier Robotics Research)**:
+    - `GaussianSplattingSlamSimulator.tsx`: 3D Gaussian Splatting SLAM (3DGS-SLAM) & volumetric radiance field differentiable rasterizer.
+    - `DiffusionPolicyVlaSimulator.tsx`: Vision-Language-Action (VLA) foundation model & conditional Denoising Diffusion action trajectory synthesis.
+    - Theoretical distillation & architecture guide for Sim-to-Real transfer, physical domain randomization, and privileged teacher-student reinforcement learning.
+    - Bilingual MDX Lessons: `content/{en,id}/advanced/3d-gaussian-splatting-slam.mdx`, `content/{en,id}/advanced/sim-to-real-and-domain-randomization.mdx`, and `content/{en,id}/advanced/vla-and-diffusion-policies.mdx`.
+- **Robot Platform Embodiments Foundations Suite**:
+  - `QuadrotorDynamicsSimulator.tsx`: 6-DOF Multirotor Flight Dynamics, collective thrust and differential torque allocation matrix.
+  - `MarineHydrodynamicsSimulator.tsx`: Subsea AUV Hydrodynamics, Archimedes buoyancy equilibrium, added mass $\mathbf{M}_A$, and Fossen 6-DOF equations.
+  - `LeggedZmpSimulator.tsx`: Bipedal/quadruped Zero Moment Point (ZMP) & Linear Inverted Pendulum Model (LIPM) dynamic stability in foot support polygon.
+  - Bilingual Lessons: `content/{en,id}/fundamentals/aerial-drone-principles.mdx`, `content/{en,id}/fundamentals/marine-robotics-fundamentals.mdx`, and `content/{en,id}/fundamentals/legged-robotics-fundamentals.mdx`.
+- **Autonomous Exploration Suite (MDPI Sensors 2020 & 2023 Research)**:
+  - `AutonomousExplorationSimulator.tsx`: Look-Ahead Guided Sampling (LAGS) frontier-based exploration algorithm.
+  - `SafeCorridorExplorationSimulator.tsx`: 3D MAV Safe Flight Corridor (SFC) polyhedral obstacle-free path generation.
+  - Bilingual Lessons: `content/{en,id}/planning/autonomous-exploration-lags.mdx` and `content/{en,id}/planning/3d-frontier-exploration-mav.mdx`.
+- **Spatial Mapping & Object Perception Suite (PythonRobotics Curriculum Expansion)**:
+  - `GaussianGridMapSimulator.tsx`: Gaussian kernel density estimation spatial mapping.
+  - `RayCastingGridMapSimulator.tsx`: Bresenham raycasting grid occupancy.
+  - `LidarToGridMapSimulator.tsx`: Sensor-to-world coordinate transform mapping.
+  - `KMeansClusteringSimulator.tsx`: Unsupervised point cloud spatial object clustering.
+  - `RectangleFittingSimulator.tsx`: Minimum Area Bounding Box fitting & L-shape search.
+  - 10 Bilingual Lessons across `content/{en,id}/perception/`.
+- **Localization, Estimation & Multi-Sensor Fusion Suite**:
+  - `EkfLocalizationSimulator.tsx`: Extended Kalman Filter 2D non-linear state estimation with dynamic covariance ellipses.
+  - `HistogramFilterSimulator.tsx`: Discrete grid Markov localization belief propagation.
+  - `SensorFusionSimulator.tsx`: Multi-rate Kalman filter fusing high-rate Wheel Odometry, IMU gyro integration, and low-rate absolute GPS multipath fixes.
+  - `NumericalIntegrationSimulator.tsx`: Numerical stability comparison between Explicit Euler, Symplectic Semi-Implicit Euler, and 4th-Order Runge-Kutta (RK4).
+  - `FormationControlSimulator.tsx`: Decentralized multi-agent formation control (Triangle, V-Wedge, Line) via graph Laplacian consensus.
+  - Bilingual Lessons across `content/{en,id}/estimation/`, `content/{en,id}/mathematics/`, and `content/{en,id}/advanced/`.
+
+### Fixed & Audited
+- **100% Dead-Link & 404 Route Audit**:
+  - Audited all internal hyperlinks in `app/robots/page.tsx`, `app/algorithms/page.tsx`, `components/layout/Header.tsx`, `components/layout/Footer.tsx`, and `app/page.tsx`.
+  - Replaced all non-canonical routes with direct, working lesson URLs.
+- **Curriculum Registry & Vitest Unit Test Expansion**:
+  - Updated `tests/curriculum/registry.test.ts` to validate all newly registered Level 0 to Level 18 modules.
+  - All 31 unit tests passing with 100% success rate.
+  - Next.js static export build generating 57+ static pages cleanly with zero errors.
+
+---
+
 ## [0.5.0] - 2026-08-24
 
 ### Added

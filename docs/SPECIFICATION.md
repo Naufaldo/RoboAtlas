@@ -138,12 +138,16 @@ Accessible via [`/robots`](../app/robots/page.tsx):
   content/
   ├── en/
   │   ├── fundamentals/
+  │   ├── mathematics/
+  │   ├── geometry/
+  │   ├── kinematics/
+  │   ├── sensors/
   │   ├── planning/
   │   ├── control/
-  │   ├── localization/
-  │   ├── mapping/
-  │   ├── slam/
-  │   └── multi-agent/
+  │   ├── estimation/
+  │   ├── perception/
+  │   ├── manipulation/
+  │   └── advanced/
   └── id/
       └── (matching exact directory and slug structure)
   ```
