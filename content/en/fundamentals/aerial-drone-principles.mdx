@@ -17,6 +17,7 @@ references:
   - "Daniel Mellinger & Vijay Kumar (2011). Minimum Snap Trajectory Generation and Control for Quadrotors. IEEE ICRA."
 components:
   - QuadrotorDynamicsSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -134,15 +135,28 @@ Quadrotors are **differentially flat** with respect to flat outputs $\mathbf{\si
 
 ---
 
-## 5. Interactive Simulator: 6-DOF Multirotor Flight Dynamics
+## 5. Educational Video: Quadcopter Flight Dynamics and Control
 
-Adjust collective thrust, trigger roll/pitch tilt angles, and inspect how vertical lift is maintained during banking maneuvers:
+<VideoEmbed
+  title="Quadcopter Dynamics and Control — Brian Douglas"
+  provider="youtube"
+  videoId="pRR_5oYdIbg"
+  duration="16:42"
+  author="Brian Douglas"
+  sourceUrl="https://www.youtube.com/watch?v=pRR_5oYdIbg"
+/>
+
+---
+
+## 6. Interactive Simulator: 6-DOF Multirotor Flight Dynamics
+
+Adjust collective thrust, test roll tilt maneuver dynamics, and observe how vertical lift is preserved under bank angles:
 
 <QuadrotorDynamicsSimulator />
 
 ---
 
-## 6. Concept Verification
+## 7. Concept Verification
 
 <ConceptCheck
   id="quiz-aerial-drone-principles"

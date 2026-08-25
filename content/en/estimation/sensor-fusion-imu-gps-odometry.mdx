@@ -17,6 +17,7 @@ references:
   - "Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics. MIT Press."
 components:
   - SensorFusionSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -75,15 +76,28 @@ Where optimal Kalman gain $\mathbf{K}_k$ dynamically balances internal motion un
 
 ---
 
-## 3. Interactive Simulator: Multi-Sensor Fusion
+## 3. Educational Video: Sensor Fusion & State Estimation
 
-Toggle individual sensor streams (Wheel Odometry, GPS Fixes, Fused Kalman Filter) to observe how the fused state estimator bounds kinematic drift:
+<VideoEmbed
+  title="Understanding Sensor Fusion and State Estimation — Brian Douglas"
+  provider="youtube"
+  videoId="6qV3YjFppuc"
+  duration="15:08"
+  author="Brian Douglas / MATLAB"
+  sourceUrl="https://www.youtube.com/watch?v=6qV3YjFppuc"
+/>
+
+---
+
+## 4. Interactive Simulator: Multi-Sensor Fusion Sandbox
+
+Toggle individual sensor layers (Raw Odometry, GPS Fixes, and Fused Kalman Filter) to observe live drift elimination:
 
 <SensorFusionSimulator />
 
 ---
 
-## 4. Concept Verification
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-sensor-fusion-imu-gps-odometry"

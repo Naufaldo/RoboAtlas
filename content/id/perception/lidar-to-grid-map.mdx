@@ -17,6 +17,7 @@ references:
   - Atsushi Sakai (2020). PythonRobotics: Lidar to Grid Map.
 components:
   - LidarToGridMapSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -61,7 +62,20 @@ Setiap sel $(i, j)$ mencatat jumlah akumulasi pantulan: $\text{Grid}[j][i] = \te
 
 ---
 
-## 2. Simulator Interaktif: Konversi LiDAR ke Grid Peta
+## 2. Video Pembelajaran: Transformasi Koordinat LiDAR & Pembentukan Grid Peta
+
+<VideoEmbed
+  title="LiDAR Sensor Principles and Point Cloud Coordinate Transformation"
+  provider="youtube"
+  videoId="x7YcT6ZJ5Gg"
+  duration="12:15"
+  author="Robotics Perception Lecture"
+  sourceUrl="https://www.youtube.com/watch?v=x7YcT6ZJ5Gg"
+/>
+
+---
+
+## 3. Simulator Interaktif: Konversi LiDAR ke Grid Peta
 
 Amati proses konversi dari titik pantulan kontinu menjadi akumulasi sel grid secara *real-time*:
 
@@ -69,7 +83,7 @@ Amati proses konversi dari titik pantulan kontinu menjadi akumulasi sel grid sec
 
 ---
 
-## 3. Uji Pemahaman Konsep
+## 4. Uji Pemahaman Konsep
 
 <ConceptCheck
   id="quiz-lidar-to-grid-map"

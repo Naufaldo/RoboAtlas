@@ -18,6 +18,7 @@ references:
   - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots. MIT Press.
 components:
   - LocalizationSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -75,15 +76,28 @@ To master state estimation algorithms (EKF, Histogram Filter, Particle Filter/MC
 
 ---
 
-## 4. Interactive Simulator: Monte Carlo Particle Filter Localization
+## 4. Educational Video: Robot Localization Fundamentals
 
-Observe how randomly scattered pose hypotheses rapidly converge onto the true robot pose as laser beams intersect known walls:
+<VideoEmbed
+  title="Robot Localization Fundamentals & Probabilistic State Estimation — Cyrill Stachniss"
+  provider="youtube"
+  videoId="CaCcOWUr9qA"
+  duration="18:40"
+  author="Cyrill Stachniss / University of Bonn"
+  sourceUrl="https://www.youtube.com/watch?v=CaCcOWUr9qA"
+/>
+
+---
+
+## 5. Interactive Simulator: Monte Carlo Localization & Obstacle Map
+
+Observe how randomly distributed belief particles converge toward the true robot pose as ray measurements match geometric map features:
 
 <LocalizationSimulator />
 
 ---
 
-## 5. Concept Verification
+## 6. Concept Verification
 
 <ConceptCheck
   id="quiz-localization-fundamentals"

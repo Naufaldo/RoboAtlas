@@ -17,6 +17,7 @@ references:
   - "Reza Olfati-Saber (2006). Flocking for Multi-Agent Dynamic Systems: Algorithms and Theory. IEEE Transactions on Automatic Control."
 components:
   - FormationControlSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -57,15 +58,28 @@ Where:
 
 ---
 
-## 3. Interactive Simulator: Multi-Agent Formation Control
+## 3. Educational Video: Multi-Agent Swarm Control & Graph Laplacians
 
-Click anywhere on the canvas to assign a new goal waypoint for the swarm Leader, and switch between Triangle, V-Wedge, and Line configurations:
+<VideoEmbed
+  title="Multi-Agent Swarm Control and Graph Laplacians — Magnus Egerstedt"
+  provider="youtube"
+  videoId="6C88_W6kM_E"
+  duration="19:40"
+  author="Magnus Egerstedt / Georgia Tech"
+  sourceUrl="https://www.youtube.com/watch?v=6C88_W6kM_E"
+/>
+
+---
+
+## 4. Interactive Simulator: Multi-Agent Formation Control
+
+Click anywhere on the simulation canvas to assign a new waypoint for the Leader robot, or switch formation topologies between Triangle, V-Wedge, and Column Line:
 
 <FormationControlSimulator />
 
 ---
 
-## 4. Concept Verification
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-formation-control-and-swarms"

@@ -17,6 +17,7 @@ references:
   - "Moo Jin Kim et al. (2024). OpenVLA: An Open-Source Vision-Language-Action Model. arXiv:2406.09246."
 components:
   - DiffusionPolicyVlaSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -67,15 +68,28 @@ To guarantee dynamic smoothness and disturbance rejection:
 
 ---
 
-## 4. Interactive Simulator: VLA Diffusion Policy Trajectory Denoising
+## 4. Educational Video: Diffusion Policies & VLA Models
 
-Select a manipulation task prompt and observe random Gaussian noise $\mathbf{a}_K$ iteratively denoise into a smooth, continuous trajectory $\mathbf{a}_0$:
+<VideoEmbed
+  title="Diffusion Policy for Robot Learning: Visuomotor Policy Generation"
+  provider="youtube"
+  videoId="xGg7P5rN8-E"
+  duration="13:45"
+  author="Robot Learning Lab / RSS"
+  sourceUrl="https://www.youtube.com/watch?v=xGg7P5rN8-E"
+/>
+
+---
+
+## 5. Interactive Simulator: Diffusion Policy & VLA Action Denoising
+
+Select a manipulation task prompt and observe Gaussian noise $\mathbf{a}_K$ iteratively denoise into an executable continuous trajectory $\mathbf{a}_0$:
 
 <DiffusionPolicyVlaSimulator />
 
 ---
 
-## 5. Concept Verification
+## 6. Concept Verification
 
 <ConceptCheck
   id="quiz-vla-and-diffusion-policies"

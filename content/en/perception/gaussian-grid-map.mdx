@@ -17,6 +17,7 @@ references:
   - Atsushi Sakai (2020). PythonRobotics: Gaussian Grid Map.
 components:
   - GaussianGridMapSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -60,15 +61,28 @@ Where:
 
 ---
 
-## 3. Interactive Simulator: Gaussian Grid Map & Kernel Density
+## 3. Educational Video: Continuous Mapping & Gaussian Mixture Models
 
-Experiment with Gaussian kernel dispersion and observe how changing variance $\sigma$ shapes the accumulated occupancy heatmap:
+<VideoEmbed
+  title="Gaussian Processes and Continuous Spatial Mapping"
+  provider="youtube"
+  videoId="DODph39j0-Y"
+  duration="14:50"
+  author="Robotics Perception Lab"
+  sourceUrl="https://www.youtube.com/watch?v=DODph39j0-Y"
+/>
+
+---
+
+## 4. Interactive Simulator: Gaussian Grid Map & Kernel Density
+
+Experiment with Gaussian kernel spatial variance and observe how continuous probability density accumulates across the grid:
 
 <GaussianGridMapSimulator />
 
 ---
 
-## 4. Concept Verification
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-gaussian-grid-map"

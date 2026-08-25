@@ -17,6 +17,7 @@ references:
   - Atsushi Sakai (2020). PythonRobotics: k-means object clustering.
 components:
   - KMeansClusteringSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -57,15 +58,28 @@ The algorithm terminates when centroid displacement satisfies $\|\boldsymbol{\mu
 
 ---
 
-## 2. Interactive Simulator: k-Means 2D Point Cloud Clustering
+## 2. Educational Video: K-Means Clustering Clearly Explained
 
-Run $k$-means clustering step-by-step or auto-converge on synthetic laser point clouds:
+<VideoEmbed
+  title="StatQuest: K-Means Clustering Clearly Explained"
+  provider="youtube"
+  videoId="4b5d3muPQmA"
+  duration="08:57"
+  author="Josh Starmer / StatQuest"
+  sourceUrl="https://www.youtube.com/watch?v=4b5d3muPQmA"
+/>
+
+---
+
+## 3. Interactive Simulator: K-Means Point Cloud Clustering
+
+Step through the iterative expectation-maximization cycle of $k$-Means clustering on 2D laser point clouds:
 
 <KMeansClusteringSimulator />
 
 ---
 
-## 3. Concept Verification
+## 4. Concept Verification
 
 <ConceptCheck
   id="quiz-kmeans-object-clustering"

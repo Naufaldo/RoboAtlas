@@ -17,6 +17,7 @@ references:
   - Atsushi Sakai (2020). PythonRobotics: Lidar to Grid Map.
 components:
   - LidarToGridMapSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -61,15 +62,28 @@ Each cell accumulates hits: $\text{Grid}[j][i] = \text{Grid}[j][i] + 1$.
 
 ---
 
-## 2. Interactive Simulator: LiDAR to Grid Map Pipeline
+## 2. Educational Video: LiDAR Coordinates & Grid Map Generation
 
-Observe raw laser points being transformed into global coordinates and accumulated in real time:
+<VideoEmbed
+  title="LiDAR Sensor Principles and Point Cloud Coordinate Transformation"
+  provider="youtube"
+  videoId="x7YcT6ZJ5Gg"
+  duration="12:15"
+  author="Robotics Perception Lecture"
+  sourceUrl="https://www.youtube.com/watch?v=x7YcT6ZJ5Gg"
+/>
+
+---
+
+## 3. Interactive Simulator: LiDAR to Grid Map Projection
+
+Observe raw laser beam hit points project into discrete 2D grid cells in real-time:
 
 <LidarToGridMapSimulator />
 
 ---
 
-## 3. Concept Verification
+## 4. Concept Verification
 
 <ConceptCheck
   id="quiz-lidar-to-grid-map"

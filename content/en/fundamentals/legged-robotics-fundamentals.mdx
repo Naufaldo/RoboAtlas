@@ -17,6 +17,7 @@ references:
   - "Jerry Pratt et al. (2006). Capture Point: A Step toward Agile Humanoid Locomotion. IEEE Humanoids."
 components:
   - LeggedZmpSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -138,15 +139,28 @@ $$
 
 ---
 
-## 6. Interactive Simulator: ZMP Stability & Inverted Pendulum
+## 6. Educational Video: Zero Moment Point (ZMP) & Bipedal Walking Dynamics
 
-Inspect CoM and ZMP trajectories within the foot support polygon. Apply impulse push perturbations to test real-time dynamic balance recovery:
+<VideoEmbed
+  title="Zero Moment Point (ZMP) & Bipedal Walking Dynamics — MIT Underactuated Robotics"
+  provider="youtube"
+  videoId="7b_c6e0bS_E"
+  duration="18:35"
+  author="Russ Tedrake / MIT OpenCourseWare"
+  sourceUrl="https://www.youtube.com/watch?v=7b_c6e0bS_E"
+/>
+
+---
+
+## 7. Interactive Simulator: ZMP Stability & Inverted Pendulum
+
+Observe real-time CoM and ZMP trajectories inside the foot support polygon. Trigger an impulsive push disturbance to evaluate dynamic recovery:
 
 <LeggedZmpSimulator />
 
 ---
 
-## 7. Concept Verification
+## 8. Concept Verification
 
 <ConceptCheck
   id="quiz-legged-robotics-fundamentals"

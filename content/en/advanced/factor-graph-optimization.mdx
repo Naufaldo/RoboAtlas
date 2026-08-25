@@ -18,6 +18,7 @@ references:
   - "Rainer Kümmerle et al. (2011). g2o: A General Framework for Graph Optimization. IEEE ICRA."
 components:
   - FactorGraphOptimizerSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -76,15 +77,28 @@ Because robots only observe local landmarks and temporally adjacent poses, the i
 
 ---
 
-## 3. Interactive Simulator: Factor Graph SLAM Optimizer
+## 3. Educational Video: Graph-Based SLAM & Pose Graph Optimization
 
-Observe noisy, drifting robot poses snap into global consistency as loop closure constraints and Gauss-Newton steps minimize total Chi-Square residual error:
+<VideoEmbed
+  title="Graph-Based SLAM and Pose Graph Optimization — Cyrill Stachniss"
+  provider="youtube"
+  videoId="saVZtgPyyJQ"
+  duration="27:40"
+  author="Cyrill Stachniss / University of Bonn"
+  sourceUrl="https://www.youtube.com/watch?v=saVZtgPyyJQ"
+/>
+
+---
+
+## 4. Interactive Simulator: Factor Graph SLAM Optimizer
+
+Observe how drifting open-loop odometry poses are globally reconciled by loop closure constraints and landmark observations:
 
 <FactorGraphOptimizerSimulator />
 
 ---
 
-## 4. Concept Verification
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-factor-graph-optimization"

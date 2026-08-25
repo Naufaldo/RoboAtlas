@@ -17,6 +17,7 @@ references:
   - Atsushi Sakai (2020). PythonRobotics: Extended Kalman Filter Localization.
 components:
   - EkfLocalizationSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -83,15 +84,28 @@ $$
 
 ---
 
-## 3. Interactive Simulator: EKF 2D Localization & 3-Sigma Covariance Ellipse
+## 3. Educational Video: Extended Kalman Filter (EKF)
 
-Observe real-time EKF tracking comparing Ground Truth (green), Drifting Odometry (red dashed), and EKF State (cyan with dynamic uncertainty ellipse):
+<VideoEmbed
+  title="Extended Kalman Filter (EKF) — Cyrill Stachniss"
+  provider="youtube"
+  videoId="5c4JukdQ8-Q"
+  duration="22:15"
+  author="Cyrill Stachniss / University of Bonn"
+  sourceUrl="https://www.youtube.com/watch?v=5c4JukdQ8-Q"
+/>
+
+---
+
+## 4. Interactive Simulator: EKF 2D & 3-Sigma Covariance Ellipses
+
+Experiment with EKF tracking by observing the comparison between ground truth robot (green), drifting dead-reckoning odometry (dashed red), and filtered EKF estimate (cyan with 3-sigma ellipse):
 
 <EkfLocalizationSimulator />
 
 ---
 
-## 4. Concept Verification
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-ekf-localization"

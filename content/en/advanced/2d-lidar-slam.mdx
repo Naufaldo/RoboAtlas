@@ -19,6 +19,7 @@ references:
   - Stefan Kohlbrecher et al. (2011). A Flexible and Scalable SLAM System with Full 3D Motion Estimation (Hector SLAM).
 components:
   - LoopClosureOptimizationSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -62,15 +63,28 @@ Google Cartographer solves the scalability bottleneck of pose-graph SLAM via a t
 
 ---
 
-## 3. Interactive Simulator: Loop Closure & Submap Factor Graph Optimization
+## 3. Educational Video: 2D LiDAR SLAM & Google Cartographer
 
-Observe how identifying a loop closure constraint edge triggers a non-linear graph relaxation that eliminates open-loop drift:
+<VideoEmbed
+  title="2D LiDAR SLAM & Google Cartographer Loop Closure Architecture"
+  provider="youtube"
+  videoId="x7YcT6ZJ5Gg"
+  duration="17:25"
+  author="Autonomous Robotics / Cartographer"
+  sourceUrl="https://www.youtube.com/watch?v=x7YcT6ZJ5Gg"
+/>
+
+---
+
+## 4. Interactive Simulator: Loop Closure & Pose Graph Optimization
+
+Watch closed-loop geometric constraints globally align drifting submaps into sharp, crisp walls:
 
 <LoopClosureOptimizationSimulator />
 
 ---
 
-## 4. Concept Verification
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-2d-lidar-slam"

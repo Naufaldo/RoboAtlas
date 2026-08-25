@@ -17,6 +17,7 @@ references:
   - Atsushi Sakai (2020). PythonRobotics: Rectangle Fitting.
 components:
   - RectangleFittingSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -75,15 +76,28 @@ Output: A complete physical obstacle state tuple $(x_c, y_c, \psi^*, L, W)$ read
 
 ---
 
-## 3. Interactive Simulator: Oriented Rectangle & L-Shape Fitting
+## 3. Educational Video: Bounding Box & L-Shape Fitting
 
-Adjust target object orientation, search step $\Delta \psi$, or fitting criteria to observe real-time bounding box estimation:
+<VideoEmbed
+  title="Oriented Bounding Box Estimation for Autonomous Driving"
+  provider="youtube"
+  videoId="Z0eA3T8W47w"
+  duration="11:20"
+  author="Autonomous Vehicle Perception Lab"
+  sourceUrl="https://www.youtube.com/watch?v=Z0eA3T8W47w"
+/>
+
+---
+
+## 4. Interactive Simulator: Oriented Bounding Box & L-Shape Fitting
+
+Modify the point cloud orientation, sweep step size $\Delta \psi$, or switch optimization criteria:
 
 <RectangleFittingSimulator />
 
 ---
 
-## 4. Concept Verification
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-rectangle-fitting"

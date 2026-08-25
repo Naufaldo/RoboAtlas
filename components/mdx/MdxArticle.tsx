@@ -606,12 +606,18 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
         const titleMatch = videoBlock.match(/title="([^"]+)"/);
         const videoIdMatch = videoBlock.match(/videoId="([^"]+)"/);
         const providerMatch = videoBlock.match(/provider="([^"]+)"/);
+        const durationMatch = videoBlock.match(/duration="([^"]+)"/);
+        const authorMatch = videoBlock.match(/author="([^"]+)"/);
+        const sourceUrlMatch = videoBlock.match(/sourceUrl="([^"]+)"/);
         nodes.push(
           <VideoEmbed
             key={`comp-video-${i}`}
             title={titleMatch ? titleMatch[1] : 'Video Demonstration'}
             videoId={videoIdMatch ? videoIdMatch[1] : '-nGlDsk1rS4'}
             provider={(providerMatch ? providerMatch[1] : 'youtube') as 'youtube' | 'vimeo'}
+            duration={durationMatch ? durationMatch[1] : undefined}
+            author={authorMatch ? authorMatch[1] : undefined}
+            sourceUrl={sourceUrlMatch ? sourceUrlMatch[1] : undefined}
           />
         );
         continue;

@@ -17,6 +17,7 @@ references:
   - Stuart Russell, Peter Norvig (2020). Artificial Intelligence: A Modern Approach. Pearson.
 components:
   - HistogramFilterSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -71,15 +72,28 @@ $$
 
 ---
 
-## 3. Interactive Simulator: 1D Hallway Histogram Filter
+## 3. Educational Video: Histogram Filters for Robot Localization
 
-Move the robot along the corridor or trigger door sensor scans to observe real-time probability bar updates:
+<VideoEmbed
+  title="Histogram Filters for Robot Localization — Sebastian Thrun"
+  provider="youtube"
+  videoId="NkW8jLqY62E"
+  duration="08:45"
+  author="Sebastian Thrun / Udacity"
+  sourceUrl="https://www.youtube.com/watch?v=NkW8jLqY62E"
+/>
+
+---
+
+## 4. Interactive Simulator: 1D Histogram Filter (Hallway Doors)
+
+Move the robot left or right and trigger landmark measurement scans to observe the evolution of the discrete probability histogram:
 
 <HistogramFilterSimulator />
 
 ---
 
-## 4. Concept Verification
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-histogram-filter-localization"

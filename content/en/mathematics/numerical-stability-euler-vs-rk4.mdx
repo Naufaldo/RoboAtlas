@@ -17,6 +17,7 @@ references:
   - "John C. Butcher (2008). Numerical Methods for Ordinary Differential Equations. John Wiley & Sons."
 components:
   - NumericalIntegrationSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -127,15 +128,28 @@ $$
 
 ---
 
-## 5. Interactive Simulator: Solver Energy & Phase Space Stability
+## 5. Educational Video: Numerical Integration & Runge-Kutta RK4
 
-Adjust integration step size $h = \Delta t$ and observe how Explicit Euler destabilizes while Symplectic and RK4 maintain physical fidelity:
+<VideoEmbed
+  title="Numerical Integration: Euler vs Runge-Kutta RK4 — Steve Brunton"
+  provider="youtube"
+  videoId="r-j-2W1nFz0"
+  duration="15:24"
+  author="Steve Brunton / University of Washington"
+  sourceUrl="https://www.youtube.com/watch?v=r-j-2W1nFz0"
+/>
+
+---
+
+## 6. Interactive Simulator: Solver Stability & Energy Drift $E(t)$
+
+Adjust the integration timestep $h = \Delta t$ and observe how the Explicit Euler solver diverges while RK4 and Symplectic Euler preserve dynamical equilibrium:
 
 <NumericalIntegrationSimulator />
 
 ---
 
-## 6. Concept Verification
+## 7. Concept Verification
 
 <ConceptCheck
   id="quiz-numerical-stability-euler-vs-rk4"

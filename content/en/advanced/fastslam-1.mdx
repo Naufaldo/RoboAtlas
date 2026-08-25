@@ -17,6 +17,7 @@ references:
   - Atsushi Sakai (2020). PythonRobotics: FastSLAM 1.0.
 components:
   - FastSlamSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -77,15 +78,28 @@ Executed when the effective particle count $N_{\text{eff}} = \frac{1}{\sum (w^{[
 
 ---
 
-## 3. Interactive Simulator: FastSLAM 1.0 & Per-Particle Landmark Ellipses
+## 3. Educational Video: FastSLAM 1.0 & 2.0 Explained
 
-Explore real-time particle trajectory dispersion, landmark discovery, and uncertainty contraction:
+<VideoEmbed
+  title="FastSLAM: Rao-Blackwellized Particle Filtering for SLAM — Cyrill Stachniss"
+  provider="youtube"
+  videoId="a80p_r6I2qM"
+  duration="25:10"
+  author="Cyrill Stachniss / University of Bonn"
+  sourceUrl="https://www.youtube.com/watch?v=a80p_r6I2qM"
+/>
+
+---
+
+## 4. Interactive Simulator: FastSLAM 1.0 & Landmark Uncertainty Ellipses
+
+Experiment with multi-hypothesis particle trajectories and independent 2x2 EKF landmark Gaussian updates in real-time:
 
 <FastSlamSimulator />
 
 ---
 
-## 4. Concept Verification
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-fastslam-1"

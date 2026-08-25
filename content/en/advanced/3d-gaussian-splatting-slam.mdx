@@ -17,6 +17,7 @@ references:
   - "Hidenobu Matsuki et al. (2024). Gaussian Splatting SLAM. IEEE CVPR."
 components:
   - GaussianSplattingSlamSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -74,15 +75,28 @@ $$
 
 ---
 
-## 4. Interactive Simulator: 3D Gaussian Splatting SLAM
+## 4. Educational Video: 3D Gaussian Splatting in Robotics
 
-Orbit the virtual sensor camera to witness real-time 3D Gaussian splat rasterization and trigger the **Densify Splats** button to refine spatial geometry:
+<VideoEmbed
+  title="3D Gaussian Splatting in Robotics and Visual SLAM"
+  provider="youtube"
+  videoId="tgyM8p5qRzg"
+  duration="16:30"
+  author="CVPR / Robotics Research"
+  sourceUrl="https://www.youtube.com/watch?v=tgyM8p5qRzg"
+/>
+
+---
+
+## 5. Interactive Simulator: 3D Gaussian Splatting SLAM
+
+Orbit the simulated visual robot camera to inspect differentiable Gaussian rasterization and click **Densify Splats** to enhance fine geometric detail:
 
 <GaussianSplattingSlamSimulator />
 
 ---
 
-## 5. Concept Verification
+## 6. Concept Verification
 
 <ConceptCheck
   id="quiz-3d-gaussian-splatting-slam"

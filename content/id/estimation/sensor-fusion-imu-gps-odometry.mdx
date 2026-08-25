@@ -17,6 +17,7 @@ references:
   - "Sebastian Thrun, Wolfram Burgard, Dieter Fox (2005). Probabilistic Robotics. MIT Press."
 components:
   - SensorFusionSimulator
+  - VideoEmbed
   - FormulaExplainer
   - ConceptCheck
 ---
@@ -75,7 +76,20 @@ Di mana $\mathbf{K}_k$ adalah Matriks Penguatan Kalman (*Kalman Gain*) yang seca
 
 ---
 
-## 3. Simulator Interaktif: Fusi Multi-Sensor Robotik
+## 3. Video Pembelajaran: Fusi Multi-Sensor dengan Filter Kalman
+
+<VideoEmbed
+  title="Understanding Sensor Fusion and State Estimation — Brian Douglas"
+  provider="youtube"
+  videoId="6qV3YjFppuc"
+  duration="15:08"
+  author="Brian Douglas / MATLAB"
+  sourceUrl="https://www.youtube.com/watch?v=6qV3YjFppuc"
+/>
+
+---
+
+## 4. Simulator Interaktif: Fusi Multi-Sensor Robotik
 
 Nyalakan/matikan masing-masing lapisan sensor (Odometri, GPS, dan Filter Fusi) untuk melihat secara langsung bagaimana filter Kalman mengeliminasi *drift* akumulasi roda:
 
@@ -83,7 +97,7 @@ Nyalakan/matikan masing-masing lapisan sensor (Odometri, GPS, dan Filter Fusi) u
 
 ---
 
-## 4. Uji Pemahaman Konsep
+## 5. Uji Pemahaman Konsep
 
 <ConceptCheck
   id="quiz-sensor-fusion-imu-gps-odometry"
