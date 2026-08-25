@@ -1,6 +1,6 @@
 ---
 id: 3d-frontier-exploration-mav
-title: "3D Frontier-Based Autonomous Exploration & Safe Flight Corridors"
+title: "3D Frontier Exploration & MAV Safe Flight Corridors (MDPI 2020)"
 slug: 3d-frontier-exploration-mav
 domain: planning
 level: 6
@@ -16,63 +16,97 @@ prerequisites:
 references:
   - "Liang Lu, Carlos Redondo, Pascual Campoy (2020). Optimal Frontier-Based Autonomous Exploration in Unconstructed Environment Using RGB-D Sensor. Sensors (MDPI), 20(22), 6507."
   - "Armin Hornung, Kai M. Wurm, Maren Bennewitz, Cyrill Stachniss, Wolfram Burgard (2013). OctoMap: An Efficient Probabilistic 3D Mapping Framework Based on Octrees. Autonomous Robots."
+  - "Sikang Liu, Mo Shan, Yash Mulgaonkar, Vijay Kumar (2017). Planning Dynamically Feasible Trajectories for Quadrotors Using Safe Flight Corridors in 3-D Complex Environments. IEEE ICRA."
 components:
   - SafeCorridorExplorationSimulator
   - FormulaExplainer
   - ConceptCheck
 ---
 
-# 3D Frontier-Based Autonomous Exploration & Safe Flight Corridors
+# 3D Frontier Exploration & MAV Safe Flight Corridors (MDPI 2020)
 
-> "How can an agile Micro Aerial Vehicle (MAV) equipped with lightweight RGB-D depth sensors map complex, unconstructed 3D disaster ruins without colliding into unseen obstacles?"
+> "How can an agile Micro Aerial Vehicle (MAV) equipped with lightweight RGB-D depth sensors autonomously explore and map complex 3D collapsed buildings without crashing into obstacles under strict battery and computational constraints?"
 
-Autonomous 3D exploration using Micro Aerial Vehicles (MAVs / Quadrotors) in collapsed subterranean structures or post-disaster search-and-rescue demands volumetric spatial reasoning within strictly constrained on-board computing limits. Grounded in research from *MDPI Sensors 2020 (Lu, Redondo, & Campoy)*, the autonomous aerial exploration framework unifies:
-1. Volumetric **3D OctoMap** mapping
-2. Polar Candidate Generation & **$k$-Means++** Frontier Clustering
-3. Collision-Free **Safe Flight Corridor (SFC)** Inflation Planning
+Autonomous aerial exploration using **Micro Aerial Vehicles (MAVs)** in disaster-response and subterranean mine inspection demands rapid 3D volumetric mapping under severe payload and on-board compute limitations.
 
----
-
-## 1. 3D OctoMap Voxel Grid Representation & Volumetric Information Gain
-
-The three-dimensional environment is discretized into hierarchical octree voxels. For each voxel $x$ with occupancy probability $p(x) \in [0, 1]$, spatial uncertainty is quantified by **Voxel Shannon Entropy**:
-
-$$
-e(x) = - p(x) \log p(x) - (1 - p(x)) \log(1 - p(x))
-$$
-
-### Volumetric Information Gain ($G_v$) for Viewpoint $v$:
-The aggregate entropy of all unmapped voxels intersected by the RGB-D camera ray bundle $R_v$:
-
-$$
-G_v = \sum_{r \in R_v} \sum_{x \in X} e(x)
-$$
+Synthesizing the *MDPI Sensors 2020 (Lu, Redondo, & Campoy)* framework, modern 3D autonomous exploration pipelines integrate:
+1. **OctoMap 3D** Probabilistic Volumetric Octree Mapping
+2. Cylindrical Candidate Viewpoint Generation & **$k$-Means++** Frontier Clustering
+3. **Safe Flight Corridor (SFC)** Constrained Continuous Trajectory Generation
 
 ---
 
-## 2. Polar Frontier Generation & $k$-Means++ Candidate Filtering
+## 1. OctoMap 3D Voxel Mapping & RGB-D Sensor Geometry
 
-Frontier points along boundaries between free and unknown space are parameterized in cylindrical coordinates around frontier origin $(X_f, Y_f, Z_f)$:
+3D spatial volume is hierarchically indexed using an Octree data structure. Each leaf voxel $n$ stores a log-odds occupancy probability:
 
 $$
-\begin{bmatrix} X_c \\ Y_c \\ Z_c \\ \theta_c \end{bmatrix} = \begin{bmatrix} X_f + R_i \cos(\theta_i) \\ Y_f + R_i \sin(\theta_i) \\ Z_f \\ \theta_i \end{bmatrix}
+L(n \mid z_{1:t}) = L(n \mid z_{1:t-1}) + L(n \mid z_t)
 $$
 
-To eliminate redundant computation from thousands of raw point candidates, **$k$-Means++** clusters the frontier space into $k$ optimal centroid viewpoints ranked by maximal Information Gain $G_v$.
+Volumetric spatial uncertainty is quantified via **Shannon Voxel Entropy**:
+
+$$
+e(x) = - p(x) \log_2 p(x) - (1 - p(x)) \log_2 (1 - p(x))
+$$
+
+### Volumetric Information Gain ($G_v$):
+The cumulative entropy encompassed by the frustum cone $R_v$ of the RGB-D sensor (horizontal FOV $\alpha_h$, vertical FOV $\alpha_v$, and range $[d_{\min}, d_{\max}]$):
+
+$$
+G_v = \sum_{r \in R_v} \sum_{x \in \text{Voxel}(r)} e(x)
+$$
 
 ---
 
-## 3. Collision-Free Flight: Safe Flight Corridor (SFC) Generation
+## 2. Cylindrical Viewpoint Generation & $k$-Means++ Clustering
 
-Once the optimal target frontier is selected by the global $A^*$ planner, the flight path is protected against obstacle proximity:
-1. **Convex Box Inflation**: Each waypoint on the $A^*$ path is inflated along all 6 axis directions until it touches the nearest obstacle voxel boundary.
-2. **Center-Corridor Replanning**: The trajectory is smoothed through the geometric centers of the inflated safe boxes, maximizing clearance from walls and narrow doorways.
+A 3D frontier voxel is defined as a free cell adjacent to at least one unknown voxel. For each frontier cluster centroid $(X_f, Y_f, Z_f)$, candidate sensor viewpoints $(X_c, Y_c, Z_c, \theta_c)$ are sampled along a cylindrical shell:
+
+$$
+\begin{bmatrix} X_c \\ Y_c \\ Z_c \\ \theta_c \end{bmatrix} = \begin{bmatrix} X_f + R_i \cos(\theta_i) \\ Y_f + R_i \sin(\theta_i) \\ Z_f \\ \theta_i + \pi \end{bmatrix}
+$$
+
+The yaw angle $\theta_c = \theta_i + \pi$ directs the RGB-D camera optical axis directly toward the unmapped frontier volume. **$k$-Means++** clustering aggregates thousands of raw frontier points into $k$ optimal candidate viewpoints ranked by information gain $G_v$.
 
 ---
 
-## 4. Interactive Simulator: MAV 3D Exploration & Safe Flight Corridors
+## 3. Safe Flight Corridors (SFC) & Convex Trajectory Optimization
 
-Observe an aerial quadrotor navigating 3D voxel obstacles while dynamically bounded inside illuminated Safe Flight Corridors:
+Once a 3D $A^*$ graph search discovers path waypoints, high-speed flight trajectories are generated using Safe Flight Corridors:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                          SAFE FLIGHT CORRIDOR (SFC) PIPELINE                            │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+                                             │
+                                             ▼
+                        ┌────────────────────────────────────────┐
+                        │ 3D A* Path Waypoints: [p_0, p_1, ...]  │
+                        └────────────────────────────────────────┘
+                                             │
+                                             ▼
+                        ┌────────────────────────────────────────┐
+                        │ Convex Box Inflation (AABB Expansion)  │
+                        │ Expand 6 directions to obstacle limits │
+                        │ S_k = [x_min, x_max] x [y_min, y_max]  │
+                        └────────────────────────────────────────┘
+                                             │
+                                             ▼
+                        ┌────────────────────────────────────────┐
+                        │ B-Spline / Minimum-Snap Trajectory QP  │
+                        │ Strictly bounded inside corridors:     │
+                        │ p(t) in S_k intersect S_{k+1}          │
+                        └────────────────────────────────────────┘
+```
+
+The Safe Flight Corridor converts non-linear obstacle avoidance into linear convex bounding constraints (Convex Quadratic Program), guaranteeing collision-free, minimum-jerk flight trajectories solvable in real-time.
+
+---
+
+## 4. Interactive Simulator: 3D Drone Exploration & Safe Flight Corridor
+
+Observe the simulated MAV navigate 3D obstacle voxels within cyan-glowing safe flight corridors:
 
 <SafeCorridorExplorationSimulator />
 
@@ -82,26 +116,26 @@ Observe an aerial quadrotor navigating 3D voxel obstacles while dynamically boun
 
 <ConceptCheck
   id="quiz-3d-frontier-exploration-mav"
-  question="What is the primary role of the Safe Flight Corridor (SFC) in MAV autonomous exploration?"
+  question="What is the primary computational benefit of constructing Safe Flight Corridors (SFC) for high-speed MAV trajectory generation?"
   options={[
     {
       id: "A",
-      text: "It constructs a connected chain of collision-free convex bounding boxes along the planned path, allowing flight trajectories to be replanned through corridor centers to maximize obstacle clearance.",
+      text: "SFC transforms difficult non-linear obstacle avoidance constraints into linear convex inequality bounds (Convex Quadratic Program / QP) over overlapping polyhedra, enabling real-time minimum-snap trajectory generation with rigorous collision-free guarantees without dense time discretization.",
       isCorrect: true,
-      explanation: "Correct! Safe Flight Corridors ensure high-speed aerial flight without risk of corner clipping against unmapped obstacles."
+      explanation: "Correct! Solving a convex QP inside safe polyhedral corridors is hundreds of times faster than non-linear numerical optimization."
     },
     {
       id: "B",
-      text: "It reduces drone battery power consumption by turning off the propellers.",
+      text: "SFC reduces drone aerodynamic payload mass.",
       isCorrect: false,
-      explanation: "Incorrect. The SFC is a spatial path planning and safety optimization strategy."
+      explanation: "Incorrect. SFC is purely a geometric trajectory planning algorithm."
     },
     {
       id: "C",
-      text: "It replaces the depth camera with a barometric pressure altimeter.",
+      text: "SFC shuts down the drone's brushless motors near obstacles.",
       isCorrect: false,
-      explanation: "Incorrect. SFC algorithms rely on accurate depth perception to calculate safe expansion limits."
+      explanation: "Incorrect. Motor shutoff would result in catastrophic freefall."
     }
   ]}
-  hint="Consider the danger of high-speed quadrotors clipping sharp obstacle corners in cluttered corridors."
+  hint="Consider the mathematical efficiency of optimizing polynomial splines inside convex bounding boxes versus non-convex collision checking."
 />

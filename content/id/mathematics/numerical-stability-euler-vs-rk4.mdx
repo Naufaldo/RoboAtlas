@@ -14,6 +14,7 @@ prerequisites:
 references:
   - "Ernst Hairer, Syvert P. Nørsett, Gerhard Wanner (1993). Solving Ordinary Differential Equations I: Nonstiff Problems. Springer."
   - "Russ Tedrake (2023). Underactuated Robotics: Algorithms for Walking, Running, Swimming, Flying, and Manipulation. MIT."
+  - "John C. Butcher (2008). Numerical Methods for Ordinary Differential Equations. John Wiley & Sons."
 components:
   - NumericalIntegrationSimulator
   - FormulaExplainer
@@ -24,7 +25,7 @@ components:
 
 > "Mengapa simulator fisika robot sering meledak (*blow up*) dan melompat ke tak hingga ketika timestep simulasi $\Delta t$ dinaikkan sedikit saja, dan mengapa integrasi numerik Runge-Kutta 4 (RK4) serta integrator simplektik menjadi pondasi mutlak simulasi robotika?"
 
-Dalam memprogram simulasi robotika (baik pergerakan pendulum, dinamika lengan manipulator, maupun navigasi mobile robot), hukum gerak Newton diformulasikan sebagai Persamaan Diferensial Biasa (*Ordinary Differential Equations / ODE*):
+Dalam memprogram simulasi robotika (pergerakan pendulum, dinamika lengan manipulator, maupun navigasi mobile robot), hukum gerak Newton diformulasikan sebagai Persamaan Diferensial Biasa (*Ordinary Differential Equations / ODE*):
 
 $$
 \mathbf{\dot{x}}(t) = \mathbf{f}(\mathbf{x}(t), \mathbf{u}(t))
@@ -34,28 +35,31 @@ Komputer digital tidak dapat mengevaluasi waktu kontinu secara analitik, melaink
 
 ---
 
-## 1. Metode Euler Eksplisit (*Forward Euler*) & Galat Truncation $\mathcal{O}(h)$
+## 1. Daerah Kestabilan Bidang Kompleks & Ledakan Energi Euler Eksplisit
 
-Metode paling sederhana melakukan perkiraan linear deret Taylor orde pertama:
+Uji kestabilan skalar linier Dahlquist $\dot{x} = \lambda x$ dengan $\lambda \in \mathbb{C}$ ($\operatorname{Re}(\lambda) < 0$ untuk sistem stabil):
 
-$$
-\mathbf{x}_{n+1} = \mathbf{x}_n + h \mathbf{f}(\mathbf{x}_n, \mathbf{u}_n)
-$$
-
-### Kelemahan Fatal Euler Eksplisit:
-Untuk sistem mekanik konservatif (seperti osilator harmonik atau pendulum tanpa gesekan), determinan transformasi matriks Euler eksplisit selalu bernilai $> 1$:
+```text
+┌─────────────────────────┬──────────────────────────┬──────────────────────────┬────────────────────────────────────────┐
+│ Solver Numerik          │ Fungsi Penguatan R(z)    │ Daerah Kestabilan |R(z)| │ Batas Maksimum Timestep Sumbu Imajiner│
+├─────────────────────────┼──────────────────────────┼──────────────────────────┼────────────────────────────────────────┤
+│ 1. Euler Eksplisit      │ R(z) = 1 + z             │ Lingkaran |1 + z| <= 1   │ 0 (Selalu tidak stabil untuk osilator) │
+│ 2. Euler Simplektik     │ Pemetaan Simplektik      │ Preservasi Luas Fase     │ h < 2 / omega_0 (Stabil terbatas)      │
+│ 3. Runge-Kutta 4 (RK4)  │ R(z) = 1 + z + ... + z^4 │ Wilayah luas bidang kiri │ h * omega_0 <= 2.828 (Sangat stabil)   │
+└─────────────────────────┴──────────────────────────┴──────────────────────────┴────────────────────────────────────────┘
+```
 
 $$
 \det(\mathbf{J}_{\text{Euler}}) = 1 + \omega_0^2 h^2 > 1
 $$
 
-Setiap langkah waktu menambahkan energi kinetik fiktif buatan (*artificial energy drift*), menyebabkan lintasan fase spiral keluar hingga sistem hancur meledak!
+Setiap langkah waktu menambahkan energi kinetik fiktif buatan (*artificial energy drift*), menyebabkan lintasan ruang fase spiral keluar hingga sistem hancur meledak!
 
 ---
 
-## 2. Integrator Simplektik / Semi-Implicit Euler
+## 2. Integrator Simplektik / Semi-Implicit Euler (Preservasi Volume Hamiltonian)
 
-Dengan memperbarui kecepatan terlebih dahulu lalu menggunakan kecepatan baru tersebut untuk menghitung posisi:
+Dalam mekanika Hamiltonian, volume ruang fase $(q, p)$ adalah invarian fisik mutlak (Teorema Liouville). Integrator Simplektik memperbarui kecepatan terlebih dahulu lalu menggunakan kecepatan baru tersebut untuk menghitung posisi:
 
 $$
 \mathbf{v}_{n+1} = \mathbf{v}_n + h \mathbf{a}(\mathbf{x}_n, \mathbf{v}_n)
@@ -65,11 +69,11 @@ $$
 \mathbf{x}_{n+1} = \mathbf{x}_n + h \mathbf{v}_{n+1}
 $$
 
-Integrator ini mempertahankan bentuk volume ruang fase Hamiltonian ($\det(\mathbf{J}) = 1$), sehingga energi total sistem berosilasi stabil di sekitar nilai sebenarnya tanpa pernah meledak.
+Matriks Jacobian transformasi ini memiliki determinan eksak $\det(\mathbf{J}_{\text{Symplectic}}) = 1$. Energi total sistem tidak pernah meledak melainkan berosilasi secara periodik di sekitar nilai analitik aslinya. Inilah alasan mengapa game engine fisika robotika (seperti MuJoCo, Box2D, dan PhysX) menggunakan integrator simplektik sebagai solver default!
 
 ---
 
-## 3. Metode Klasik Runge-Kutta Orde ke-4 (RK4)
+## 3. Metode Klasik Runge-Kutta Orde ke-4 (RK4) & Tabel Butcher
 
 RK4 mengevaluasi empat kemiringan lereng turunan perantara (*slopes*) dalam interval $[t_n, t_n + h]$:
 
@@ -95,11 +99,35 @@ $$
 \mathbf{y}_{n+1} = \mathbf{y}_n + \frac{h}{6} (\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4)
 $$
 
-Dengan galat pemotongan lokal sangat kecil $\mathcal{O}(h^5)$ dan galat global $\mathcal{O}(h^4)$, RK4 memberikan presisi trajektori yang luar biasa tinggi pada pergerakan dinamis robot.
+```text
+TABEL BUTCHER METODE RK4:
+  0   │
+ 1/2  │ 1/2
+ 1/2  │  0   1/2
+  1   │  0    0    1
+──────┼───────────────────
+      │ 1/6  1/3  1/3  1/6
+```
+
+Dengan galat pemotongan lokal sangat kecil $\mathcal{O}(h^5)$ dan galat global akumulatif $\mathcal{O}(h^4)$, RK4 memberikan presisi trajektori yang luar biasa tinggi pada pergerakan dinamis robot manipulator dan UAV.
 
 ---
 
-## 4. Simulator Interaktif: Stabilitas Solver & Kurva Energi $E(t)$
+## 4. Analisis Energi Mekanik Pendulum Sederhana
+
+Untuk pendulum bermassa $m$ dan panjang tali $l$:
+
+$$
+E(t) = \frac{1}{2} m l^2 \dot{\theta}^2 + m g l (1 - \cos\theta)
+$$
+
+- **Euler Eksplisit**: $\frac{dE}{dt} > 0$ (Energi terus bertambah, pendulum mengayun semakin tinggi hingga berputar tak berujung).
+- **Euler Simplektik**: $\langle \frac{dE}{dt} \rangle = 0$ (Energi berosilasi terikat tanpa drift).
+- **RK4**: $\Delta E \sim \mathcal{O}(h^4)$ (Energi konstan hampir sempurna pada timestep yang wajar).
+
+---
+
+## 5. Simulator Interaktif: Stabilitas Solver & Kurva Energi $E(t)$
 
 Ubah ukuran langkah waktu integrasi $h = \Delta t$ dan amati bagaimana solver Euler eksplisit meledak sementara RK4 dan Simplektik mempertahankan kestabilan dinamis:
 
@@ -107,7 +135,7 @@ Ubah ukuran langkah waktu integrasi $h = \Delta t$ dan amati bagaimana solver Eu
 
 ---
 
-## 5. Uji Pemahaman Konsep
+## 6. Uji Pemahaman Konsep
 
 <ConceptCheck
   id="quiz-numerical-stability-euler-vs-rk4"

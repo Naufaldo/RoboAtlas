@@ -15,7 +15,8 @@ prerequisites:
   - probability-for-robotics
 references:
   - "Ao Feng, Yuyang Xie, Yankang Sun, Xuanzhi Wang, Bin Jiang, Jian Xiao (2023). Efficient Autonomous Exploration and Mapping in Unknown Environments. Sensors (MDPI), 23(10), 4766."
-  - "Brian J. Julian, Sertac Karaman, Daniela Rus (2014). On Mutual Information-Based Control of Range Sensing Robots for Mapping Applications. IJRR."
+  - "Brian J. Julian, Sertac Karaman, Daniela Rus (2014). On Mutual Information-Based Control of Range Sensing Robots for Mapping Applications. International Journal of Robotics Research."
+  - "Brian Yamauchi (1997). A Frontier-Based Approach for Autonomous Exploration. IEEE CIRA."
 components:
   - AutonomousExplorationSimulator
   - FormulaExplainer
@@ -24,63 +25,93 @@ components:
 
 # Eksplorasi Otonom Berbasis Informasi & Strategi Lokal-Global (LAGS)
 
-> "Mengapa robot eksplorasi otonom yang hanya mengejar perolehan informasi (*greedy information gain*) sering meninggalkan kantong-kantong kecil yang belum terpetakan di sudut peta, sehingga efisiensi eksplorasi di tahap akhir anjlok drastis?"
+> "Mengapa robot eksplorasi otonom yang hanya mengejar perolehan informasi serakah (*greedy information gain*) sering meninggalkan kantong-kantong kecil yang belum terpetakan di sudut peta, sehingga waktu eksplorasi di tahap akhir membengkak drastis akibat bolak-balik rute?"
 
-Dalam misi pencarian dan penyelamatan (*search and rescue*), robot pembersih cerdas (*robotic vacuum cleaner*), dan pengintaian bencana, robot harus memetakan seluruh lingkungan asing secepat dan seefisien mungkin tanpa adanya peta awal. Berdasarkan kajian ilmiah *MDPI Sensors 2023 (Feng et al.)*, algoritma eksplorasi konvensional menderita masalah **Regional Legacy Issues** (kantong wilayah kecil tertinggal akibat keserakahan eksplorasi lokal).
+Dalam misi pencarian dan penyelamatan korban bencana (*Search and Rescue*), pemetaan tambang bawah tanah, dan robot pembersih otonom, robot harus memetakan seluruh lingkungan asing secepat dan seefisien mungkin tanpa adanya denah awal.
 
-Metode **Local-and-Global Strategy (LAGS)** memadukan optimasi berbasis teori informasi Shannon, Regresi Proses Gaussian (GPR), *Bayesian Optimization (BO)*, dan *Deep Reinforcement Learning (DRL)* untuk mencapai eksplorasi yang efisien tanpa meninggalkan kantong kosong.
+Berdasarkan kajian ilmiah mutakhir *MDPI Sensors 2023 (Feng et al.)*, algoritma eksplorasi konvensional berbasis *Nearest Frontier* atau informasi murni menderita masalah **Regional Legacy Issues** (kantong wilayah kecil tertinggal akibat keserakahan lokal). Metode **Local-and-Global Strategy (LAGS)** memadukan teori informasi Shannon, Regresi Proses Gaussian (GPR), *Bayesian Optimization (BO)*, dan *Deep Reinforcement Learning (DRL)* untuk mencapai efisiensi eksplorasi optimal.
 
 ---
 
 ## 1. Entropi Shannon Peta Okupansi & Perolehan Informasi Mutual (MI)
 
-Ketidakpastian seluruh peta grid okupansi $m$ diukur menggunakan **Entropi Shannon**:
+Ketidakpastian seluruh peta grid okupansi $\mathbf{m} = \{m_i\}$ diukur menggunakan **Entropi Informasi Shannon**:
 
 $$
-H(m) = - \sum_{i} \sum_{j} p(m_{i,j}) \log p(m_{i,j})
+H(\mathbf{m}) = \sum_{i} H(m_i) = - \sum_{i} \left[ p(m_i) \log_2 p(m_i) + (1 - p(m_i)) \log_2 (1 - p(m_i)) \right]
 $$
 
-Di mana setiap sel yang belum diketahui memiliki probabilitas okupansi $p(m_{i,j}) = 0.5$ (memberikan 1 unit entropi maksimal).
+- Sel yang belum diketahui (*unknown*) memiliki prior $p(m_i) = 0.5 \implies H(m_i) = 1.0\text{ bit}$ (entropi maksimal).
+- Sel yang pasti bebas ($p(m_i) \to 0$) atau pasti occupied ($p(m_i) \to 1$) memiliki $H(m_i) \to 0\text{ bit}$.
 
-### Perolehan Informasi Mutual (Mutual Information Gain):
-Pengurangan entropi yang diharapkan jika robot berpindah ke koordinat target $x_{t+1}$ dan melakukan pemindaian sensor:
+### Perolehan Informasi Mutual (*Mutual Information Gain*):
+Pengurangan entropi yang diharapkan jika robot berpindah ke koordinat target $\mathbf{x}_k$ dan melakukan pemindaian berkas sinar LiDAR $\mathbf{z}$:
 
 $$
-I(m_t, x_{t+1}) = H(m_t) - H(m_t \mid x_{t+1})
+I(\mathbf{m}; \mathbf{z} \mid \mathbf{x}_k) = H(\mathbf{m}) - H(\mathbf{m} \mid \mathbf{z}, \mathbf{x}_k) = \sum_{\text{ray } r} I(m_r; z_r \mid \mathbf{x}_k)
 $$
 
 ---
 
-## 2. Prediksi Permukaan MI dengan Regresi Proses Gaussian (GPR) & Bayesian Optimization
+## 2. Prediksi Permukaan MI dengan Regresi Proses Gaussian (GPR) & Kernel Matérn
 
-Menghitung raycasting MI secara analitik pada setiap piksel peta sangat mahal ($O(N^2)$). Algoritma LAGS menyelesaikannya dengan:
-1. **Regresi Proses Gaussian (GPR)** dengan **Kernel Matérn** untuk memprediksi permukaan nilai $I(m, x_*)$ beserta varians ketidakpastiannya $\sigma^2(x_*)$:
-   $$k(x, x') = \frac{2^{1-v}}{\Gamma(v)} \left(\frac{\sqrt{2v}|x-x'|}{\ell}\right)^v K_v\left(\frac{\sqrt{2v}|x-x'|}{\ell}\right)$$
-   *(Kernel Matérn sangat unggul memodelkan perubahan tajam nilai informasi di balik dinding/rintangan).*
-2. **Bayesian Optimization (GP-UCB)** untuk memilih titik aksi kandidat terbaik:
-   $$x_{\text{sample}}^* = \arg\max_{x \in \mathcal{C}_{\text{action}}} \left[ \mu(x) + \kappa \sigma(x) \right]$$
+Menghitung raycasting MI analitik pada setiap piksel peta sangat lambat ($\mathcal{O}(N^2)$). LAGS menyelesaikannya dengan:
+1. Menghitung sampel MI pada beberapa titik representatif.
+2. Melatih **Regresi Proses Gaussian (GPR)** dengan **Kernel Matérn-3/2** untuk memprediksi fungsi kontinu $I(\mathbf{x})$ dan ketidakpastian prediksinya $\sigma^2(\mathbf{x})$:
+
+$$
+k_{\text{Matérn-3/2}}(\mathbf{x}, \mathbf{x}') = \sigma_f^2 \left( 1 + \frac{\sqrt{3} \|\mathbf{x} - \mathbf{x}'\|}{\ell} \right) \exp\left( -\frac{\sqrt{3} \|\mathbf{x} - \mathbf{x}'\|}{\ell} \right)
+$$
+
+*(Kernel Matérn jauh lebih unggul daripada RBF Gaussian murni karena mampu menangani diskontinuitas tajam pada perolehan informasi akibat terhalang dinding/rintangan).*
+
+3. **Bayesian Optimization (GP-UCB)** memilih titik kandidat lokal terbaik:
+
+$$
+\mathbf{x}_{\text{local}}^* = \arg\max_{\mathbf{x} \in \mathcal{C}_{\text{free}}} \left[ \mu_{\text{GPR}}(\mathbf{x}) + \kappa \sigma_{\text{GPR}}(\mathbf{x}) \right]
+$$
 
 ---
 
-## 3. Strategi Dual-Layer LAGS (Local Exploration + Global Perception)
+## 3. Arsitektur Dual-Layer LAGS (Local vs Global Coordination)
 
 ```text
-┌────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────┐
-│ Lapisan Strategi                       │ Fungsi & Perilaku Pengambilan Keputusan                                │
-├────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ 1. Local Exploration Strategy          │ Memaksimalkan perolehan informasi lokal berkecepatan tinggi di dekat   │
-│                                        │ posisi robot saat ini: score_local = I(m_local, x) / I_max             │
-│ 2. Global Perception Strategy (DRL)    │ Mengidentifikasi kantong kecil yang tertinggal dan memandu robot       │
-│                                        │ membersihkan area regional legacy: score_global = w*g + (1-w)*(1-d)    │
-│ 3. Keputusan Gabungan Akhir            │ score_finish = score_local + eta * score_global                        │
-└────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                          ALUR EKSEKUSI PIPELINE EKSPLORASI LAGS                         │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+                                             │
+                                             ▼
+                        ┌────────────────────────────────────────┐
+                        │   Pembaruan Peta Grid Okupansi m_k     │
+                        └────────────────────────────────────────┘
+                                             │
+                       ┌─────────────────────┴─────────────────────┐
+                       ▼                                           ▼
+          ┌─────────────────────────┐                 ┌─────────────────────────┐
+          │ STRATEGI LOKAL (GPR-BO) │                 │ STRATEGI GLOBAL (DRL)   │
+          │ • Sampling Titik Kandidat│                │ • Deteksi Regional      │
+          │ • Prediksi Permukaan MI │                 │   Legacy (Kantong Sisa) │
+          │ • Skor: I(m, x) / I_max │                 │ • Penalti Jarak Tempuh  │
+          └─────────────────────────┘                 └─────────────────────────┘
+                       │                                           │
+                       └─────────────────────┬─────────────────────┘
+                                             ▼
+                        ┌────────────────────────────────────────┐
+                        │ SKOR AKHIR GABUNGAN:                   │
+                        │ S_total = S_local + eta * S_global     │
+                        └────────────────────────────────────────┘
+                                             │
+                                             ▼
+                        ┌────────────────────────────────────────┐
+                        │ Eksekusi Trajektori Bebas Tabrakan A*  │
+                        └────────────────────────────────────────┘
 ```
 
 ---
 
 ## 4. Simulator Interaktif: Eksplorasi Otonom LAGS vs Nearest Frontier
 
-Bandingkan strategi eksplorasi **LAGS (MDPI 2023)** dengan metode klasik **Nearest Frontier (NF 1997)** dan amati penurunan kurva Entropi Peta $H(m)$ secara real-time:
+Bandingkan strategi eksplorasi **LAGS (MDPI Sensors 2023)** dengan metode klasik **Nearest Frontier (NF 1997)** dan amati penurunan kurva Entropi Peta $H(\mathbf{m})$ secara real-time:
 
 <AutonomousExplorationSimulator />
 
@@ -90,26 +121,26 @@ Bandingkan strategi eksplorasi **LAGS (MDPI 2023)** dengan metode klasik **Neare
 
 <ConceptCheck
   id="quiz-autonomous-exploration-lags"
-  question="Apa yang dimaksud dengan 'Regional Legacy Issue' pada algoritma eksplorasi otonom berbasis informasi murni?"
+  question="Mengapa metode eksplorasi Nearest Frontier (NF) klasik sering kalah efisien dibandingkan strategi terpadu LAGS pada lingkungan ruangan bersekat rumit?"
   options={[
     {
       id: "A",
-      text: "Kecenderungan strategi serakah lokal mengejar area berinformasi tinggi dan meninggalkan kantong-kantong kecil belum terpetakan di berbagai sudut, memaksa robot menempuh rute bolak-balik yang sangat panjang di akhir eksplorasi.",
+      text: "Karena Nearest Frontier hanya memilih batas terdekat tanpa mempertimbangkan kuantitas informasi tersembunyi di balik batas tersebut, sering menyebabkan robot terjebak dalam bolak-balik rute panjang (thrashing) dan meninggalkan kantong-kantong kecil yang harus dikunjungi kembali di akhir misi.",
       isCorrect: true,
-      explanation: "Tepat! LAGS memecahkan masalah ini dengan mengombinasikan persepsi global untuk segera membersihkan kantong kecil di dekatnya sebelum berpindah jauh."
+      explanation: "Tepat! LAGS memadukan perolehan informasi mutual berbobot GPR dengan kebijakan global DRL untuk memastikan tidak ada kantong terisolasi yang tertinggal."
     },
     {
       id: "B",
-      text: "Kerusakan mekanik pada girboks motor penggerak roda.",
+      text: "Karena Nearest Frontier membutuhkan sensor kamera inframerah 3D yang mahal.",
       isCorrect: false,
-      explanation: "Salah. Ini adalah masalah optimasi jalur spasial dan perencanaan keputusan eksplorasi."
+      explanation: "Salah. Nearest Frontier hanya membutuhkan peta grid biner standar."
     },
     {
       id: "C",
-      text: "Kondisi di mana baterai robot terisi penuh 100%.",
+      text: "Karena algoritma A* tidak dapat berjalan bersama Nearest Frontier.",
       isCorrect: false,
-      explanation: "Salah. Regional legacy adalah inefisiensi lintasan akibat kantong peta yang terabaikan."
+      explanation: "Salah. Nearest Frontier menggunakan A* untuk menghitung jarak tempuh."
     }
   ]}
-  hint="Pikirkan berapa biaya jarak yang harus ditempuh robot jika ada 1 ruang kecil di awal peta yang tertinggal saat robot sudah berada di ujung gedung."
+  hint="Pikirkan apa yang terjadi jika ada dua lorong: satu lorong pendek buntu yang dekat, dan satu aula raksasa yang sedikit lebih jauh."
 />

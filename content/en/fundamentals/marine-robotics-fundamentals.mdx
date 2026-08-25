@@ -8,12 +8,13 @@ tier: Foundations
 difficulty: beginner
 language: en
 interactive: true
-estimatedMinutes: 40
+estimatedMinutes: 45
 prerequisites:
   - intro-to-robotics
 references:
   - "Thor I. Fossen (2011). Handbook of Marine Craft Hydrodynamics and Motion Control. John Wiley & Sons."
   - "Gianluca Antonelli (2014). Underwater Robots. Springer."
+  - "Louis L. Whitcomb (2000). Underwater Robotics: Out of the Research Laboratory and Into the Real World. IEEE ICRA."
 components:
   - MarineHydrodynamicsSimulator
   - FormulaExplainer
@@ -22,81 +23,148 @@ components:
 
 # Marine Robotics: Hydrodynamics, Buoyancy & 6-DOF AUV Equations
 
-> "Why are GPS and LiDAR unusable in subsea environments, and how do Autonomous Underwater Vehicles (AUVs) maintain precise depth stability in high-pressure ocean currents?"
+> "Why are GPS, RF radio, and optical LiDAR virtually unusable underwater, and how do Autonomous Underwater Vehicles (AUVs) and Remotely Operated Vehicles (ROVs) achieve stable depth control and navigation using acoustic Doppler sonar and Fossen's equations of motion?"
 
-**Marine Robotics** encompasses Autonomous Surface Vehicles (USVs) and Autonomous Underwater Vehicles (AUVs/ROVs). Subsea vehicle dynamics are governed by fluid mechanics, viscous hydrodynamic drag, and hydrostatic buoyancy equilibria.
+**Marine Robotics** encompasses **Autonomous Surface Vehicles (USVs)** and **Autonomous Underwater Vehicles (AUVs)**. Subsea autonomy operates in an extreme physical regime characterized by massive hydrostatic pressure (increasing by 1 atm every 10 meters of depth), optical darkness, and rapid electromagnetic attenuation that renders high-frequency wireless communication completely ineffective.
 
 ---
 
-## 1. Hydrostatic Equilibrium: Gravitational Weight vs Archimedes Buoyancy
+## 1. Subsea Navigation Physics & Acoustic Sensor Modalities
 
-According to Archimedes' principle, the upward hydrostatic buoyancy force $B$ and downward gravitational weight $W$ are:
-
-$$
-W = m g, \quad B = \rho_{\text{fluid}} g V_{\text{displaced}}
-$$
-
-Where $\rho_{\text{fluid}}$ is seawater density ($\approx 1025 \text{ kg/m}^3$) and $V_{\text{displaced}}$ is the submerged hull volume.
+Because high-frequency electromagnetic radiation attenuates within centimeters in conductive seawater, marine robotics relies on acoustic wave propagation (speed of sound in seawater $c \approx 1500\text{ m/s}$):
 
 ```text
-┌─────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
-│ Hydrostatic Trim State  │ Net Force Equilibrium                    │ Subsea AUV Behavioral Response                         │
-├─────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
-│ 1. Neutral Trim (B = W) │ Net vertical force = 0                   │ AUV hovers passively at constant depth without power   │
-│ 2. Positive Trim (B > W)│ Net upward buoyancy force                │ Fail-safe mode: AUV floats safely to surface on outage │
-│ 3. Negative Trim (B < W)│ Net downward sinking force               │ Rapid descent capability to deep seabed floor          │
-└─────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                          SUBSEA AUV NAVIGATION & SENSOR SUITE                           │
+├─────────────────────────┬───────────────────────────────┬───────────────────────────────┤
+│ ACOUSTIC & INERTIAL NAV │ ENVIRONMENTAL SENSORS         │ PROPULSION & TRIM ACTUATION   │
+├─────────────────────────┼───────────────────────────────┼───────────────────────────────┤
+│ • Doppler Velocity Log  │ • Pressure Depth Sensor (bar) │ • Magnetic Brushless Thrusters│
+│   (DVL 300-1200 kHz)    │ • CTD Profiler (Salinity/Temp)│ • Hydrodynamic Control Planes │
+│ • USBL Acoustic Beacons │ • Multibeam Imaging Sonar     │ • Active Variable Ballast     │
+│ • Fiber Optic Gyro INS  │ • Low-Light HD Cameras + LEDs │ • Oil-Compensated Enclosures  │
+└─────────────────────────┴───────────────────────────────┴───────────────────────────────┘
 ```
 
 ---
 
-## 2. Fossen's 6-DOF Marine Equations of Motion
+## 2. Hydrostatic Equilibrium & Metacentric Passive Stability
 
-AUV rigid-body motion across 6 degrees of freedom (*Surge, Sway, Heave, Roll, Pitch, Yaw*) is formulated by Professor Thor I. Fossen:
+A submerged rigid body experiences two primary opposing vertical forces acting at distinct geometric centroids:
 
 $$
-\mathbf{M} \boldsymbol{\dot{\nu}} + \mathbf{C}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}(\boldsymbol{\eta}) = \boldsymbol{\tau}_{\text{thruster}}
+W = m g \quad (\text{acting at Center of Gravity } CG = [x_G, y_G, z_G]^T)
 $$
 
-1. **$\mathbf{M} = \mathbf{M}_{RB} + \mathbf{M}_A$**: Total inertia tensor summing rigid-body mass and **Hydrodynamic Added Mass ($\mathbf{M}_A$)** (the effective inertia of the surrounding fluid displaced during acceleration).
-2. **$\mathbf{D}(\boldsymbol{\nu})$**: Quadratic hydrodynamic viscous drag damping:
-   $$F_{\text{drag}} = \frac{1}{2} \rho C_D A v^2$$
-3. **$\mathbf{g}(\boldsymbol{\eta})$**: Restoring hydrostatic forces and moments ensuring the Center of Buoyancy ($CB$) remains positioned above the Center of Gravity ($CG$) for passive metacentric stability.
+$$
+B = \rho_{\text{fluid}} g \nabla \quad (\text{acting at Center of Buoyancy } CB = [x_B, y_B, z_B]^T)
+$$
+
+Where $\rho_{\text{fluid}}$ is seawater density ($\approx 1025 \text{ kg/m}^3$) and $\nabla = V_{\text{displaced}}$ is the displaced hull fluid volume.
+
+```text
+               METACENTRIC PASSIVE STABILITY CONDITION (CB ABOVE CG)
+               
+                         Buoyancy Force B (Archimedes)
+                                    ▲
+                                    │
+                                 [ CB ] (Center of Buoyancy)
+                                    │
+                                    │  <-- Restoring Arm (z_G - z_B)
+                                    │
+                                 [ CG ] (Center of Gravity)
+                                    │
+                                    ▼
+                         Gravitational Weight W
+```
+
+### Metacentric Righting Stability Criterion:
+To ensure the vehicle is self-righting (passively stable in roll and pitch during power loss), heavy batteries and pressure vessels are positioned at the bottom of the hull while lightweight syntactic buoyancy foam is placed at the top:
+
+$$
+z_G > z_B \implies \overline{BG} = z_G - z_B > 0
+$$
 
 ---
 
-## 3. Interactive Simulator: 6-DOF Marine Hydrodynamics
+## 3. SNAME 6-DOF Notation & Underwater Kinematics
 
-Trim ballast buoyancy, dive plane control angles, and forward thruster propulsion under dynamic currents:
+The Society of Naval Architects and Marine Engineers (SNAME) standardizes the 6 degrees of freedom:
+
+```text
+┌─────────────────┬────────────────────┬────────────────────┬─────────────────────────────┐
+│ Degree of DOF   │ Position / Angle   │ Body Velocity nu   │ Body Force / Torque tau     │
+├─────────────────┼────────────────────┼────────────────────┼─────────────────────────────┤
+│ 1. Longitudinal │ x (Surge)          │ u (Surge velocity) │ X (Surge Force)             │
+│ 2. Lateral      │ y (Sway)           │ v (Sway velocity)  │ Y (Sway Force)              │
+│ 3. Vertical     │ z (Heave)          │ w (Heave velocity) │ Z (Heave Force)             │
+│ 4. Rotation X   │ phi (Roll)         │ p (Roll rate)      │ K (Roll Moment)             │
+│ 5. Rotation Y   │ theta (Pitch)      │ q (Pitch rate)     │ M (Pitch Moment)            │
+│ 6. Rotation Z   │ psi (Yaw)          │ r (Yaw rate)       │ N (Yaw Moment)              │
+└─────────────────┴────────────────────┴────────────────────┴─────────────────────────────┘
+```
+
+The differential kinematic transformation relating body-fixed velocities $\boldsymbol{\nu} = [u, v, w, p, q, r]^T$ to world rates $\boldsymbol{\dot{\eta}} = [\dot{x}, \dot{y}, \dot{z}, \dot{\phi}, \dot{\theta}, \dot{\psi}]^T$ is:
+
+$$
+\boldsymbol{\dot{\eta}} = \mathbf{J}(\boldsymbol{\eta}) \boldsymbol{\nu} = \begin{bmatrix} \mathbf{R}_B^I(\boldsymbol{\Theta}) & \mathbf{0}_{3\times 3} \\ \mathbf{0}_{3\times 3} & \mathbf{T}_{\Theta}(\boldsymbol{\Theta}) \end{bmatrix} \boldsymbol{\nu}
+$$
+
+---
+
+## 4. Fossen's 6-DOF Non-Linear Equations of Motion
+
+The universal governing equations for underwater vehicles are formulated in Fossen's matrix representation:
+
+$$
+\mathbf{M} \boldsymbol{\dot{\nu}} + \mathbf{C}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}(\boldsymbol{\eta}) = \boldsymbol{\tau}_{\text{thruster}} + \boldsymbol{\tau}_{\text{ocean\_current}}
+$$
+
+### Matrix Components:
+1. **Total System Inertia $\mathbf{M} = \mathbf{M}_{RB} + \mathbf{M}_A$**:
+   - $\mathbf{M}_{RB}$: Rigid-body mass and inertia tensor.
+   - $\mathbf{M}_A = -\operatorname{diag}(X_{\dot{u}}, Y_{\dot{v}}, Z_{\dot{w}}, K_{\dot{p}}, M_{\dot{q}}, N_{\dot{r}})$: **Hydrodynamic Added Mass**, representing fluid inertia accelerated alongside the hull. In underwater robotics, added mass often equals or exceeds the vehicle's dry mass!
+2. **Coriolis & Centripetal Matrix $\mathbf{C}(\boldsymbol{\nu}) = \mathbf{C}_{RB}(\boldsymbol{\nu}) + \mathbf{C}_A(\boldsymbol{\nu})$**.
+3. **Hydrodynamic Damping Matrix $\mathbf{D}(\boldsymbol{\nu}) = \mathbf{D}_{\text{linear}} + \mathbf{D}_{\text{nonlinear}}|\boldsymbol{\nu}|$**:
+   Capturing laminar skin friction and quadratic turbulent vortex drag $\frac{1}{2} \rho C_D A v^2$.
+4. **Hydrostatic Restoring Vector $\mathbf{g}(\boldsymbol{\eta})$**:
+   Supplying gravitational righting moments:
+   $$g_4(\boldsymbol{\eta}) = (z_G - z_B) W \cos\theta \sin\phi, \quad g_5(\boldsymbol{\eta}) = (z_G - z_B) W \sin\theta$$
+
+---
+
+## 5. Interactive Simulator: Marine Hydrodynamics & Fossen Dynamics
+
+Tune ballast buoyancy trim, rudder/elevator plane angles, and thruster output to observe steady-state diving equilibrium:
 
 <MarineHydrodynamicsSimulator />
 
 ---
 
-## 4. Concept Verification
+## 6. Concept Verification
 
 <ConceptCheck
   id="quiz-marine-robotics-fundamentals"
-  question="What physical phenomenon is represented by 'Hydrodynamic Added Mass' in underwater robotics?"
+  question="Why does an underwater AUV weighing 50 kg in air require significantly higher propulsion force to accelerate at 2 m/s^2 underwater than it would in air?"
   options={[
     {
       id: "A",
-      text: "The inertial reaction force caused by accelerating a volume of the surrounding viscous fluid along with the vehicle hull, increasing apparent system inertia during acceleration.",
+      text: "Due to Hydrodynamic Added Mass (M_A), where the volume of incompressible fluid surrounding the hull is forced to accelerate alongside the vehicle, raising the effective dynamic inertia to M_total = M_RB + M_A (often reaching 80-100 kg equivalent inertia).",
       isCorrect: true,
-      explanation: "Correct! Added mass is not physical mass inside the robot; it is the hydrodynamic inertial resistance of water that must be pushed aside when the hull accelerates."
+      explanation: "Correct! Added mass represents fluid pressure reaction forces proportional to vehicle acceleration dnu/dt."
     },
     {
       id: "B",
-      text: "Spare lead weights loaded inside the electronics dry canister.",
+      text: "Because water destroys magnetic fields in electric motors.",
       isCorrect: false,
-      explanation: "Incorrect. That is physical ballast mass."
+      explanation: "Incorrect. Modern subsea thrusters are magnetically coupled or fluid-sealed."
     },
     {
       id: "C",
-      text: "Biofouling barnacles and algae clinging to the propeller shafts.",
+      text: "Because gravity is 10 times stronger at the seabed.",
       isCorrect: false,
-      explanation: "Incorrect. Added mass is a purely hydrodynamic consequence of fluid acceleration."
+      explanation: "Incorrect. Gravitational acceleration g remains approximately constant."
     }
   ]}
-  hint="Consider the effort required to suddenly push a broad paddle sideways through water versus through air."
+  hint="Consider the physical effort required to wave your hand through air versus through deep water."
 />

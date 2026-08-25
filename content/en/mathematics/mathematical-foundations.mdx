@@ -1,6 +1,6 @@
 ---
 id: mathematical-foundations
-title: "Mathematical & Geometric Foundations for Robotics"
+title: "Mathematical Foundations & Geometry for Robotics"
 slug: mathematical-foundations
 domain: mathematics
 level: 1
@@ -22,17 +22,17 @@ components:
   - ConceptCheck
 ---
 
-# Mathematical & Geometric Foundations for Robotics
+# Mathematical Foundations & Geometry for Robotics
 
-> "Why do linear algebra, multivariate calculus, and probability theory constitute the universal language powering every autonomous robot algorithm worldwide?"
+> "Why are linear algebra, skew-symmetric operators, multivariate calculus, and Gaussian probability theory the universal languages powering every autonomous robot from self-driving cars to bipedal humanoids?"
 
-To navigate continuous real-world environments, actuate multi-link articulated robot arms, filter sensor noise, or optimize non-linear SLAM factor graphs, a robot must mathematically map spatial geometry into precise numerical algorithms. This module introduces the four indispensable mathematical pillars powering the entire RoboAtlas curriculum.
+To navigate the physical world, articulate multi-link robotic manipulators, filter noisy sensor readings, or optimize large-scale SLAM pose graphs, a robot must translate continuous spatial geometry into precise numerical operations. This module provides the 5 core mathematical pillars supporting the entire RoboAtlas curriculum.
 
 ---
 
 ## 1. Vector Spaces & Spatial Distance Metrics ($\mathbb{R}^n$)
 
-The physical position of an obstacle, goal landmark, or robot end-effector is expressed as a column vector:
+Physical obstacle points, target goal waypoints, and robot poses in 2D/3D space are represented as column vectors:
 
 $$
 \mathbf{p} = \begin{bmatrix} x \\ y \\ z \end{bmatrix} \in \mathbb{R}^3, \quad \mathbf{\hat{u}} = \frac{\mathbf{p}}{\|\mathbf{p}\|} \quad (\text{Unit Direction Vector})
@@ -40,95 +40,140 @@ $$
 
 ```text
 ┌───────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
-│ Metric Norm Definition    │ Mathematical Formula                     │ Robotics Application Role                              │
+│ Distance Norm Metric      │ Mathematical Formula                     │ Typical Role in Autonomous Robotics                    │
 ├───────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
-│ L2 Euclidean Norm         │ ||p||_2 = sqrt(x^2 + y^2 + z^2)          │ Straight-line LiDAR range, camera raycasting           │
-│ L1 Manhattan Norm         │ ||p||_1 = |x| + |y| + |z|                │ 4-connected grid A* graph search heuristic             │
-│ L-Infinity Chebyshev Norm │ ||p||_inf = max(|x|, |y|, |z|)           │ 8-connected grid motion with uniform diagonal cost     │
-│ Mahalanobis Distance      │ D_M = sqrt((p - mu)^T Sigma^-1 (p - mu)) │ Statistical outlier rejection in EKF/MCL data assoc.   │
+│ L2 Norm (Euclidean)       │ ||p||_2 = sqrt(x^2 + y^2 + z^2)          │ Straight-line LiDAR range, optical raycasting, cameras │
+│ L1 Norm (Manhattan)       │ ||p||_1 = |x| + |y| + |z|                │ 4-connected grid A* graph search heuristic             │
+│ L-Infinity (Chebyshev)    │ ||p||_inf = max(|x|, |y|, |z|)           │ 8-connected grid movement heuristic (diagonal moves)   │
+│ Mahalanobis Distance      │ D_M = sqrt((p - mu)^T Sigma^-1 (p - mu)) │ Sensor data association validation gate in EKF/MCL     │
 └───────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
 ```
 
 ### Interactive Vector Visualizer:
-Drag the coordinate handles on the canvas below to explore real-time Euclidean Pythagoras norms, Cartesian projections, and unit directional angles:
+Drag the $(x, y)$ coordinate on the canvas below to observe unit vector projections and Euclidean magnitude updates in real time:
 
 <VectorVisualizer />
 
 ---
 
-## 2. Matrix Algebra, The Special Orthogonal Group $SO(n)$, & SVD
+## 2. Dot Product, Cross Product & Skew-Symmetric Matrices
 
-Matrices perform spatial linear transformations across reference frames:
+1. **Dot Product (Inner Product)**:
+   $$\mathbf{a} \cdot \mathbf{b} = \mathbf{a}^T \mathbf{b} = \|\mathbf{a}\| \|\mathbf{b}\| \cos\theta$$
+   Measures collinearity and yields orthogonal vector projection length $\mathbf{a}_{\parallel} = (\mathbf{a} \cdot \mathbf{\hat{b}}) \mathbf{\hat{b}}$.
 
-1. **Matrix Multiplication & Transposition**: $(\mathbf{A}\mathbf{B})^T = \mathbf{B}^T \mathbf{A}^T$ and $(\mathbf{A}\mathbf{B})^{-1} = \mathbf{B}^{-1} \mathbf{A}^{-1}$.
-2. **Special Orthogonal Rotation Groups $SO(2)$ & $SO(3)$**:
-   $$\mathbf{R}^T \mathbf{R} = \mathbf{I}, \quad \det(\mathbf{R}) = +1$$
-   *(Preserves Euclidean lengths and mutual angular relationships rigidly without shear or volume distortion).*
-3. **Singular Value Decomposition (SVD)**:
-   $$\mathbf{A} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^T$$
-   Used fundamentally in closed-form *Iterative Closest Point (ICP)* rotation alignment and the *Moore-Penrose Pseudoinverse* $\mathbf{J}^+ = \mathbf{V} \mathbf{\Sigma}^+ \mathbf{U}^T$ for redundant robot arm inverse kinematics.
+2. **Cross Product & Skew-Symmetric Operator $[\mathbf{v}]_\times$**:
+   $$\mathbf{a} \times \mathbf{b} = [\mathbf{a}]_\times \mathbf{b} = \begin{bmatrix} 0 & -a_z & a_y \\ a_z & 0 & -a_x \\ -a_y & a_x & 0 \end{bmatrix} \begin{bmatrix} b_x \\ b_y \\ b_z \end{bmatrix}$$
+   Produces a vector mutually perpendicular to the plane spanned by $\mathbf{a}$ and $\mathbf{b}$. In robotics, skew-symmetric matrices are Lie algebra $\mathfrak{so}(3)$ generators governing angular velocity rotation rates $\mathbf{\dot{R}} = [\boldsymbol{\omega}]_\times \mathbf{R}$.
 
 ---
 
-## 3. Multivariate Calculus: Gradients, Jacobians, & Hessians
+## 3. Matrix Algebra, Special Orthogonal Group $SO(n)$, & SVD
 
-Physical robot forward kinematics and sensor observation models are inherently non-linear ($\mathbf{y} = \mathbf{f}(\mathbf{x})$). Multivariate calculus enables analytical linear approximation via Taylor series expansion:
+Matrix operations map coordinates across coordinate frames:
+
+1. **Matrix Multiplication & Transpose Inverses**: $(\mathbf{A}\mathbf{B})^T = \mathbf{B}^T \mathbf{A}^T$ and $(\mathbf{A}\mathbf{B})^{-1} = \mathbf{B}^{-1} \mathbf{A}^{-1}$.
+2. **Special Orthogonal Rotation Groups $SO(2)$ & $SO(3)$**:
+   $$\mathbf{R}^T \mathbf{R} = \mathbf{I}, \quad \det(\mathbf{R}) = +1$$
+   *(Preserves Euclidean lengths and inter-vector angles rigidly without shear or dilation).*
+3. **Singular Value Decomposition (SVD)**:
+   $$\mathbf{A} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^T$$
+   Used universally in the *Iterative Closest Point (ICP)* algorithm for closed-form rotation recovery and in the *Moore-Penrose Pseudoinverse* $\mathbf{J}^+ = \mathbf{V} \mathbf{\Sigma}^+ \mathbf{U}^T$ for redundant robot arm inverse kinematics.
+
+---
+
+## 4. Eigenvalues, Eigenvectors & Covariance Uncertainty Ellipses
+
+For a symmetric positive semi-definite covariance matrix $\mathbf{\Sigma} \in \mathbb{R}^{2\times 2}$:
+
+$$
+\mathbf{\Sigma} \mathbf{v}_i = \lambda_i \mathbf{v}_i
+$$
+
+- **Eigenvectors $\mathbf{v}_1, \mathbf{v}_2$**: Define the major and minor axis directions of the spatial uncertainty ellipse.
+- **Eigenvalues $\lambda_1, \lambda_2$**: Determine the geometric semi-axis standard deviation lengths ($\sigma_1 = \sqrt{\lambda_1}, \sigma_2 = \sqrt{\lambda_2}$).
+
+```text
+                        2D COVARIANCE UNCERTAINTY ELLIPSE
+                        
+                                       ^ v_1 (Major Principal Direction)
+                                      /
+                                     /    .-----.
+                                    /   .'       `.
+                                   /   /           \
+                                  +   |      + mu   |  <-- Semi-axis Length = sqrt(lambda_1)
+                                 /     \           /
+                                /       `.       .'
+                               /          `-----'
+                              /
+                             /  v_2 (Minor Semi-axis, Length = sqrt(lambda_2))
+```
+
+---
+
+## 5. Multivariate Calculus: Gradients, Jacobians, & Hessians
+
+Most kinematic and sensor models in robotics are non-linear ($\mathbf{y} = \mathbf{f}(\mathbf{x})$). Multivariate calculus linearizes systems via multivariate Taylor expansions:
 
 $$
 \mathbf{f}(\mathbf{x}) \approx \mathbf{f}(\mathbf{x}_0) + \mathbf{J}(\mathbf{x}_0)(\mathbf{x} - \mathbf{x}_0) + \frac{1}{2}(\mathbf{x} - \mathbf{x}_0)^T \mathbf{H}(\mathbf{x}_0)(\mathbf{x} - \mathbf{x}_0)
 $$
 
-1. **Gradient Vector ($\nabla f$)**: The vector pointing in the direction of greatest rate of increase; powers Gradient Descent and Artificial Potential Field obstacle avoidance.
-2. **Jacobian Matrix ($\mathbf{J} = \frac{\partial \mathbf{f}}{\partial \mathbf{x}}$)**: The first-order partial derivative matrix mapping joint velocities to end-effector velocities ($\mathbf{\dot{x}} = \mathbf{J}\mathbf{\dot{q}}$) and linearizing EKF motion/sensor models ($\mathbf{F}_t, \mathbf{H}_t$).
-3. **Hessian Matrix ($\mathbf{H} = \nabla^2 f$)**: The second-order curvature matrix required by non-linear least squares optimizers in Pose Graph SLAM (*Gauss-Newton* and *Levenberg-Marquardt*).
+1. **Gradient Vector ($\nabla f$)**: Direction of steepest ascent, utilized in *Gradient Descent* and Artificial Potential Fields.
+2. **Jacobian Matrix ($\mathbf{J} = \frac{\partial \mathbf{f}}{\partial \mathbf{x}}$)**: First-order partial derivative matrix mapping joint velocities to end-effector velocities ($\mathbf{\dot{x}} = \mathbf{J}\mathbf{\dot{q}}$) and linearizing EKF transition models ($\mathbf{F}_t, \mathbf{H}_t$).
+3. **Hessian Matrix ($\mathbf{H} = \nabla^2 f$)**: Second-order curvature matrix utilized in non-linear least squares SLAM optimizers (*Gauss-Newton* and *Levenberg-Marquardt*).
 
 ---
 
-## 4. Multivariate Probability & Covariance Propagation
+## 6. Probability Theory & Linear Covariance Propagation
 
-Because physical actuators and sensors are subject to random noise, robot states are modeled as multivariate Gaussian random vectors $\mathbf{x} \sim \mathcal{N}(\boldsymbol{\mu}, \mathbf{\Sigma})$:
+Because real sensors and actuators exhibit stochastic Gaussian noise, a robot's belief over its spatial state is modeled as a multivariate Gaussian random variable $\mathbf{x} \sim \mathcal{N}(\boldsymbol{\mu}, \mathbf{\Sigma})$:
 
 $$
 p(\mathbf{x}) = \frac{1}{(2\pi)^{n/2} |\mathbf{\Sigma}|^{1/2}} \exp\left( -\frac{1}{2} (\mathbf{x} - \boldsymbol{\mu})^T \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right)
 $$
 
-### The Law of Linear Covariance Propagation:
-If a random vector $\mathbf{x}$ with covariance matrix $\mathbf{\Sigma}_x$ undergoes an affine linear transformation $\mathbf{y} = \mathbf{A}\mathbf{x} + \mathbf{b}$, its output covariance $\mathbf{\Sigma}_y$ is:
+### Linear Covariance Propagation Law:
+If a Gaussian state vector $\mathbf{x}$ with covariance $\mathbf{\Sigma}_x$ undergoes affine transformation $\mathbf{y} = \mathbf{A}\mathbf{x} + \mathbf{b}$, the output covariance $\mathbf{\Sigma}_y$ is:
 
 $$
 \mathbf{\Sigma}_y = \mathbf{A} \mathbf{\Sigma}_x \mathbf{A}^T
 $$
 
-*(This fundamental law governs motion uncertainty expansion in Extended Kalman Filtering and FastSLAM).*
+---
 
-<DotProductExplorer />
+## 7. Interactive Coordinate Frame Explorer
+
+Explore how translation offsets and rotational transformations interact to transform physical points across spatial coordinate frames:
+
+<CoordinateFrameExplorer />
 
 ---
 
-## 5. Concept Verification
+## 8. Concept Verification
 
 <ConceptCheck
-  id="quiz-math-foundations"
-  question="If a robot state vector x with covariance matrix Sigma_x undergoes an affine linear transformation y = A * x + b, what is the exact formula for the resulting covariance matrix Sigma_y?"
+  id="quiz-mathematical-foundations"
+  question="If a robot pose estimate x has covariance matrix Sigma_x, and undergoes an affine transformation y = A * x + b, why is the resulting covariance computed as Sigma_y = A * Sigma_x * A^T rather than simply A * Sigma_x?"
   options={[
     {
       id: "A",
-      text: "Sigma_y = A * Sigma_x * A^T",
+      text: "Because the expectation definition Cov(y) = E[(y - mu_y)(y - mu_y)^T] = E[A(x - mu_x)(x - mu_x)^T A^T] = A * E[(x - mu_x)(x - mu_x)^T] * A^T = A * Sigma_x * A^T, which strictly guarantees that the resulting covariance matrix remains symmetric and positive semi-definite.",
       isCorrect: true,
-      explanation: "Correct! The constant displacement vector b contributes zero covariance variance, and linear matrix A pre- and post-multiplies the covariance as A * Sigma_x * A^T."
+      explanation: "Correct! The quadratic sandwich A * Sigma * A^T preserves dimensionality, symmetry, and positive semi-definiteness."
     },
     {
       id: "B",
-      text: "Sigma_y = A * Sigma_x + b",
+      text: "Because matrix transpose reverses time progression in simulation.",
       isCorrect: false,
-      explanation: "Incorrect. Covariance is a second-order quadratic operator; the constant offset b vanishes."
+      explanation: "Incorrect. The transpose is purely a matrix index swapping operation."
     },
     {
       id: "C",
-      text: "Sigma_y = Sigma_x / A",
+      text: "Because matrix A is always a 1x1 scalar.",
       isCorrect: false,
-      explanation: "Incorrect. Matrix division is undefined in linear algebra."
+      explanation: "Incorrect. Transformation matrix A is generally of size m x n."
     }
   ]}
-  hint="Recall the basic covariance operator rule: Cov(Ax) = A * Cov(x) * A^T."
+  hint="Recall the algebraic definition of multivariate variance expectation E[(Y - E[Y])(Y - E[Y])^T]."
 />

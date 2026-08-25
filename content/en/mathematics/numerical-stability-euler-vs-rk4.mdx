@@ -14,6 +14,7 @@ prerequisites:
 references:
   - "Ernst Hairer, Syvert P. Nørsett, Gerhard Wanner (1993). Solving Ordinary Differential Equations I: Nonstiff Problems. Springer."
   - "Russ Tedrake (2023). Underactuated Robotics: Algorithms for Walking, Running, Swimming, Flying, and Manipulation. MIT."
+  - "John C. Butcher (2008). Numerical Methods for Ordinary Differential Equations. John Wiley & Sons."
 components:
   - NumericalIntegrationSimulator
   - FormulaExplainer
@@ -34,28 +35,31 @@ Digital computers cannot evaluate continuous time analytically; instead, they st
 
 ---
 
-## 1. Explicit Forward Euler & The $\mathcal{O}(h)$ Energy Blow-up
+## 1. Dahlquist Test Equation & The $\mathcal{O}(h)$ Energy Blow-up
 
-The simplest numerical scheme truncates the Taylor expansion at first order:
+Consider the standard scalar linear test equation $\dot{x} = \lambda x$ with complex eigenvalue $\lambda \in \mathbb{C}$ ($\operatorname{Re}(\lambda) < 0$ for stable physical systems):
 
-$$
-\mathbf{x}_{n+1} = \mathbf{x}_n + h \mathbf{f}(\mathbf{x}_n, \mathbf{u}_n)
-$$
-
-### The Instability Mechanism:
-For conservative Hamiltonian mechanical systems (such as frictionless pendulums or spring oscillators), the Jacobian determinant of Explicit Euler exceeds unity:
+```text
+┌─────────────────────────┬──────────────────────────┬──────────────────────────┬────────────────────────────────────────┐
+│ Numerical Solver        │ Amplification Map R(z)   │ Stability Region |R(z)|  │ Max Timestep on Imaginary Axis         │
+├─────────────────────────┼──────────────────────────┼──────────────────────────┼────────────────────────────────────────┤
+│ 1. Explicit Euler       │ R(z) = 1 + z             │ Disk |1 + z| <= 1        │ 0 (Always unstable for pure oscillators│
+│ 2. Symplectic Euler     │ Symplectic Area-Preserve │ Exact Phase Area Preserv │ h < 2 / omega_0 (Bounded oscillations) │
+│ 3. Runge-Kutta 4 (RK4)  │ R(z) = 1 + z + ... + z^4 │ Broad left-half plane    │ h * omega_0 <= 2.828 (High stability)  │
+└─────────────────────────┴──────────────────────────┴──────────────────────────┴────────────────────────────────────────┘
+```
 
 $$
 \det(\mathbf{J}_{\text{Euler}}) = 1 + \omega_0^2 h^2 > 1
 $$
 
-Every integration step introduces artificial kinetic energy, causing state trajectories to spiral outwards exponentially until floating-point overflow occurs.
+Every Explicit Euler step injects artificial kinetic energy into conservative mechanical systems, causing phase trajectories to spiral outwards exponentially until floating-point overflow occurs.
 
 ---
 
-## 2. Semi-Implicit Symplectic Euler Integration
+## 2. Semi-Implicit Symplectic Euler (Hamiltonian Phase Volume Preservation)
 
-By updating velocity first and immediately evaluating the new velocity to integrate position:
+In Hamiltonian classical mechanics, phase space volume $(q, p)$ is an exact physical invariant (Liouville's theorem). Symplectic Euler updates velocity first and evaluates the newly computed velocity for position integration:
 
 $$
 \mathbf{v}_{n+1} = \mathbf{v}_n + h \mathbf{a}(\mathbf{x}_n, \mathbf{v}_n)
@@ -65,11 +69,11 @@ $$
 \mathbf{x}_{n+1} = \mathbf{x}_n + h \mathbf{v}_{n+1}
 $$
 
-The symplectic map preserves phase space volume ($\det(\mathbf{J}) = 1$), bounding total mechanical energy indefinitely without artificial explosion.
+The transformation Jacobian determinant satisfies $\det(\mathbf{J}_{\text{Symplectic}}) = 1$. Total mechanical energy is rigorously bounded and oscillates stably around the true analytic value. This is why robotics physics engines (MuJoCo, Box2D, PhysX) rely on symplectic integrators as their default solvers!
 
 ---
 
-## 3. Classical 4th-Order Runge-Kutta (RK4)
+## 3. Classical 4th-Order Runge-Kutta (RK4) & Butcher Tableau
 
 RK4 samples four intermediate derivative slopes across the interval $[t_n, t_n + h]$:
 
@@ -95,11 +99,35 @@ $$
 \mathbf{y}_{n+1} = \mathbf{y}_n + \frac{h}{6} (\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4)
 $$
 
-With a local truncation error of $\mathcal{O}(h^5)$ and global error $\mathcal{O}(h^4)$, RK4 delivers exceptional numerical fidelity for smooth multi-body robot dynamics.
+```text
+BUTCHER TABLEAU FOR CLASSICAL RK4:
+  0   │
+ 1/2  │ 1/2
+ 1/2  │  0   1/2
+  1   │  0    0    1
+──────┼───────────────────
+      │ 1/6  1/3  1/3  1/6
+```
+
+With a local truncation error of $\mathcal{O}(h^5)$ and cumulative global error $\mathcal{O}(h^4)$, RK4 delivers exceptional numerical fidelity for smooth multi-body robot dynamics.
 
 ---
 
-## 4. Interactive Simulator: Solver Energy & Phase Space Stability
+## 4. Mechanical Energy Conservation in a Pendulum
+
+For a rigid pendulum of mass $m$ and length $l$:
+
+$$
+E(t) = \frac{1}{2} m l^2 \dot{\theta}^2 + m g l (1 - \cos\theta)
+$$
+
+- **Explicit Euler**: $\frac{dE}{dt} > 0$ (Energy drifts unbounded, causing the pendulum to gain speed endlessly).
+- **Symplectic Euler**: $\langle \frac{dE}{dt} \rangle = 0$ (Energy bounded indefinitely).
+- **RK4**: $\Delta E \sim \mathcal{O}(h^4)$ (Near-perfect energy preservation at practical step sizes).
+
+---
+
+## 5. Interactive Simulator: Solver Energy & Phase Space Stability
 
 Adjust integration step size $h = \Delta t$ and observe how Explicit Euler destabilizes while Symplectic and RK4 maintain physical fidelity:
 
@@ -107,7 +135,7 @@ Adjust integration step size $h = \Delta t$ and observe how Explicit Euler desta
 
 ---
 
-## 5. Concept Verification
+## 6. Concept Verification
 
 <ConceptCheck
   id="quiz-numerical-stability-euler-vs-rk4"

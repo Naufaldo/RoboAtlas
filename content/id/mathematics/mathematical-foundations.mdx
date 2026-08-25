@@ -24,9 +24,9 @@ components:
 
 # Fundamental Matematika & Geometri untuk Robotika
 
-> "Mengapa aljabar linier, kalkulus multivariat, dan teori probabilitas menjadi bahasa universal yang digunakan oleh setiap algoritma robot otonom di dunia?"
+> "Mengapa aljabar linier, operator skew-symmetric, kalkulus multivariat, dan teori probabilitas Gaussian menjadi bahasa universal yang menggerakkan setiap algoritma otonom dari mobil self-driving hingga robot humanoid?"
 
-Untuk menavigasi dunia fisik, menggerakkan lengan manipulator multi-sendi, mengoreksi derau sensor, atau mengoptimalkan graf pose SLAM, robot harus merepresentasikan geometri ruang kontinu ke dalam operasi numerik yang terdefinisi secara presisi. Modul ini menyajikan 4 pilar matematika fundamental yang mendasari seluruh kurikulum RoboAtlas.
+Untuk menavigasi dunia fisik, menggerakkan lengan manipulator multi-sendi, mengoreksi derau sensor, atau mengoptimalkan graf pose SLAM, robot harus merepresentasikan geometri ruang kontinu ke dalam operasi numerik yang terdefinisi secara presisi. Modul ini menyajikan 5 pilar matematika fundamental yang mendasari seluruh kurikulum RoboAtlas.
 
 ---
 
@@ -41,12 +41,12 @@ $$
 ```text
 ┌───────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
 │ Jenis Metrik Norma Jarak  │ Formula Matematis                        │ Peran Tipikal dalam Robotika                           │
-├───────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+├─────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
 │ Norma L2 (Euclidean)      │ ||p||_2 = sqrt(x^2 + y^2 + z^2)          │ Jarak garis lurus sensor LiDAR, kamera, raycasting     │
 │ Norma L1 (Manhattan)      │ ||p||_1 = |x| + |y| + |z|                │ Heuristik pencarian graf grid A* (gerak 4-arah)        │
 │ Norma L-Infinity (Cheb)   │ ||p||_inf = max(|x|, |y|, |z|)           │ Heuristik pergerakan grid 8-arah (diagonal sama cepat) │
 │ Jarak Mahalanobis         │ D_M = sqrt((p - mu)^T Sigma^-1 (p - mu)) │ Uji validasi asosiasi data pengamatan sensor EKF/MCL   │
-└───────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+└───────────────────────────┴──────────────────────────┴────────────────────────────────────────────────────────┘
 ```
 
 ### Visualizer Vektor Interaktif:
@@ -56,7 +56,19 @@ Geser koordinat $(x, y)$ pada kanvas di bawah ini untuk melihat komponen trigono
 
 ---
 
-## 2. Aljabar Matriks, Grup Rotasi $SO(n)$, & SVD
+## 2. Perkalian Titik (*Dot Product*), Perkalian Silang (*Cross Product*) & Matriks Skew-Symmetric
+
+1. **Perkalian Titik (*Dot Product*)**:
+   $$\mathbf{a} \cdot \mathbf{b} = \mathbf{a}^T \mathbf{b} = \|\mathbf{a}\| \|\mathbf{b}\| \cos\theta$$
+   Mengukur derajat kesejajaran dan menghasilkan panjang proyeksi ortogonal vektor $\mathbf{a}_{\parallel} = (\mathbf{a} \cdot \mathbf{\hat{b}}) \mathbf{\hat{b}}$.
+
+2. **Perkalian Silang (*Cross Product*) & Operator Skew-Symmetric $[\mathbf{v}]_\times$**:
+   $$\mathbf{a} \times \mathbf{b} = [\mathbf{a}]_\times \mathbf{b} = \begin{bmatrix} 0 & -a_z & a_y \\ a_z & 0 & -a_x \\ -a_y & a_x & 0 \end{bmatrix} \begin{bmatrix} b_x \\ b_y \\ b_z \end{bmatrix}$$
+   Menghasilkan vektor yang tegak lurus terhadap bidang yang dibentuk oleh $\mathbf{a}$ dan $\mathbf{b}$. Dalam robotika, matriks skew-symmetric ini adalah generator aljabar Lie $\mathfrak{so}(3)$ untuk memodelkan laju kecepatan sudut $\mathbf{\dot{R}} = [\boldsymbol{\omega}]_\times \mathbf{R}$.
+
+---
+
+## 3. Aljabar Matriks, Grup Rotasi $SO(n)$, & SVD
 
 Operasi matriks memetakan vektor antar kerangka koordinat:
 
@@ -70,7 +82,36 @@ Operasi matriks memetakan vektor antar kerangka koordinat:
 
 ---
 
-## 3. Kalkulus Multivariat: Gradien, Jacobian, & Hessian
+## 4. Nilai Eigen (*Eigenvalues*), Vektor Eigen, & Elips Ketidakpastian
+
+Untuk matriks kovariansi simetris semi-definit positif $\mathbf{\Sigma} \in \mathbb{R}^{2\times 2}$:
+
+$$
+\mathbf{\Sigma} \mathbf{v}_i = \lambda_i \mathbf{v}_i
+$$
+
+- **Vektor Eigen $\mathbf{v}_1, \mathbf{v}_2$**: Menentukan orientasi arah sumbu utama dan minor elips ketidakpastian.
+- **Nilai Eigen $\lambda_1, \lambda_2$**: Menentukan panjang radius sebaran standar deviasi ($\sigma_1 = \sqrt{\lambda_1}, \sigma_2 = \sqrt{\lambda_2}$).
+
+```text
+                        ELIPS KOVARIANSI KETIDAKPASTIAN 2D
+                        
+                                       ^ v_1 (Arah Utama Sebaran)
+                                      /
+                                     /    .-----.
+                                    /   .'       `.
+                                   /   /           \
+                                  +   |      + mu   |  <-- Panjang Sumbu = sqrt(lambda_1)
+                                 /     \           /
+                                /       `.       .'
+                               /          `-----'
+                              /
+                             /  v_2 (Sumbu Minor, Panjang = sqrt(lambda_2))
+```
+
+---
+
+## 5. Kalkulus Multivariat: Gradien, Jacobian, & Hessian
 
 Sebagian besar model kinematika robot dan sensor bersifat non-linear ($\mathbf{y} = \mathbf{f}(\mathbf{x})$). Kalkulus multivariat melinearisasikan sistem melalui ekspansi deret Taylor:
 
@@ -84,7 +125,7 @@ $$
 
 ---
 
-## 4. Teori Probabilitas & Propagasi Kovariansi
+## 6. Teori Probabilitas & Propagasi Kovariansi
 
 Karena sensor dan motor nyata selalu memiliki derau acak, robot merepresentasikan status spasialnya sebagai variabel acak Gaussian multivariat $\mathbf{x} \sim \mathcal{N}(\boldsymbol{\mu}, \mathbf{\Sigma})$:
 
@@ -99,36 +140,40 @@ $$
 \mathbf{\Sigma}_y = \mathbf{A} \mathbf{\Sigma}_x \mathbf{A}^T
 $$
 
-*(Formula inilah yang menjadi dasar perhitungan ketidakpastian gerak pada Extended Kalman Filter dan FastSLAM).*
+---
 
-<DotProductExplorer />
+## 7. Eksplorasi Interaktif Kerangka Koordinat
+
+Amati bagaimana translasi dan rotasi berinteraksi mengubah representasi koordinat fisik dalam ruang:
+
+<CoordinateFrameExplorer />
 
 ---
 
-## 5. Uji Pemahaman Konsep
+## 8. Uji Pemahaman Konsep
 
 <ConceptCheck
-  id="quiz-math-foundations"
-  question="Jika sebuah robot bergerak dengan model transformasi linier y = A * x + b, dan ketidakpastian awal adalah matriks kovariansi Sigma_x, bagaimana rumus perambatan kovariansi hasil akhirnya?"
+  id="quiz-mathematical-foundations"
+  question="Jika sebuah robot bergerak dengan estimasi status pose x yang memiliki matriks kovariansi Sigma_x, lalu posisi barunya dihitung melalui transformasi y = A * x + b, mengapa matriks kovariansi baru dihitung sebagai Sigma_y = A * Sigma_x * A^T dan bukan sekadar A * Sigma_x?"
   options={[
     {
       id: "A",
-      text: "Sigma_y = A * Sigma_x * A^T",
+      text: "Karena definisi kovariansi Cov(y) = E[(y - mu_y)(y - mu_y)^T] = E[A(x - mu_x)(x - mu_x)^T A^T] = A * E[(x - mu_x)(x - mu_x)^T] * A^T = A * Sigma_x * A^T, yang menjamin bahwa matriks kovariansi hasil transformasi tetap simetris dan bernilai positif semi-definit.",
       isCorrect: true,
-      explanation: "Tepat! Konstanta offset b tidak menambah kovariansi, dan faktor linier A dikalikan dari kiri dan kanannya dalam bentuk transpos (A * Sigma_x * A^T)."
+      explanation: "Tepat! Aturan kuadratis A * Sigma * A^T menjamin bahwa ketidakpastian dipropagasikan secara konsisten di seluruh sumbu dimensi matriks."
     },
     {
       id: "B",
-      text: "Sigma_y = A * Sigma_x + b",
+      text: "Karena operator transpose membalikkan arah waktu simulasi.",
       isCorrect: false,
-      explanation: "Salah. Kovariansi adalah operator kuadratik orde kedua; konstanta translasi b bernilai nol pada perhitungan kovariansi."
+      explanation: "Salah. Transpose adalah operasi penukaran baris dan kolom matriks murni."
     },
     {
       id: "C",
-      text: "Sigma_y = Sigma_x / A",
+      text: "Karena dimensi matriks A selalu berbentuk skalar 1x1.",
       isCorrect: false,
-      explanation: "Salah. Pembagian matriks tidak terdefinisi secara langsung dalam aljabar linier."
+      explanation: "Salah. Matriks A berukuran m x n."
     }
   ]}
-  hint="Ingat sifat kovariansi: Cov(Ax) = A * Cov(x) * A^T."
+  hint="Pikirkan definisi aljabar ekspektasi nilai variansi kuadrat multivariat E[(Y - E[Y])(Y - E[Y])^T]."
 />

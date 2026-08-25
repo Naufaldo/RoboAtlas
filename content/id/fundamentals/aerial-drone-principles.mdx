@@ -8,12 +8,13 @@ tier: Foundations
 difficulty: beginner
 language: id
 interactive: true
-estimatedMinutes: 40
+estimatedMinutes: 45
 prerequisites:
   - intro-to-robotics
 references:
   - "Randal W. Beard & Timothy W. McLain (2012). Small Unmanned Aircraft: Theory and Practice. Princeton University Press."
   - "Quan Quan (2017). Introduction to Multicopter Design and Control. Springer."
+  - "Daniel Mellinger & Vijay Kumar (2011). Minimum Snap Trajectory Generation and Control for Quadrotors. IEEE ICRA."
 components:
   - QuadrotorDynamicsSimulator
   - FormulaExplainer
@@ -22,87 +23,149 @@ components:
 
 # Robotika Udara: Dinamika Penerbangan Multirotor & Kendali Dorong 6-DOF
 
-> "Bagaimana sebuah quadrotor dengan hanya 4 motor penggerak dapat bermanuver bebas di ruang 3D 6-DOF tanpa sayap atau kemudi mekanis aerodinamis konvensional?"
+> "Bagaimana sebuah quadrotor dengan hanya 4 motor penggerak dapat bermanuver lincah di ruang 3D 6-DOF tanpa sayap aerodinamis atau kemudi mekanis, dan mengapa sifat *Differential Flatness* menjadi rahasia manuver akrobatik drone otonom modern?"
 
-**Wahana Udara Nirawak (Unmanned Aerial Vehicle / UAV)** berjenis multirotor merupakan robot yang *underactuated* (memiliki 6 derajat kebebasan spasial namun hanya dikendalikan oleh 4 input gaya dorong motor independen).
+**Wahana Udara Nirawak (Unmanned Aerial Vehicle / UAV)** berjenis multirotor merupakan robot yang terkategori *underactuated*—memiliki 6 derajat kebebasan spasial posisi dan orientasi $(x, y, z, \phi, \theta, \psi)$, namun hanya dikendalikan oleh 4 input gaya dorong motor independen $(u_1, u_2, u_3, u_4)$.
 
 ---
 
-## 1. Pemetaan Gaya Dorong & Torsi Aerodinamis
+## 1. Anatomi Sistem & Siklus Kendali Otonom Wahana Udara
 
-Setiap baling-baling yang berputar dengan kecepatan sudut $\omega_i$ (rad/s) menghasilkan gaya dorong $f_i$ dan momen torsi reaksi aerodinamis $\tau_{m,i}$:
+Multirotor modern (seperti drone inspeksi industri, pengiriman logistik, atau drone balap FPV) mengintegrasikan tumpukan perangkat keras berkecepatan tinggi:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                           ARSITEKTUR AVIONIK & KENDALI UAV                              │
+├─────────────────────────┬───────────────────────────────┬───────────────────────────────┤
+│ SENSORIK PERSEPSI       │ SISTEM ESTIMASI & KOMPUTASI   │ AKTUASI & PROPULSI            │
+├─────────────────────────┼───────────────────────────────┼───────────────────────────────┤
+│ • IMU 6-DOF (200-1000Hz)│ • Autopilot (PX4 / ArduPilot) │ • ESC Digital (DShot600/1200) │
+│ • Barometer & LiDAR ToF │ • Extended Kalman Filter (EKF)│ • Motor Brushless DC (BLDC)   │
+│ • Optical Flow / VIO    │ • Kontroler Sikap SE(3) Casc. │ • Baling-baling Fixed-Pitch   │
+│ • Modul GNSS RTK Satelit│ • Pembangkit Trajektori Snap  │ • Paket Baterai LiPo / Li-Ion │
+└─────────────────────────┴───────────────────────────────┴───────────────────────────────┘
+```
+
+---
+
+## 2. Pemetaan Gaya Dorong & Torsi Aerodinamis Baling-Baling
+
+Setiap baling-baling berputar pada kecepatan sudut $\omega_i$ (rad/s) dan menghasilkan gaya dorong aerodinamis $f_i$ serta torsi seret (*drag torque*) $\tau_{m,i}$ berdasarkan teori momentum elemen bilah (*Blade Element Momentum Theory*):
 
 $$
 f_i = k_f \omega_i^2, \quad \tau_{m,i} = k_m \omega_i^2
 $$
 
-Di mana $k_f$ adalah koefisien gaya dorong aerodinamis dan $k_m$ adalah koefisien momen seret baling-baling.
+Di mana:
+- $k_f$ adalah koefisien gaya dorong aerodinamis ($\text{N}\cdot\text{s}^2/\text{rad}^2$), bergantung pada kerapatan udara $\rho$, diameter bilah $D$, dan koefisien dorong $C_T$.
+- $k_m$ adalah koefisien momen seret aerodinamis ($\text{N}\cdot\text{m}\cdot\text{s}^2/\text{rad}^2$).
 
-### Matriks Alokasi Penggerak Quadrotor Konfigurasi Plus (+):
+### Matriks Alokasi Penggerak Konfigurasi Silang (X-Configuration):
+Untuk quadrotor dengan panjang lengan $L$ dari pusat massa ke setiap motor:
 
 $$
-\begin{bmatrix} F_{\text{total}} \\ \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix} = \begin{bmatrix} k_f & k_f & k_f & k_f \\ 0 & -L k_f & 0 & L k_f \\ -L k_f & 0 & L k_f & 0 \\ k_m & -k_m & k_m & -k_m \end{bmatrix} \begin{bmatrix} \omega_1^2 \\ \omega_2^2 \\ \omega_3^2 \\ \omega_4^2 \end{bmatrix}
+\begin{bmatrix} F_{\text{total}} \\ \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix} = \begin{bmatrix} k_f & k_f & k_f & k_f \\ -\frac{\sqrt{2}}{2} L k_f & -\frac{\sqrt{2}}{2} L k_f & \frac{\sqrt{2}}{2} L k_f & \frac{\sqrt{2}}{2} L k_f \\ \frac{\sqrt{2}}{2} L k_f & -\frac{\sqrt{2}}{2} L k_f & -\frac{\sqrt{2}}{2} L k_f & \frac{\sqrt{2}}{2} L k_f \\ k_m & -k_m & k_m & -k_m \end{bmatrix} \begin{bmatrix} \omega_1^2 \\ \omega_2^2 \\ \omega_3^2 \\ \omega_4^2 \end{bmatrix}
 $$
 
 ```text
-┌─────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
-│ Manuver Sikap Terbang   │ Kombinasi Kecepatan Putar Motor          │ Respon Dinamis Wahana                                  │
-├─────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
-│ 1. Ketinggian (Throttle)│ Semua motor berputar lebih cepat bersama │ Gaya angkat total F > m*g -> Drone naik vertikal       │
-│ 2. Gulingan (Roll phi)  │ Motor kanan dipercepat, kiri diperlambat │ Torsi guling positif -> Drone miring dan akselerasi Y │
-│ 3. Anggukan (Pitch theta│ Motor belakang dipercepat, depan pelan   │ Torsi angguk positif -> Drone miring dan akselerasi X  │
-│ 4. Gelengan (Yaw psi)   │ CW motor dipercepat, CCW diperlambat     │ Torsi reaksi tidak seimbang -> Drone berputar yaw      │
-└─────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+       [CW 1] (Depan Kiri)        [CCW 2] (Depan Kanan)
+                 \                /
+                  \              /
+                   \    +X_B    /
+                    \    ^     /
+                     \   |    /
+                      \  |   /
+                       [CM] ----> +Y_B
+                      /     \
+                     /       \
+                    /         \
+                   /           \
+                 /              \
+       [CCW 4] (Belakang Kiri)   [CW 3] (Belakang Kanan)
 ```
 
 ---
 
-## 2. Persamaan Translasi & Rotasi Newton-Euler
+## 3. Formulasi Matematika Dinamika 6-DOF Newton-Euler
 
-Dinamika translasi posisi $\mathbf{p} = [x, y, z]^T$ dan orientasi rotasi badan dinyatakan dalam kerangka acuan inersia:
+Dinamika gerak quadrotor didefinisikan dalam dua kerangka koordinat:
+1. **Kerangka Inersia Bumi $\{I\}$** $(X_I, Y_I, Z_I)$ dengan sumbu $Z_I$ mengarah ke atas (ENU) atau ke bawah (NED).
+2. **Kerangka Badan Drone $\{B\}$** $(X_B, Y_B, Z_B)$ yang terpusat pada titik pusat gravitasi robot ($CM$).
+
+### 1. Persamaan Translasi Posisi (Hukum II Newton):
+Posisi translasi robot $\mathbf{p} = [x, y, z]^T \in \mathbb{R}^3$ memenuhi:
 
 $$
-m \mathbf{\ddot{p}} = \mathbf{R}_{B}^{I} \begin{bmatrix} 0 \\ 0 \\ F_{\text{total}} \end{bmatrix} - \begin{bmatrix} 0 \\ 0 \\ m g \end{bmatrix} - \mathbf{F}_{\text{drag}}
+m \mathbf{\ddot{p}} = \mathbf{R}_{B}^{I} \begin{bmatrix} 0 \\ 0 \\ F_{\text{total}} \end{bmatrix} - \begin{bmatrix} 0 \\ 0 \\ m g \end{bmatrix} - \mathbf{D}_{\text{drag}} \mathbf{\dot{p}}
 $$
 
+Di mana $\mathbf{R}_B^I \in SO(3)$ adalah matriks orientasi rotasi badan terhadap inersia bumi, $m$ adalah massa total drone, $g = 9.81\text{ m/s}^2$, dan $\mathbf{D}_{\text{drag}} = \operatorname{diag}(k_{dx}, k_{dy}, k_{dz})$ adalah matriks redaman seret udara.
+
+### 2. Persamaan Rotasi Sikap Terbang (Dinamika Euler Benda Tegar):
+Kecepatan sudut badan $\boldsymbol{\omega}_B = [p, q, r]^T \in \mathbb{R}^3$ (roll rate, pitch rate, yaw rate) memenuhi:
+
 $$
-\mathbf{I} \boldsymbol{\dot{\omega}}_B + \boldsymbol{\omega}_B \times (\mathbf{I} \boldsymbol{\omega}_B) = \begin{bmatrix} \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix}
+\mathbf{J} \boldsymbol{\dot{\omega}}_B + \boldsymbol{\omega}_B \times (\mathbf{J} \boldsymbol{\omega}_B) + \boldsymbol{\Gamma}_{\text{gyro}} = \begin{bmatrix} \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix}
 $$
+
+Di mana:
+- $\mathbf{J} = \operatorname{diag}(I_{xx}, I_{yy}, I_{zz})$ adalah matriks tensor inersia bodi utama.
+- $\boldsymbol{\Gamma}_{\text{gyro}} = \sum_{i=1}^4 (-1)^i I_r (\boldsymbol{\omega}_B \times \mathbf{z}_B) \omega_i$ adalah momen presesi giroskopik rotor bilah baling-baling bermassa inersia $I_r$.
 
 ---
 
-## 3. Simulator Interaktif: Dinamika Multirotor 6-DOF
+## 4. Arsitektur Kendali Kaskade Berjenjang (Cascaded Flight Controller)
 
-Eksplorasi kendali diferensial dorongan motor, sudut kemiringan gulingan (*roll tilt*), dan kestabilan terbang terhadap gangguan angin secara langsung:
+Untuk menstabilkan penerbangan, arsitektur *Cascaded Loop* memisahkan dinamika translasi yang lambat dari dinamika rotasi sikap yang sangat cepat:
+
+```text
+[ Posisi Target p_des ]
+          │
+          ▼
+┌──────────────────┐    Percepatan Target    ┌──────────────────┐   Sudut Sikap Target   ┌──────────────────┐   Torsi Bodi tau   ┌──────────────────┐
+│  Loop Posisi     │ ──────────────────────> │  Loop Sikap      │ ─────────────────────> │  Loop Rate Gyro  │ ─────────────────> │  Alokasi Motor   │ ──> [ ESC / Motor ]
+│  (Outer Loop)    │   a_des = PID(e_p)      │  (Attitude Loop) │   phi_des, theta_des   │  (Inner Loop)    │   tau = PID(e_w)   │  (Matrix Mixer)  │
+│  Frekuensi 50Hz  │                         │  Frekuensi 250Hz │                        │  Frekuensi 1kHz  │                    │                  │
+└──────────────────┘                         └──────────────────┘                        └──────────────────┘                    └──────────────────┘
+```
+
+### Sifat Istimewa: *Differential Flatness*
+Quadrotor terbukti memiliki sifat *differentially flat* terhadap output datar $\mathbf{\sigma}(t) = [x(t), y(t), z(t), \psi(t)]^T$. Artinya, jika sebuah trajektori 3D posisi dan sudut yaw diberikan, seluruh profil kecepatan, orientasi sikap $(\phi, \theta)$, kecepatan sudut $\boldsymbol{\omega}$, hingga gaya dorong keempat motor dapat dihitung secara analitik aljabar tanpa perlu mengintegrasikan persamaan diferensial secara numerik!
+
+---
+
+## 5. Simulator Interaktif: Dinamika Multirotor 6-DOF
+
+Ubah parameter gaya dorong, uji respon manuver gulingan (*roll tilt*), dan amati bagaimana gaya angkat vertikal terkompensasi saat drone bermanuver miring:
 
 <QuadrotorDynamicsSimulator />
 
 ---
 
-## 4. Uji Pemahaman Konsep
+## 6. Uji Pemahaman Konsep
 
 <ConceptCheck
   id="quiz-aerial-drone-principles"
-  question="Mengapa sepasang baling-baling quadrotor berputar searah jarum jam (CW) dan sepasang lainnya berlawanan arah jarum jam (CCW)?"
+  question="Ketika sebuah quadrotor melaju cepat maju ke depan secara horizontal dengan kecepatan konstan, mengapa gaya dorong total keempat motor (F_total) harus lebih besar daripada berat gravitasi drone (m * g)?"
   options={[
     {
       id: "A",
-      text: "Untuk menyeimbangkan torsi reaksi aerodinamis (anti-torque) saat kondisi hover, dan memungkinkan kendali putaran yaw cukup dengan mengubah selisih kecepatan antara pasangan CW dan CCW.",
+      text: "Karena badan drone harus condong ke depan sebesar sudut pitch (theta), sehingga vektor gaya dorong terbagi menjadi komponen horizontal F * sin(theta) untuk melawan hambatan udara dan komponen vertikal F * cos(theta) yang harus tetap sama dengan m * g agar ketinggian tidak merosot.",
       isCorrect: true,
-      explanation: "Tepat! Jika semua baling-baling berputar ke arah yang sama, badan drone akan terus berputar liar tanpa terkendali akibat hukum aksi-reaksi Newton."
+      explanation: "Tepat! Karena F_z = F_total * cos(theta) = m * g, maka gaya dorong total yang dibutuhkan adalah F_total = (m * g) / cos(theta) > m * g."
     },
     {
       id: "B",
-      text: "Agar baling-baling tidak saling bertabrakan secara fisik.",
+      text: "Karena udara di depan drone memiliki massa jenis yang jauh lebih tinggi daripada di belakang drone.",
       isCorrect: false,
-      explanation: "Salah. Jarak antar motor sudah diatur agar baling-baling tidak beririsan."
+      explanation: "Salah. Variasi tekanan udara akibat kecepatan maju drone sangat kecil pada rezim subsonik UAV."
     },
     {
       id: "C",
-      text: "Untuk menghemat baterai hingga 50%.",
+      text: "Karena motor drone kehilangan daya listrik baterai saat bergerak horizontal.",
       isCorrect: false,
-      explanation: "Salah. Putaran berlawanan adalah prinsip fisika penyeimbangan momen momentum sudut."
+      explanation: "Salah. Tegangan baterai berkurang seiring waktu pemakaian, bukan karena arah orientasi gerakan."
     }
   ]}
-  hint="Pikirkan hukum kekekalan momentum sudut dan torsi reaksi motor."
+  hint="Pikirkan dekomposisi vektor trigonometri segitiga siku-siku antara gaya angkat vertikal dan dorongan maju horizontal."
 />

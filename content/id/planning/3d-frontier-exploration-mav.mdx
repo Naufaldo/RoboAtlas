@@ -16,6 +16,7 @@ prerequisites:
 references:
   - "Liang Lu, Carlos Redondo, Pascual Campoy (2020). Optimal Frontier-Based Autonomous Exploration in Unconstructed Environment Using RGB-D Sensor. Sensors (MDPI), 20(22), 6507."
   - "Armin Hornung, Kai M. Wurm, Maren Bennewitz, Cyrill Stachniss, Wolfram Burgard (2013). OctoMap: An Efficient Probabilistic 3D Mapping Framework Based on Octrees. Autonomous Robots."
+  - "Sikang Liu, Mo Shan, Yash Mulgaonkar, Vijay Kumar (2017). Planning Dynamically Feasible Trajectories for Quadrotors Using Safe Flight Corridors in 3-D Complex Environments. IEEE ICRA."
 components:
   - SafeCorridorExplorationSimulator
   - FormulaExplainer
@@ -24,49 +25,82 @@ components:
 
 # Eksplorasi Frontier 3D & Safe Flight Corridor MAV (MDPI 2020)
 
-> "Bagaimana drone terbang (Micro Aerial Vehicle / MAV) dengan muatan komputasi dan sensor RGB-D terbatas dapat memetakan gedung runtuh 3D secara otonom tanpa menabrak rintangan?"
+> "Bagaimana drone mikro (Micro Aerial Vehicle / MAV) dengan muatan komputasi dan sensor kedalaman RGB-D terbatas dapat memetakan interior gedung runtuh 3D secara otonom tanpa menabrak reruntuhan puing?"
 
-Eksplorasi otonom berbasis wahana udara mikro (*Micro Aerial Vehicles / MAVs*) dalam skenario bencana gempa atau terowongan tambang menuntut pemetaan volumetrik 3D yang cepat dengan sumber daya komputasi *on-board* yang sangat terbatas. Berdasarkan publikasi *MDPI Sensors 2020 (Lu, Redondo, & Campoy)*, arsitektur penjelajahan udara otonom mengintegrasikan:
-1. Peta Volumetrik **OctoMap 3D**
-2. Klasterisasi Titik Frontier dengan **$k$-Means++**
-3. Perencanaan Jalur Bebas Tabrakan Berbasis **Safe Flight Corridor (SFC)**
+Eksplorasi otonom berbasis wahana udara mikro (*Micro Aerial Vehicles / MAVs*) dalam skenario tanggap darurat bencana gempa bumi atau inspeksi terowongan tambang menuntut pemetaan volumetrik 3D real-time dengan keterbatasan daya baterai dan komputasi *on-board*.
 
----
-
-## 1. Peta Okupansi Voxel OctoMap 3D & Entropi Volumetrik
-
-Ruang tiga dimensi dibagi menjadi voxel-voxel terindeks octree. Untuk setiap voxel $x$ dengan probabilitas okupansi $p(x) \in [0, 1]$, ketidakpastian informasi dinyatakan dalam **Entropi Voxel**:
-
-$$
-e(x) = - p(x) \log p(x) - (1 - p(x)) \log(1 - p(x))
-$$
-
-### Perolehan Informasi (*Information Gain*) dari Sudut Pandang Sensor $v$:
-Jumlah entropi dari seluruh voxel yang ditembus oleh berkas sinar raycasting $R_v$ kamera kedalaman RGB-D:
-
-$$
-G_v = \sum_{r \in R_v} \sum_{x \in X} e(x)
-$$
+Berdasarkan publikasi ilmiah *MDPI Sensors 2020 (Lu, Redondo, & Campoy)*, arsitektur eksplorasi otonom 3D MAV mengintegrasikan:
+1. Peta Volumetrik Probabilistik **OctoMap 3D**
+2. Penapisan Titik Sudut Pandang Kandidat Silindris (*Cylindrical Viewpoint Sampling*) & Klasterisasi **$k$-Means++**
+3. Perencanaan Trajektori Mulus Terkekang **Safe Flight Corridor (SFC)**
 
 ---
 
-## 2. Generasi Titik Kandidat & Klasterisasi $k$-Means++
+## 1. Peta Okupansi Voxel OctoMap 3D & Model Sensor RGB-D
 
-Titik-titik frontier di batas antara area bebas (*free*) dan area belum dikenal (*unknown*) diekstrak dalam koordinat silindris polar di sekitar frontier $(X_f, Y_f, Z_f)$:
+Ruang 3D dipartisi secara hierarkis menggunakan struktur data Octree. Setiap simpul daun (*leaf voxel*) $n$ menyimpan log-odds probabilitas okupansi:
 
 $$
-\begin{bmatrix} X_c \\ Y_c \\ Z_c \\ \theta_c \end{bmatrix} = \begin{bmatrix} X_f + R_i \cos(\theta_i) \\ Y_f + R_i \sin(\theta_i) \\ Z_f \\ \theta_i \end{bmatrix}
+L(n \mid z_{1:t}) = L(n \mid z_{1:t-1}) + L(n \mid z_t)
 $$
 
-Untuk menghindari ledakan komputasi akibat ribuan titik frontier mentah, algoritma **$k$-Means++** mengelompokkan kandidat frontier menjadi $k$ titik representatif berbobot informasi tertinggi ($G_v$).
+Ketidakpastian informasi volumetrik dihitung dari **Entropi Shannon Voxel**:
+
+$$
+e(x) = - p(x) \log_2 p(x) - (1 - p(x)) \log_2 (1 - p(x))
+$$
+
+### Perolehan Informasi Volumetrik (*Volumetric Information Gain $G_v$*):
+Jumlah entropi dari seluruh voxel yang berada dalam kerucut pandang frustum kamera RGB-D (dengan sudut pandang horizontal $\alpha_h$, vertikal $\alpha_v$, dan jarak jangkauan $[d_{\min}, d_{\max}]$):
+
+$$
+G_v = \sum_{r \in R_v} \sum_{x \in \text{Voxel}(r)} e(x)
+$$
 
 ---
 
-## 3. Perencanaan Jalur Aman: Safe Flight Corridor (SFC)
+## 2. Generasi Sudut Pandang Silindris & Klasterisasi $k$-Means++
 
-Setelah titik target optimal dipilih oleh perencana $A^*$, lintasan harus dilindungi dari risiko tabrakan dengan rintangan 3D:
-1. **Inflasi Kotak Pembatas Cembung (*Convex Box Inflation*)**: Setiap simpul jalur $A^*$ diekspansi ke 6 arah mata angin hingga menyentuh voxel rintangan terdekat.
-2. **Penataan Ulang Trajektori (*Center-Corridor Replanning*)**: Jalur penerbangan dihaluskan melintasi titik pusat setiap koridor aman, menjamin jarak batas bebas (*clearance distance*) maksimal dari dinding dan puing bangunan.
+Titik frontier 3D didefinisikan sebagai voxel bebas (*free*) yang berbatasan langsung dengan minimal satu voxel belum dikenal (*unknown*). Untuk setiap klaster frontier $(X_f, Y_f, Z_f)$, titik sudut pandang kandidat $(X_c, Y_c, Z_c, \theta_c)$ dibangkitkan pada selubung koordinat silindris:
+
+$$
+\begin{bmatrix} X_c \\ Y_c \\ Z_c \\ \theta_c \end{bmatrix} = \begin{bmatrix} X_f + R_i \cos(\theta_i) \\ Y_f + R_i \sin(\theta_i) \\ Z_f \\ \theta_i + \pi \end{bmatrix}
+$$
+
+Di mana sudut yaw $\theta_c = \theta_i + \pi$ memastikan kamera RGB-D drone selalu menghadap tepat ke pusat massa frontier yang belum terpetakan. Klasterisasi **$k$-Means++** mereduksi ribuan titik frontier mentah menjadi $k$ kelompok representatif berbobot informasi $G_v$ tertinggi.
+
+---
+
+## 3. Safe Flight Corridor (SFC) & Optimasi Trajektori Cembung
+
+Setelah perencana graf $A^*$ 3D menemukan rute simpul jalur, trajektori penerbangan drone berkecepatan tinggi harus dilindungi dari tabrakan dengan rintangan:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                      PEMBANGKITAN KORIDOR TERBANG AMAN (SFC)                            │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+                                             │
+                                             ▼
+                        ┌────────────────────────────────────────┐
+                        │ Simpul Lintasan A* 3D: [p_0, p_1, ...] │
+                        └────────────────────────────────────────┘
+                                             │
+                                             ▼
+                        ┌────────────────────────────────────────┐
+                        │ Inflasi Kotak Pembatas Cembung (AABB)  │
+                        │ Ekspansi 6 arah hingga sentuh rintangan│
+                        │ S_k = [x_min, x_max] x [y_min, y_max]  │
+                        └────────────────────────────────────────┘
+                                             │
+                                             ▼
+                        ┌────────────────────────────────────────┐
+                        │ Optimasi B-Spline / Minimum-Snap QP    │
+                        │ Terkekang di dalam irisan koridor:     │
+                        │ p(t) in S_k intersect S_{k+1}          │
+                        └────────────────────────────────────────┘
+```
+
+Koridor penerbangan aman memastikan drone dapat bermanuver pada kecepatan tinggi melintasi pusat koridor dengan jaminan batas aman jarak (*clearance distance*) maksimal dari dinding dan puing bangunan.
 
 ---
 
@@ -86,9 +120,9 @@ Amati drone MAV bermanuver menjelajahi voxel rintangan 3D di dalam koridor aman 
   options={[
     {
       id: "A",
-      text: "Membangun serangkaian kotak pembatas cembung bebas rintangan di sepanjang simpul A*, sehingga trajektori penerbangan dapat dialihkan melintasi pusat koridor untuk memaksimalkan jarak aman dari dinding.",
+      text: "Membangun serangkaian kotak pembatas cembung bebas rintangan di sepanjang simpul A*, sehingga optimasi trajektori polinomial minimum-snap dapat dibatasi di dalam ruang cembung tersebut untuk menjamin terbang bebas tabrakan berkecepatan tinggi tanpa diskritisasi waktu yang rapat.",
       isCorrect: true,
-      explanation: "Tepat! Safe Flight Corridor memastikan drone terbang mulus tanpa risiko benturan meskipun berkecepatan dinamis tinggi."
+      explanation: "Tepat! Safe Flight Corridor mengubah masalah penghindaran rintangan non-linear yang sulit menjadi kendala linier cembung (Convex Quadratic Program) yang dapat diselesaikan dalam hitungan milidetik."
     },
     {
       id: "B",
@@ -98,10 +132,10 @@ Amati drone MAV bermanuver menjelajahi voxel rintangan 3D di dalam koridor aman 
     },
     {
       id: "C",
-      text: "Menonaktifkan kamera RGB-D agar menghemat kuota internet.",
+      text: "Mematikan motor baling-baling drone saat berada di dekat dinding.",
       isCorrect: false,
-      explanation: "Salah. SFC mengandalkan data voxel kamera RGB-D untuk menentukan batas koridor aman."
+      explanation: "Salah. Mematikan motor di udara akan menyebabkan drone jatuh bebas gravitasi."
     }
   ]}
-  hint="Pikirkan tentang bahaya jika drone terbang terlalu dekat dengan tepi tajam rintangan di gedung sempit."
+  hint="Pikirkan keuntungan matematis mengoptimasi kurva spline di dalam kumpulan kotak cembung (convex boxes)."
 />

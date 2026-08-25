@@ -15,6 +15,7 @@ prerequisites:
 references:
   - "Joan Solà, Jeremie Deray, Dinesh Atchuthan (2018). A Micro Lie Theory for State Estimation in Robotics. arXiv:1812.01537."
   - "Timothy D. Barfoot (2017). State Estimation for Robotics. Cambridge University Press."
+  - "Richard M. Murray, Zexiang Li, S. Shankar Sastry (1994). A Mathematical Introduction to Robotic Manipulation. CRC Press."
 components:
   - LieGroupAlgebraSimulator
   - FormulaExplainer
@@ -23,37 +24,44 @@ components:
 
 # Matrix Lie Groups SO(3)/SE(3) & Lie Algebras so(3)/se(3)
 
-> "Why do Euler angles suffer from catastrophic gimbal lock, while $3 \times 3$ rotation matrices carry 9 parameters burdened by 6 non-linear orthonormality constraints—and how does Lie Group theory enable singularity-free spatial optimization?"
+> "Why do Euler angles suffer from kinematic gimbal lock, why are $3 \times 3$ rotation matrices over-parameterized with 6 non-linear constraints, and how does Lie Group Theory unlock singularity-free geometric optimization in 3D robotics?"
 
-In modern robotics (Visual-Inertial Odometry, Factor Graph SLAM, and Manipulator Control), 3D spatial rotations $SO(3)$ and rigid body transformations $SE(3)$ do not form standard Euclidean vector spaces under addition. Instead, they constitute smooth **Differentiable Manifolds (Lie Groups)**.
+In modern robotics (Visual-Inertial Odometry, Factor Graph SLAM, and Operational Space Manipulation), 3D spatial rotations $SO(3)$ and rigid body poses $SE(3)$ do not form standard Euclidean vector spaces. Instead, they form smooth **Differentiable Manifolds endowed with Group Structure (Lie Groups)**.
 
 ---
 
 ## 1. The Lie Group $SO(3)$ & Its Tangent Lie Algebra $\mathfrak{so}(3)$
 
-The Special Orthogonal Group $SO(3)$ is defined as:
+The Special Orthogonal group $SO(3)$ formalizes rigid 3D rotations without scale distortion:
 
 $$
 SO(3) = \{ \mathbf{R} \in \mathbb{R}^{3 \times 3} \mid \mathbf{R}^T \mathbf{R} = \mathbf{I}, \, \det(\mathbf{R}) = +1 \}
 $$
 
-The tangent space attached to the identity element $\mathbf{I}$ is the **Lie Algebra $\mathfrak{so}(3)$**, comprising $3 \times 3$ skew-symmetric matrices parameterized by twist vector $\boldsymbol{\omega} \in \mathbb{R}^3$:
+The tangent space at the identity matrix $\mathbf{I}$ is the **Lie Algebra $\mathfrak{so}(3)$**, populated by $3 \times 3$ skew-symmetric matrices:
 
 $$
-[\boldsymbol{\omega}]_\times = \begin{bmatrix} 0 & -\omega_3 & \omega_2 \\ \omega_3 & 0 & -\omega_1 \\ -\omega_2 & \omega_1 & 0 \end{bmatrix} \in \mathfrak{so}(3)
+[\boldsymbol{\omega}]_\times = \begin{bmatrix} 0 & -\omega_3 & \omega_2 \\ \omega_3 & 0 & -\omega_1 \\ -\omega_2 & \omega_1 & 0 \end{bmatrix} \in \mathfrak{so}(3), \quad \boldsymbol{\omega} \in \mathbb{R}^3
+$$
+
+The isomorphic *vee* $(\cdot)^\vee$ and *hat* $(\cdot)^\wedge$ operators map between unconstrained rotation vectors $\mathbb{R}^3$ and Lie algebra matrices $\mathfrak{so}(3)$:
+
+$$
+\boldsymbol{\omega} = [\boldsymbol{\omega}]_\times^\vee \in \mathbb{R}^3, \quad [\boldsymbol{\omega}]_\times = \boldsymbol{\omega}^\wedge \in \mathfrak{so}(3)
 $$
 
 ---
 
-## 2. The Exponential Map & Rodrigues' Formula
+## 2. Rodrigues Exponential & Matrix Logarithm Maps
 
-The Exponential Map ($\exp: \mathfrak{so}(3) \to SO(3)$) seamlessly projects tangent vectors onto the curved manifold:
+The matrix exponential map wraps straight lines in the tangent space $\mathfrak{so}(3)$ onto closed geodesic rotation arcs on the $SO(3)$ manifold:
 
 $$
 \mathbf{R} = \exp([\boldsymbol{\omega}]_\times) = \mathbf{I} + \frac{\sin\theta}{\theta} [\boldsymbol{\omega}]_\times + \frac{1 - \cos\theta}{\theta^2} [\boldsymbol{\omega}]_\times^2, \quad \theta = \|\boldsymbol{\omega}\|
 $$
 
-### The Matrix Logarithm ($\log: SO(3) \to \mathfrak{so}(3)$):
+### The Logarithm Map ($\log: SO(3) \to \mathfrak{so}(3)$):
+Extracts the rotation angle $\theta$ and axis from a $3 \times 3$ matrix:
 
 $$
 \theta = \arccos\left(\frac{\text{tr}(\mathbf{R}) - 1}{2}\right), \quad [\boldsymbol{\omega}]_\times = \frac{\theta}{2\sin\theta}(\mathbf{R} - \mathbf{R}^T)
@@ -61,52 +69,99 @@ $$
 
 ---
 
-## 3. Manifold Perturbations & The Plus/Minus Operators ($\boxplus / \boxminus$)
+## 3. Special Euclidean Group $SE(3)$ & Spatial Twists $\mathfrak{se}(3)$
 
-Because naive matrix addition $\mathbf{R}_1 + \mathbf{R}_2 \notin SO(3)$, manifold optimization updates are defined via geodesic retraction:
-
-$$
-\mathbf{R} \boxplus \boldsymbol{\delta} = \mathbf{R} \exp([\boldsymbol{\delta}]_\times) \in SO(3)
-$$
+The Special Euclidean group $SE(3)$ combines rotation and translation into a homogeneous matrix:
 
 $$
-\mathbf{R}_1 \boxminus \mathbf{R}_2 = \log(\mathbf{R}_2^T \mathbf{R}_1)^\vee \in \mathbb{R}^3
+SE(3) = \left\{ \mathbf{T} = \begin{bmatrix} \mathbf{R} & \mathbf{t} \\ \mathbf{0}_{1\times 3} & 1 \end{bmatrix} \in \mathbb{R}^{4 \times 4} \;\middle|\; \mathbf{R} \in SO(3), \, \mathbf{t} \in \mathbb{R}^3 \right\}
+$$
+
+A 6-dimensional spatial twist vector $\boldsymbol{\xi} = [\boldsymbol{\rho}^T, \boldsymbol{\phi}^T]^T \in \mathbb{R}^6$ maps to Lie algebra $\mathfrak{se}(3)$ via:
+
+$$
+[\boldsymbol{\xi}]_\wedge = \begin{bmatrix} [\boldsymbol{\phi}]_\times & \boldsymbol{\rho} \\ \mathbf{0} & 0 \end{bmatrix} \in \mathfrak{se}(3)
+$$
+
+### Closed-Form $SE(3)$ Exponential Map:
+
+$$
+\exp([\boldsymbol{\xi}]_\wedge) = \begin{bmatrix} \exp([\boldsymbol{\phi}]_\times) & \mathbf{J}_l(\boldsymbol{\phi}) \boldsymbol{\rho} \\ \mathbf{0} & 1 \end{bmatrix}
+$$
+
+Where $\mathbf{J}_l(\boldsymbol{\phi}) = \frac{\sin\theta}{\theta}\mathbf{I} + \left(1 - \frac{\sin\theta}{\theta}\right)\mathbf{n}\mathbf{n}^T + \frac{1-\cos\theta}{\theta}[\mathbf{n}]_\times$ is the $SO(3)$ Left Jacobian.
+
+---
+
+## 4. The Adjoint Representation ($\operatorname{Ad}_{\mathbf{T}}$)
+
+To transform spatial twist velocities or $6 \times 6$ covariance matrices between coordinate frames:
+
+$$
+\operatorname{Ad}_{\mathbf{T}} = \begin{bmatrix} \mathbf{R} & [\mathbf{t}]_\times \mathbf{R} \\ \mathbf{0}_{3\times 3} & \mathbf{R} \end{bmatrix} \in \mathbb{R}^{6 \times 6}
 $$
 
 ---
 
-## 4. Interactive Simulator: $\mathfrak{so}(3)$ Tangent Space Exponential Map
+## 5. Manifold Perturbation Calculus: $\boxplus$ and $\boxminus$ Operators
 
-Adjust the angular twist vector $\boldsymbol{\omega}$ on the tangent plane and observe the geodesic flow yielding the orthogonal rotation matrix $\mathbf{R} \in SO(3)$:
+Because standard matrix addition $\mathbf{R}_1 + \mathbf{R}_2 \notin SO(3)$ violates orthogonality, non-linear least squares optimizers (such as Gauss-Newton in GTSAM and Ceres) formulate updates on the tangent space:
+
+$$
+\mathbf{T} \boxplus \boldsymbol{\delta} = \mathbf{T} \exp([\boldsymbol{\delta}]_\wedge) \in SE(3)
+$$
+
+$$
+\mathbf{T}_1 \boxminus \mathbf{T}_2 = \log(\mathbf{T}_2^{-1} \mathbf{T}_1)^\vee \in \mathbb{R}^6
+$$
+
+```text
+              BOXPLUS AND BOXMINUS MANIFOLD RETRACTION OPERATORS
+              
+       Vector Space R^6 (Unconstrained)         Manifold SE(3) (Non-linear Group)
+       ┌──────────────────────────────┐         ┌──────────────────────────────┐
+       │ State Increment delta        │ ──────> │ T_new = T * exp(delta^)      │
+       │ (Solved by Linear Solver)    │ boxplus │ (Rigorously Valid SE(3))     │
+       └──────────────────────────────┘         └──────────────────────────────┘
+                      ▲                                        │
+                      │               boxminus                 │
+                      └────────────────────────────────────────┘
+```
+
+---
+
+## 6. Interactive Simulator: Lie Algebra Tangent Space $\mathfrak{so}(3)$
+
+Adjust angular rotation vector $\boldsymbol{\omega}$ on the tangent plane and observe how the exponential map projects tangent vectors into geodesic rotations on $SO(3)$:
 
 <LieGroupAlgebraSimulator />
 
 ---
 
-## 5. Concept Verification
+## 7. Concept Verification
 
 <ConceptCheck
   id="quiz-lie-groups-and-lie-algebras"
-  question="Why do modern state estimation frameworks (e.g., GTSAM, ORB-SLAM, and FAST-LIO) optimize state perturbations on the Lie Algebra tangent space rather than directly on rotation matrix elements?"
+  question="Why do modern SLAM and Visual-Inertial Odometry frameworks (such as GTSAM, ORB-SLAM3, and FAST-LIO) optimize state perturbations on the Lie Algebra tangent space rather than optimizing matrix R directly?"
   options={[
     {
       id: "A",
-      text: "Because the Lie Algebra is an unconstrained 3D linear vector space, allowing standard gradient descent and Gauss-Newton steps to be computed freely while guaranteeing that exp(delta) retractions always stay strictly on the valid SO(3) manifold without gimbal lock.",
+      text: "Because the Lie Algebra tangent space is an unconstrained linear vector space R^3, allowing Gauss-Newton and Levenberg-Marquardt solvers to compute free gradient steps without violating R^T R = I orthogonality and completely avoiding Euler angle gimbal lock singularities.",
       isCorrect: true,
-      explanation: "Correct! Optimizing in the local unconstrained Euclidean tangent space R^3 and wrapping back via the exponential map preserves exact orthonormality R^T R = I."
+      explanation: "Correct! Optimizing unconstrained increments in R^3 and retracting back via exp(delta) guarantees valid, singularity-free rotations."
     },
     {
       id: "B",
-      text: "Because 3x3 matrices cannot be multiplied by floating-point numbers.",
+      text: "Because 3x3 matrices cannot be multiplied on 64-bit computers.",
       isCorrect: false,
-      explanation: "Incorrect. Matrix multiplication by scalars is standard, but addition leaves the SO(3) manifold."
+      explanation: "Incorrect. Modern computers perform matrix multiplications effortlessly."
     },
     {
       id: "C",
-      text: "Because Lie groups are only defined for integer coordinates.",
+      text: "Because Lie Algebra requires 100x less RAM than Euler angles.",
       isCorrect: false,
-      explanation: "Incorrect. Lie groups are smooth continuous differential manifolds."
+      explanation: "Incorrect. The advantage is mathematical geometry, not memory allocation."
     }
   ]}
-  hint="Consider what happens if you add two rotation matrices R_1 + R_2: is the resulting sum an orthogonal matrix with determinant +1?"
+  hint="Consider what happens if you add two rotation matrices element-wise: the sum is not a valid rotation."
 />

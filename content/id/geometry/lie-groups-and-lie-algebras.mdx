@@ -15,6 +15,7 @@ prerequisites:
 references:
   - "Joan Solà, Jeremie Deray, Dinesh Atchuthan (2018). A Micro Lie Theory for State Estimation in Robotics. arXiv:1812.01537."
   - "Timothy D. Barfoot (2017). State Estimation for Robotics. Cambridge University Press."
+  - "Richard M. Murray, Zexiang Li, S. Shankar Sastry (1994). A Mathematical Introduction to Robotic Manipulation. CRC Press."
 components:
   - LieGroupAlgebraSimulator
   - FormulaExplainer
@@ -25,13 +26,13 @@ components:
 
 > "Mengapa representasi sudut Euler menderita gimbal lock, matriks rotasi $3 \times 3$ berlebih 9-parameter dengan 6 kendala ortogonalitas, dan bagaimana Teori Grup Lie menyelesaikan optimasi kalkulus spasial tanpa singularitas?"
 
-Dalam robotika tingkat lanjut (Visual-Inertial Odometry, SLAM Graf Faktor, dan Kendali Trajektori Manipulator), rotasi spasial $SO(3)$ dan transformasi rigid-body $SE(3)$ tidak membentuk ruang vektor linear Euklides biasa, melainkan **Manifold Diferensiabel (Grup Lie)**.
+Dalam robotika modern (Visual-Inertial Odometry, SLAM Graf Faktor, dan Kinematika Manipulator Ruang Operasional), rotasi spasial $SO(3)$ dan transformasi rigid-body $SE(3)$ tidak membentuk ruang vektor linear Euklides biasa, melainkan **Manifold Diferensiabel Berstruktur Grup (Grup Lie)**.
 
 ---
 
 ## 1. Grup Lie $SO(3)$ & Aljabar Lie Ruang Singgung $\mathfrak{so}(3)$
 
-Grup ortogonal khusus $SO(3)$ didefinisikan sebagai:
+Grup ortogonal khusus $SO(3)$ mendefinisikan seluruh rotasi kaku 3D tanpa distorsi skala:
 
 $$
 SO(3) = \{ \mathbf{R} \in \mathbb{R}^{3 \times 3} \mid \mathbf{R}^T \mathbf{R} = \mathbf{I}, \, \det(\mathbf{R}) = +1 \}
@@ -43,17 +44,24 @@ $$
 [\boldsymbol{\omega}]_\times = \begin{bmatrix} 0 & -\omega_3 & \omega_2 \\ \omega_3 & 0 & -\omega_1 \\ -\omega_2 & \omega_1 & 0 \end{bmatrix} \in \mathfrak{so}(3), \quad \boldsymbol{\omega} \in \mathbb{R}^3
 $$
 
+Operator *vee* $(\cdot)^\vee$ dan *hat* $(\cdot)^\wedge$ memetakan secara isomorfik antara vektor rotasi $\mathbb{R}^3$ dan aljabar Lie $\mathfrak{so}(3)$:
+
+$$
+\boldsymbol{\omega} = [\boldsymbol{\omega}]_\times^\vee \in \mathbb{R}^3, \quad [\boldsymbol{\omega}]_\times = \boldsymbol{\omega}^\wedge \in \mathfrak{so}(3)
+$$
+
 ---
 
 ## 2. Peta Eksponensial Rodrigues & Logaritma Matriks
 
-Hubungan antara ruang singgung $\mathfrak{so}(3)$ dan manifold $SO(3)$ dihubungkan melalui **Peta Eksponensial**:
+Peta eksponensial membungkus garis lurus pada ruang singgung $\mathfrak{so}(3)$ menjadi kurva rotasi geodetik tertutup pada manifold $SO(3)$:
 
 $$
 \mathbf{R} = \exp([\boldsymbol{\omega}]_\times) = \mathbf{I} + \frac{\sin\theta}{\theta} [\boldsymbol{\omega}]_\times + \frac{1 - \cos\theta}{\theta^2} [\boldsymbol{\omega}]_\times^2, \quad \theta = \|\boldsymbol{\omega}\|
 $$
 
 ### Peta Logaritma ($\log: SO(3) \to \mathfrak{so}(3)$):
+Menguraikan kembali matriks rotasi $3 \times 3$ menjadi sumbu putar dan sudut rotasi $\theta$:
 
 $$
 \theta = \arccos\left(\frac{\text{tr}(\mathbf{R}) - 1}{2}\right), \quad [\boldsymbol{\omega}]_\times = \frac{\theta}{2\sin\theta}(\mathbf{R} - \mathbf{R}^T)
@@ -61,21 +69,68 @@ $$
 
 ---
 
-## 3. Perturbasi Manifold & Operasi "Plus/Minus" ($\boxplus / \boxminus$)
+## 3. Transformasi Rigid Body $SE(3)$ & Twist Spasial $\mathfrak{se}(3)$
 
-Karena operasi penjumlahan matriks $\mathbf{R}_1 + \mathbf{R}_2 \notin SO(3)$, optimasi kalkulus pada manifold menggunakan operator perturbasi geodetik:
-
-$$
-\mathbf{R} \boxplus \boldsymbol{\delta} = \mathbf{R} \exp([\boldsymbol{\delta}]_\times) \in SO(3)
-$$
+Grup Euklides Khusus $SE(3)$ menggabungkan rotasi dan translasi:
 
 $$
-\mathbf{R}_1 \boxminus \mathbf{R}_2 = \log(\mathbf{R}_2^T \mathbf{R}_1)^\vee \in \mathbb{R}^3
+SE(3) = \left\{ \mathbf{T} = \begin{bmatrix} \mathbf{R} & \mathbf{t} \\ \mathbf{0}_{1\times 3} & 1 \end{bmatrix} \in \mathbb{R}^{4 \times 4} \;\middle|\; \mathbf{R} \in SO(3), \, \mathbf{t} \in \mathbb{R}^3 \right\}
+$$
+
+Vektor *spatial twist* $\boldsymbol{\xi} = [\boldsymbol{\rho}^T, \boldsymbol{\phi}^T]^T \in \mathbb{R}^6$ (di mana $\boldsymbol{\rho}$ adalah translasi dan $\boldsymbol{\phi}$ adalah vektor rotasi) dipetakan ke aljabar Lie $\mathfrak{se}(3)$ melalui:
+
+$$
+[\boldsymbol{\xi}]_\wedge = \begin{bmatrix} [\boldsymbol{\phi}]_\times & \boldsymbol{\rho} \\ \mathbf{0} & 0 \end{bmatrix} \in \mathfrak{se}(3)
+$$
+
+### Peta Eksponensial $SE(3)$:
+
+$$
+\exp([\boldsymbol{\xi}]_\wedge) = \begin{bmatrix} \exp([\boldsymbol{\phi}]_\times) & \mathbf{J}_l(\boldsymbol{\phi}) \boldsymbol{\rho} \\ \mathbf{0} & 1 \end{bmatrix}
+$$
+
+Di mana $\mathbf{J}_l(\boldsymbol{\phi}) = \frac{\sin\theta}{\theta}\mathbf{I} + \left(1 - \frac{\sin\theta}{\theta}\right)\mathbf{n}\mathbf{n}^T + \frac{1-\cos\theta}{\theta}[\mathbf{n}]_\times$ adalah *Left Jacobian* dari $SO(3)$.
+
+---
+
+## 4. Representasi Adjoint ($\operatorname{Ad}_{\mathbf{T}}$)
+
+Untuk mentransformasikan vektor kecepatan spatial twist $\boldsymbol{\xi}$ atau matriks kovariansi $6 \times 6$ dari satu kerangka ke kerangka lain:
+
+$$
+\operatorname{Ad}_{\mathbf{T}} = \begin{bmatrix} \mathbf{R} & [\mathbf{t}]_\times \mathbf{R} \\ \mathbf{0}_{3\times 3} & \mathbf{R} \end{bmatrix} \in \mathbb{R}^{6 \times 6}
 $$
 
 ---
 
-## 4. Simulator Interaktif: Peta Eksponensial Ruang Singgung $\mathfrak{so}(3)$
+## 5. Perturbasi Manifold & Operasi "Plus/Minus" ($\boxplus / \boxminus$)
+
+Karena operasi penjumlahan biasa $\mathbf{R}_1 + \mathbf{R}_2 \notin SO(3)$ merusak ortogonalitas, optimasi kuadrat terkecil non-linear (seperti Gauss-Newton pada GTSAM/Ceres) menggunakan operator perturbasi geodetik:
+
+$$
+\mathbf{T} \boxplus \boldsymbol{\delta} = \mathbf{T} \exp([\boldsymbol{\delta}]_\wedge) \in SE(3)
+$$
+
+$$
+\mathbf{T}_1 \boxminus \mathbf{T}_2 = \log(\mathbf{T}_2^{-1} \mathbf{T}_1)^\vee \in \mathbb{R}^6
+$$
+
+```text
+              OPERATOR PERTURBASI MANIFOLD BOXPLUS DAN BOXMINUS
+              
+       Ruang Vektor R^6 (Tanpa Kendala)         Manifold SE(3) (Grup Non-Linear)
+       ┌──────────────────────────────┐         ┌──────────────────────────────┐
+       │ Vektor Inkrement delta       │ ──────> │ T_new = T * exp(delta^)      │
+       │ (Dioptimasi oleh solver GN)  │ boxplus │ (Selalu valid SE(3))         │
+       └──────────────────────────────┘         └──────────────────────────────┘
+                      ▲                                        │
+                      │               boxminus                 │
+                      └────────────────────────────────────────┘
+```
+
+---
+
+## 6. Simulator Interaktif: Peta Eksponensial Ruang Singgung $\mathfrak{so}(3)$
 
 Ubah vektor putaran $\boldsymbol{\omega}$ pada ruang singgung dan amati aliran geodetik yang memetakan vektor ke rotasi rigid 3D pada manifold $SO(3)$:
 
@@ -83,7 +138,7 @@ Ubah vektor putaran $\boldsymbol{\omega}$ pada ruang singgung dan amati aliran g
 
 ---
 
-## 5. Uji Pemahaman Konsep
+## 7. Uji Pemahaman Konsep
 
 <ConceptCheck
   id="quiz-lie-groups-and-lie-algebras"
@@ -99,14 +154,14 @@ Ubah vektor putaran $\boldsymbol{\omega}$ pada ruang singgung dan amati aliran g
       id: "B",
       text: "Karena matriks rotasi 3x3 tidak bisa dikalikan dengan angka biasa.",
       isCorrect: false,
-      explanation: "Salah. Matriks bisa dikalikan skalar, namun penjumlahannya tidak menghasilkan matriks rotasi yang valid."
+      explanation: "Salah. Masalah utamanya adalah kendala ortogonalitas non-linear R^T R = I."
     },
     {
       id: "C",
-      text: "Karena Aljabar Lie hanya bekerja pada bilangan bulat.",
+      text: "Karena representasi sudut Euler membutuhkan memori RAM yang 100x lebih besar.",
       isCorrect: false,
-      explanation: "Salah. Aljabar Lie adalah ruang vektor kontinu bernilai riil R^3."
+      explanation: "Salah. Masalah sudut Euler adalah singularitas geometris (gimbal lock)."
     }
   ]}
-  hint="Pikirkan apa yang terjadi jika Anda menjumlahkan dua matriks rotasi R_1 + R_2: apakah hasilnya masih memiliki determinan +1 dan R^T R = I?"
+  hint="Pikirkan apa yang terjadi jika Anda menjumlahkan dua matriks rotasi R_1 + R_2 secara element-wise: hasilnya bukan lagi matriks rotasi yang valid."
 />
