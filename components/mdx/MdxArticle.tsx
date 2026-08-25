@@ -40,6 +40,7 @@ import { RobotClassificationExplorer } from '@/components/simulation/RobotClassi
 import { ConceptCheck, QuizOption } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { CodeBlock } from '@/components/mdx/CodeBlock';
+import { getAssetPath } from '@/lib/utils/asset-path';
 
 interface MdxArticleProps {
   content: string;
@@ -495,13 +496,32 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       if (imgMatch) {
         const altText = imgMatch[1];
         const src = imgMatch[2];
+        const resolvedSrc = getAssetPath(src);
+
         nodes.push(
           <figure key={`img-${i}`} className="my-6 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/70 p-2 shadow-xl">
             <img
-              src={src}
+              src={resolvedSrc}
               alt={altText}
               className="w-full h-auto rounded-xl object-contain max-h-[520px] mx-auto"
               loading="lazy"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (!target.dataset.triedFallback) {
+                  target.dataset.triedFallback = 'true';
+                  // If current src has /RoboAtlas/, try without it; otherwise try with /RoboAtlas/
+                  if (target.src.includes('/RoboAtlas/')) {
+                    target.src = target.src.replace('/RoboAtlas/', '/');
+                  } else {
+                    try {
+                      const url = new URL(target.src);
+                      target.src = `${url.origin}/RoboAtlas${url.pathname}`;
+                    } catch {
+                      target.src = `/RoboAtlas${src.startsWith('/') ? src : `/${src}`}`;
+                    }
+                  }
+                }
+              }}
             />
             {altText && (
               <figcaption className="text-center text-xs font-mono text-slate-500 dark:text-slate-400 mt-2.5 pb-1">
