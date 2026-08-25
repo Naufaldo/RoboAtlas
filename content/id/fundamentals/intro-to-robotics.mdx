@@ -1,72 +1,128 @@
 ---
 id: intro-to-robotics
-title: Pengantar Robotika & Sistem Otonom
+title: "Pengantar Robotika Otonom & Klasifikasinya"
 slug: intro-to-robotics
-category: fundamentals
+domain: fundamentals
+level: 0
+tier: Foundations
 difficulty: beginner
 language: id
 interactive: true
-estimatedMinutes: 30
+estimatedMinutes: 35
 prerequisites: []
 references:
-  - ben-ari-elements-of-robotics
-  - herath-foundations-of-robotics
+  - "Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics. Springer Open."
+  - "Deepak Herath & David St-Onge (2022). Foundations of Robotics. Springer."
+  - "Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots. MIT Press."
 components:
-  - LessonOrientation
-  - VideoEmbed
   - SensePlanActExplorer
   - RobotClassificationExplorer
+  - VideoEmbed
   - ConceptCheck
-  - AcademicReferences
 ---
 
-# Pengantar Robotika & Sistem Otonom
+# Pengantar Robotika Otonom & Klasifikasinya
 
-## Apa itu Robotika?
+> "Robot bukan sekadar komputer yang dipasangi roda, dan bukan sekadar mesin mekanis otomatis. Robot adalah entitas fisik cerdas yang mengamati, bernalar, dan mengubah keadaan dunia nyata secara simpal tertutup (closed-loop)."
 
-Ketika mendengar kata **robot**, Anda mungkin membayangkan robot humanoid, lengan robot industri di pabrik mobil, robot pengantar barang di gudang, atau drone terbang.
-
-Robotika adalah disiplin ilmu multidisiplin yang berfokus pada perancangan dan pembangunan mesin cerdas yang mampu **mengamati (sense), memproses (compute), dan bertindak (act) di dunia fisik nyata**.
-
-Definisi inti yang berguna untuk dipahami:
-
-> Robot adalah mesin fisik yang menggabungkan penginderaan sensor, komputasi algoritma, dan aktuasi mekanik untuk menyelesaikan tugas di dunia nyata.
-
-Prinsip utamanya: robot bukan sekadar komputer dan bukan sekadar mesin mekanis biasa, melainkan sistem simpal tertutup (*closed-loop system*) yang menjembatani dunia fisik nyata dengan komputasi kecerdasan.
+**Robotika** adalah ilmu interdisipliner yang menggabungkan teknik mesin, teknik elektro, ilmu komputer, matematika, dan kecerdasan buatan untuk merancang mesin fisik otonom.
 
 ---
 
-## Siklus Sense-Plan-Act
+## 1. Anatomi Sistem Siber-Fisik (*Cyber-Physical Systems*)
 
-Untuk beroperasi secara otonom di lingkungan nyata yang dinamis, robot menjalankan siklus **Sense $\to$ Plan $\to$ Act** secara terus-menerus:
+Sebuah robot otonom tersusun atas empat pilar subsistem utama:
 
-1. **SENSE (Penginderaan)**: Mengamati lingkungan melalui sensor eksteroseptif (LiDAR, Kamera, Sonar) dan sensor proprioseptif (enkoder roda, IMU).
-2. **ESTIMASI & PEMETAAN**: Menggabungkan data sensor mentah untuk mengestimasi status posisi robot $\mathbf{x}_k = (x, y, \theta)$ dan membangun peta grid okupansi lingkungan.
-3. **PLAN (Perencanaan)**: Menghitung jalur bebas tabrakan menggunakan algoritma pencarian graf seperti A* atau kurva polinomial kuintik.
-4. **ACT (Aktuasi)**: Mengirimkan sinyal kontrol motor (tegangan PWM, sudut servo kemudi) ke roda atau aktuator penggerak.
-5. **PENGAMATAN ULANG**: Mengulang siklus umpan balik secara kontinu pada frekuensi 10 Hz hingga 100 Hz.
+```text
+┌───────────────────────────────┐
+│     LINGKUNGAN FISIK NYATA    │
+└───────────────────────────────┘
+     │                    ▲
+     │ (Fisika/Cahaya)    │ (Torsi/Gaya)
+     ▼                    │
+┌──────────────┐     ┌──────────────┐
+│ 1. SENSOR    │     │ 4. AKTUATOR  │
+│ (Mata/Telinga)│    │ (Otot/Motor) │
+└──────────────┘     └──────────────┘
+     │                    ▲
+     ▼                    │
+┌───────────────────────────────────┐
+│ 2. ESTIMASI STATUS & PEMETAAN     │
+│ 3. PERENCANAAN & KENDALI CERDAS   │
+│       (Komputasi Otak Robot)      │
+└───────────────────────────────────┘
+```
+
+1. **Sensor (*Sensing*)**: Sensor proprioseptif (enkoder roda, IMU, arus motor) dan sensor eksteroseptif (LiDAR, Kamera RGB-D, Radar, Sonar) mengubah fenomena fisika menjadi sinyal digital.
+2. **Estimasi Status & Persepsi (*Perception*)**: Mengolah data sensor berderau menjadi keyakinan status posisi robot $\mathbf{x} = [x, y, \theta]^T$ dan model lingkungan (Peta Okupansi / OctoMap).
+3. **Perencanaan & Pengambilan Keputusan (*Planning*)**: Menghitung trajektori trajektori optimal bebas rintangan dari titik awal ke tujuan.
+4. **Aktuator (*Actuation*)**: Mengubah tegangan listrik PWM dan arus motor menjadi torsi mekanis $\tau$, kecepatan putar $\omega$, dan gaya dorong $F$.
 
 ---
 
-## Apa Perbedaan Robot dengan Otomasi Biasa?
+## 2. Paradigma Siklus Sense-Plan-Act
 
-Bayangkan mesin cuci standar:
-- Memiliki motor penggerak, pewaktu (timer), dan tombol operasi.
-- Namun mesin cuci mengeksekusi siklus putaran yang kaku dan tetap sama, terlepas dari apakah pakaian sudah bersih, tersangkut, atau berlebih beban.
+Semua robot otonom mengeksekusi siklus umpan balik (*closed-loop feedback*) berkecepatan tinggi:
 
-Sekarang bayangkan **robot pembersih lantai otonom (vacuum AMR)**:
-- Robot mendeteksi rintangan dinamis secara seketika, memetakan ruangan, merencanakan rute penyisiran optimal, dan mampu bermanuver membebaskan diri jika terjebak.
-- Robot menyesuaikan tindakannya berdasarkan persepsi fisik waktu nyata.
+<SensePlanActExplorer />
 
 ---
 
-## Rujukan Video: Apa yang Mengkualifikasikan Sebuah Robot?
+## 3. Taksonomi Morfologi Robotika
 
-Profesor Kagan Tumer (Oregon State University) mendiskusikan batasan definisi robotika serta mengapa wujud fisik (*embodiment*) dan pengambilan keputusan otonom merupakan fondasi esensial sebuah robot.
+Berdasarkan lingkungan operasional dan derajat kebebasannya (*Degrees of Freedom / DOF*), robot diklasifikasikan ke dalam 5 famili utama:
+
+<RobotClassificationExplorer />
+
+```text
+┌─────────────────────────┬──────────────┬─────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Famili Robot            │ Ruang Kerja  │ Sensor Tipikal              │ Tantangan Utama                                        │
+├─────────────────────────┼──────────────┼─────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Wheeled Mobile (AMR) │ Bidang 2D    │ 2D LiDAR, Enkoder, Wheel IMU│ Selip roda, lokalisasi indoor, kendala non-holonomik   │
+│ 2. Serial Manipulator   │ Ruang 3D     │ Enkoder Sendi, Kamera Hand  │ Kinematika balik, singularitas Jacobian, torsi beban   │
+│ 3. Aerial Drone (UAV)   │ 3D Volumetrik│ IMU 1000Hz, Barometer, RGB-D│ Daya tahan baterai, aerodinamika cepat, batasan bobot  │
+│ 4. Marine (AUV / USV)   │ Akuatik / 3D │ Sonar Multibeam, DVL, IMU   │ Redaman air, ketiadaan GPS di bawah laut, turbulensi   │
+│ 5. Legged (Humanoid/Dog)│ Dinamis 3D   │ IMU, Sensor Torsi Kaki      │ Keseimbangan dinamis Zero Moment Point (ZMP), kontak   │
+└─────────────────────────┴──────────────┴─────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Video Pembelajaran Fondasi
 
 <VideoEmbed
   title="What is a robot?"
   provider="youtube"
   videoId="-nGlDsk1rS4"
   sourceUrl="https://www.youtube.com/watch?v=-nGlDsk1rS4"
+/>
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-intro-to-robotics"
+  question="Apa perbedaan paling mendasar antara mesin otomasi terprogram (seperti konveyor pabrik sederhana) dan robot otonom (seperti Autonomous Mobile Robot)?"
+  options={[
+    {
+      id: "A",
+      text: "Robot otonom memiliki simpal umpan balik tertutup (closed-loop) yang memproses persepsi lingkungan secara dinamis untuk mengubah keputusannya saat menghadapi ketidakpastian atau rintangan baru.",
+      isCorrect: true,
+      explanation: "Tepat! Sistem otomasi kaku mengeksekusi urutan tanpa memedulikan perubahan lingkungan, sementara robot otonom beradaptasi berdasarkan fusi sensor waktu nyata."
+    },
+    {
+      id: "B",
+      text: "Robot selalu terbuat dari logam titanium sedangkan otomasi dari plastik.",
+      isCorrect: false,
+      explanation: "Salah. Material fisik tidak menentukan tingkat kecerdasan atau otonomi suatu sistem."
+    },
+    {
+      id: "C",
+      text: "Robot otonom tidak membutuhkan daya listrik sama sekali.",
+      isCorrect: false,
+      explanation: "Salah. Semua robot elektromekanik membutuhkan sumber energi."
+    }
+  ]}
+  hint="Pikirkan tentang peran siklus Sense-Plan-Act dalam merespons perubahan kondisi nyata."
 />

@@ -1,72 +1,128 @@
 ---
 id: intro-to-robotics
-title: Introduction to Robotics & Autonomous Systems
+title: "Introduction to Autonomous Robotics & Classifications"
 slug: intro-to-robotics
-category: fundamentals
+domain: fundamentals
+level: 0
+tier: Foundations
 difficulty: beginner
 language: en
 interactive: true
-estimatedMinutes: 30
+estimatedMinutes: 35
 prerequisites: []
 references:
-  - ben-ari-elements-of-robotics
-  - herath-foundations-of-robotics
+  - "Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics. Springer Open."
+  - "Deepak Herath & David St-Onge (2022). Foundations of Robotics. Springer."
+  - "Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots. MIT Press."
 components:
-  - LessonOrientation
-  - VideoEmbed
   - SensePlanActExplorer
   - RobotClassificationExplorer
+  - VideoEmbed
   - ConceptCheck
-  - AcademicReferences
 ---
 
-# Introduction to Robotics & Autonomous Systems
+# Introduction to Autonomous Robotics & Classifications
 
-## What is Robotics?
+> "A robot is neither simply a computer on wheels nor an automatic mechanical gadget. A robot is an embodied physical intelligence that senses, reasons, and actively transforms the real world in a closed-loop."
 
-When you hear the word **robot**, you might imagine a humanoid, an industrial arm in an automotive plant, a warehouse automated guided vehicle, or an aerial drone.
-
-Robotics is an interdisciplinary field concerned with building machines that can **sense, compute, and act in the physical world**.
-
-A useful way to think about a robot is:
-
-> A robot is a physical machine that uses sensing, computation, and actuation to perform tasks in the physical world.
-
-The essential idea is that a robot is not simply a computer and not simply a mechanical device. It is a closed-loop system connecting the physical world, sensory perception, and algorithmic computation.
+**Robotics** is the interdisciplinary science bridging mechanical engineering, electrical engineering, computer science, mathematics, and artificial intelligence to create autonomous physical machines.
 
 ---
 
-## The Sense-Plan-Act Loop
+## 1. Cyber-Physical Systems Anatomy
 
-To operate autonomously in dynamic environments, a robot executes the continuous **Sense $\to$ Plan $\to$ Act** cycle:
+An autonomous robot operates across four foundational interconnected subsystems:
 
-1. **SENSE**: Perceive the environment using exteroceptive sensors (LiDAR, Cameras, Sonar) and proprioceptive sensors (encoders, IMU).
-2. **UNDERSTAND & ESTIMATE**: Fuse sensor data to estimate true state $\mathbf{x}_k = (x, y, \theta)$ and update occupancy grid maps.
-3. **PLAN**: Compute collision-free paths using graph search algorithms like A* or trajectory splines.
-4. **ACT**: Generate actuator commands (motor PWM voltage, steering servo angles) to drive wheels or limbs.
-5. **OBSERVE AGAIN**: Close the feedback loop at frequencies between 10 Hz to 100 Hz.
+```text
+┌───────────────────────────────┐
+│     PHYSICAL ENVIRONMENT      │
+└───────────────────────────────┘
+     │                    ▲
+     │ (Photons / Forces) │ (Torque / Velocity)
+     ▼                    │
+┌──────────────┐     ┌──────────────┐
+│ 1. SENSORS   │     │ 4. ACTUATORS │
+│ (Eyes / Ears)│     │(Motors/Limbs)│
+└──────────────┘     └──────────────┘
+     │                    ▲
+     ▼                    │
+┌───────────────────────────────────┐
+│ 2. STATE ESTIMATION & PERCEPTION  │
+│ 3. PLANNING & FEEDBACK CONTROL    │
+│      (Robotic Compute Core)       │
+└───────────────────────────────────┘
+```
+
+1. **Sensors (*Sensing*)**: Proprioceptive sensors (wheel encoders, IMU, motor current) and exteroceptive sensors (LiDAR, RGB-D cameras, radar, sonar) transduce physical phenomena into digital measurements.
+2. **State Estimation & Perception**: Filters noisy raw measurements into consistent spatial beliefs $\mathbf{x} = [x, y, \theta]^T$ and spatial representations (Occupancy Grids / OctoMaps).
+3. **Planning & Decision-Making**: Computes collision-free dynamically feasible paths from start configurations to goal targets.
+4. **Actuators (*Actuation*)**: Converts compute commands into mechanical torque $\tau$, rotational velocity $\omega$, and linear thrust $F$.
 
 ---
 
-## What Distinguishes a Robot From Simple Automation?
+## 2. The Sense-Plan-Act Feedback Paradigm
 
-Consider a standard washing machine:
-- It has motors, timers, and buttons.
-- But it blindly runs fixed pre-programmed cycles regardless of whether clothes are clean, tangled, or overloaded.
+Every autonomous robot continuously executes high-speed closed-loop cycles:
 
-Now consider an **autonomous vacuum robot**:
-- It observes obstacles, builds a map of the room, plans optimal coverage paths, and recovers when trapped.
-- It adapts its actions in response to real-time physical perception.
+<SensePlanActExplorer />
 
 ---
 
-## Video Reference: What Qualifies as a Robot?
+## 3. Robot Morphology Taxonomy
 
-Professor Kagan Tumer (Oregon State University) discusses the nuances of what qualifies as a robot and why embodiment and autonomous decision-making are core principles.
+Robots are classified into 5 primary physical embodiments based on their workspace topology and degrees of freedom (DOF):
+
+<RobotClassificationExplorer />
+
+```text
+┌─────────────────────────┬──────────────┬─────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Robot Morphology        │ Workspace    │ Core Sensor Suite           │ Primary Engineering Challenges                         │
+├─────────────────────────┼──────────────┼─────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Wheeled Mobile (AMR) │ 2D Plane     │ 2D LiDAR, Wheel Encoders    │ Wheel slippage, indoor localization, non-holonomy      │
+│ 2. Serial Manipulator   │ 3D Envelope  │ Joint Encoders, Hand Camera │ Inverse kinematics, Jacobian singularities, payload    │
+│ 3. Aerial Drone (UAV)   │ 3D Volumetric│ 1000Hz IMU, Barometer, RGB-D│ Flight endurance, rapid aerodynamics, payload limits   │
+│ 4. Marine (AUV / USV)   │ 3D Aquatic   │ Multibeam Sonar, DVL, IMU   │ Acoustic attenuation, absence of underwater GPS        │
+│ 5. Legged (Humanoid/Dog)│ Dynamic 3D   │ IMU, Foot Force/Torque      │ Zero Moment Point (ZMP) stability, contact physics     │
+└─────────────────────────┴──────────────┴─────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Foundational Video
 
 <VideoEmbed
   title="What is a robot?"
   provider="youtube"
   videoId="-nGlDsk1rS4"
   sourceUrl="https://www.youtube.com/watch?v=-nGlDsk1rS4"
+/>
+
+---
+
+## 5. Concept Verification
+
+<ConceptCheck
+  id="quiz-intro-to-robotics"
+  question="What fundamental characteristic distinguishes an autonomous robot from fixed industrial automation (such as a blind factory conveyor)?"
+  options={[
+    {
+      id: "A",
+      text: "An autonomous robot possesses a closed-loop perception-action feedback system that dynamically adapts its decisions when encountering environmental uncertainty, unexpected obstacles, or altered goals.",
+      isCorrect: true,
+      explanation: "Correct! Rigid automation blindly executes fixed sequences, while autonomous robots adapt continuously based on real-time sensor fusion."
+    },
+    {
+      id: "B",
+      text: "Robots are always constructed from titanium, whereas automation machines are built of wood.",
+      isCorrect: false,
+      explanation: "Incorrect. Physical construction materials do not define autonomous capability."
+    },
+    {
+      id: "C",
+      text: "Autonomous robots do not require electrical or battery power.",
+      isCorrect: false,
+      explanation: "Incorrect. All electro-mechanical robots require an energy source."
+    }
+  ]}
+  hint="Consider the role of the Sense-Plan-Act feedback loop when unexpected obstacles appear in the environment."
 />

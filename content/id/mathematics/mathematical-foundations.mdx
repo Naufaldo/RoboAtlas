@@ -1,8 +1,10 @@
 ---
 id: mathematical-foundations
-title: Fundamental Matematika & Geometri untuk Robotika
+title: "Fundamental Matematika & Geometri untuk Robotika"
 slug: mathematical-foundations
-category: mathematics
+domain: mathematics
+level: 1
+tier: Foundations
 difficulty: beginner
 language: id
 interactive: true
@@ -10,8 +12,9 @@ estimatedMinutes: 45
 prerequisites:
   - intro-to-robotics
 references:
-  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 2). Springer Open.
-  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 1). Springer.
+  - "Gilbert Strang (2016). Introduction to Linear Algebra (5th Edition). Wellesley-Cambridge Press."
+  - "Deepak Herath & David St-Onge (2022). Foundations of Robotics. Springer."
+  - "Sebastian Thrun et al. (2005). Probabilistic Robotics (Chapter 2 & 3). MIT Press."
 components:
   - CoordinateFrameExplorer
   - VectorVisualizer
@@ -21,83 +24,111 @@ components:
 
 # Fundamental Matematika & Geometri untuk Robotika
 
-> "Mengapa aljabar linier, trigonometri, dan geometri koordinat menjadi bahasa universal yang digunakan oleh setiap robot otonom di dunia?"
+> "Mengapa aljabar linier, kalkulus multivariat, dan teori probabilitas menjadi bahasa universal yang digunakan oleh setiap algoritma robot otonom di dunia?"
 
-Untuk dapat bernavigasi di dunia fisik, menggerakkan lengan mekanik, atau menjaga kestabilan terbang drone, robot harus merepresentasikan geometri ruang kontinu ke dalam angka-angka diskrit numerik.
-
----
-
-## 1. Vektor Posisi Fisik & Kerangka Kartesius
-
-Pada robotika planar 2D, posisi titik rintangan atau target relatif terhadap titik acuan $\{O\}$ dinyatakan melalui vektor kolom Euklides 2D:
-
-$$
-\mathbf{p} = \begin{bmatrix} x \\ y \end{bmatrix} \in \mathbb{R}^2
-$$
-
-### Magnitudo Vektor (Jarak Euklides $L_2$):
-Berdasarkan teorema Pythagoras:
-
-$$
-\|\mathbf{p}\| = \sqrt{x^2 + y^2}
-$$
-
-### Vektor Satuan Penunjuk Arah:
-$$
-\mathbf{\hat{u}} = \frac{\mathbf{p}}{\|\mathbf{p}\|} = \begin{bmatrix} \frac{x}{\sqrt{x^2 + y^2}} \\ \frac{y}{\sqrt{x^2 + y^2}} \end{bmatrix} = \begin{bmatrix} \cos\theta \\ \sin\theta \end{bmatrix}
-$$
+Untuk menavigasi dunia fisik, menggerakkan lengan manipulator multi-sendi, mengoreksi derau sensor, atau mengoptimalkan graf pose SLAM, robot harus merepresentasikan geometri ruang kontinu ke dalam operasi numerik yang terdefinisi secara presisi. Modul ini menyajikan 4 pilar matematika fundamental yang mendasari seluruh kurikulum RoboAtlas.
 
 ---
 
-## 2. Visualizer Vektor & Kerangka Koordinat Interaktif
+## 1. Ruang Vektor & Metrik Jarak Spasial ($\mathbb{R}^n$)
 
-Geser titik koordinat $(x, y)$ pada kanvas interaktif di bawah ini untuk melihat proyeksi trigonometri dan perhitungan Pythagoras secara *real-time*:
+Posisi fisik titik rintangan atau target robot pada bidang 2D atau ruang 3D dinyatakan sebagai vektor kolom:
+
+$$
+\mathbf{p} = \begin{bmatrix} x \\ y \\ z \end{bmatrix} \in \mathbb{R}^3, \quad \mathbf{\hat{u}} = \frac{\mathbf{p}}{\|\mathbf{p}\|} \quad (\text{Vektor Satuan Arah})
+$$
+
+```text
+┌───────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Jenis Metrik Norma Jarak  │ Formula Matematis                        │ Peran Tipikal dalam Robotika                           │
+├───────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ Norma L2 (Euclidean)      │ ||p||_2 = sqrt(x^2 + y^2 + z^2)          │ Jarak garis lurus sensor LiDAR, kamera, raycasting     │
+│ Norma L1 (Manhattan)      │ ||p||_1 = |x| + |y| + |z|                │ Heuristik pencarian graf grid A* (gerak 4-arah)        │
+│ Norma L-Infinity (Cheb)   │ ||p||_inf = max(|x|, |y|, |z|)           │ Heuristik pergerakan grid 8-arah (diagonal sama cepat) │
+│ Jarak Mahalanobis         │ D_M = sqrt((p - mu)^T Sigma^-1 (p - mu)) │ Uji validasi asosiasi data pengamatan sensor EKF/MCL   │
+└───────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+### Visualizer Vektor Interaktif:
+Geser koordinat $(x, y)$ pada kanvas di bawah ini untuk melihat komponen trigonometri vektor satuan dan norma Pythagoras secara langsung:
 
 <VectorVisualizer />
 
 ---
 
-## 3. Perkalian Titik (Dot Product) & Penyelarasan Arah
+## 2. Aljabar Matriks, Grup Rotasi $SO(n)$, & SVD
 
-Ketika robot melacak jalur lintasan atau menghitung proyeksi sensor jarak, sistem menghitung **perkalian titik (*dot product*)** antara vektor kecepatan $\mathbf{v}$ dan vektor target $\mathbf{d}$:
+Operasi matriks memetakan vektor antar kerangka koordinat:
+
+1. **Perkalian Matriks & Sifat Transpose**: $(\mathbf{A}\mathbf{B})^T = \mathbf{B}^T \mathbf{A}^T$ dan $(\mathbf{A}\mathbf{B})^{-1} = \mathbf{B}^{-1} \mathbf{A}^{-1}$.
+2. **Matriks Rotasi Khusus $SO(2)$ & $SO(3)$**:
+   $$\mathbf{R}^T \mathbf{R} = \mathbf{I}, \quad \det(\mathbf{R}) = +1$$
+   *(Panjang vektor dan sudut antar vektor dipertahankan secara kaku tanpa distorsi).*
+3. **Dekomposisi Nilai Singular (SVD)**:
+   $$\mathbf{A} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^T$$
+   Digunakan secara fundamental pada algoritma *Iterative Closest Point (ICP)* untuk menghitung rotasi optimal dan pada *Pseudoinverse Moore-Penrose* $\mathbf{J}^+ = \mathbf{V} \mathbf{\Sigma}^+ \mathbf{U}^T$ untuk kontrol kinematika balik lengan robot berlebih (*redundant manipulator*).
+
+---
+
+## 3. Kalkulus Multivariat: Gradien, Jacobian, & Hessian
+
+Sebagian besar model kinematika robot dan sensor bersifat non-linear ($\mathbf{y} = \mathbf{f}(\mathbf{x})$). Kalkulus multivariat melinearisasikan sistem melalui ekspansi deret Taylor:
 
 $$
-\mathbf{a} \cdot \mathbf{b} = a_x b_x + a_y b_y = \|\mathbf{a}\| \|\mathbf{b}\| \cos\theta
+\mathbf{f}(\mathbf{x}) \approx \mathbf{f}(\mathbf{x}_0) + \mathbf{J}(\mathbf{x}_0)(\mathbf{x} - \mathbf{x}_0) + \frac{1}{2}(\mathbf{x} - \mathbf{x}_0)^T \mathbf{H}(\mathbf{x}_0)(\mathbf{x} - \mathbf{x}_0)
 $$
 
-### Interpretasi Geometris:
-1. **$\mathbf{a} \cdot \mathbf{b} > 0$** ($\theta < 90^\circ$): Robot bergerak mendekat ke arah target.
-2. **$\mathbf{a} \cdot \mathbf{b} = 0$** ($\theta = 90^\circ$): Posisi tepat tegak lurus (*ortogonal*).
-3. **$\mathbf{a} \cdot \mathbf{b} < 0$** ($\theta > 90^\circ$): Robot bergerak menjauh dari arah target.
+1. **Vektor Gradien ($\nabla f$)**: Arah kenaikan fungsi tercepat, digunakan dalam optimasi *Gradient Descent* dan medan potensial buatan (*Artificial Potential Fields*).
+2. **Matriks Jacobian ($\mathbf{J} = \frac{\partial \mathbf{f}}{\partial \mathbf{x}}$)**: Matriks turunan parsial orde pertama yang menghubungkan kecepatan sendi robot dengan kecepatan ujung efektor ($\mathbf{\dot{x}} = \mathbf{J}\mathbf{\dot{q}}$) dan melinearisasikan filter EKF ($\mathbf{F}_t, \mathbf{H}_t$).
+3. **Matriks Hessian ($\mathbf{H} = \nabla^2 f$)**: Matriks turunan kedua yang mengukur kelengkungan permukaan galat untuk algoritma optimasi graf SLAM (*Gauss-Newton* dan *Levenberg-Marquardt*).
+
+---
+
+## 4. Teori Probabilitas & Propagasi Kovariansi
+
+Karena sensor dan motor nyata selalu memiliki derau acak, robot merepresentasikan status spasialnya sebagai variabel acak Gaussian multivariat $\mathbf{x} \sim \mathcal{N}(\boldsymbol{\mu}, \mathbf{\Sigma})$:
+
+$$
+p(\mathbf{x}) = \frac{1}{(2\pi)^{n/2} |\mathbf{\Sigma}|^{1/2}} \exp\left( -\frac{1}{2} (\mathbf{x} - \boldsymbol{\mu})^T \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right)
+$$
+
+### Hukum Propagasi Kovariansi Linier:
+Jika variabel acak $\mathbf{x}$ dengan kovariansi $\mathbf{\Sigma}_x$ ditransformasikan secara linier menjadi $\mathbf{y} = \mathbf{A}\mathbf{x} + \mathbf{b}$, maka kovariansi baru $\mathbf{\Sigma}_y$ bernilai:
+
+$$
+\mathbf{\Sigma}_y = \mathbf{A} \mathbf{\Sigma}_x \mathbf{A}^T
+$$
+
+*(Formula inilah yang menjadi dasar perhitungan ketidakpastian gerak pada Extended Kalman Filter dan FastSLAM).*
 
 <DotProductExplorer />
 
 ---
 
-## 4. Uji Pemahaman Konsep
+## 5. Uji Pemahaman Konsep
 
 <ConceptCheck
   id="quiz-math-foundations"
-  question="Jika vektor a = [3, 4] dan vektor b = [4, -3], berapakah hasil perkalian titik (dot product) a . b?"
+  question="Jika sebuah robot bergerak dengan model transformasi linier y = A * x + b, dan ketidakpastian awal adalah matriks kovariansi Sigma_x, bagaimana rumus perambatan kovariansi hasil akhirnya?"
   options={[
     {
       id: "A",
-      text: "0 (Kedua vektor saling tegak lurus / ortogonal).",
+      text: "Sigma_y = A * Sigma_x * A^T",
       isCorrect: true,
-      explanation: "Tepat! a . b = (3 * 4) + (4 * -3) = 12 - 12 = 0."
+      explanation: "Tepat! Konstanta offset b tidak menambah kovariansi, dan faktor linier A dikalikan dari kiri dan kanannya dalam bentuk transpos (A * Sigma_x * A^T)."
     },
     {
       id: "B",
-      text: "25",
+      text: "Sigma_y = A * Sigma_x + b",
       isCorrect: false,
-      explanation: "Salah."
+      explanation: "Salah. Kovariansi adalah operator kuadratik orde kedua; konstanta translasi b bernilai nol pada perhitungan kovariansi."
     },
     {
       id: "C",
-      text: "7",
+      text: "Sigma_y = Sigma_x / A",
       isCorrect: false,
-      explanation: "Salah."
+      explanation: "Salah. Pembagian matriks tidak terdefinisi secara langsung dalam aljabar linier."
     }
   ]}
-  hint="Hitung a_x * b_x + a_y * b_y."
+  hint="Ingat sifat kovariansi: Cov(Ax) = A * Cov(x) * A^T."
 />

@@ -1,8 +1,10 @@
 ---
 id: mathematical-foundations
-title: Mathematical & Geometric Foundations for Robotics
+title: "Mathematical & Geometric Foundations for Robotics"
 slug: mathematical-foundations
-category: mathematics
+domain: mathematics
+level: 1
+tier: Foundations
 difficulty: beginner
 language: en
 interactive: true
@@ -10,8 +12,9 @@ estimatedMinutes: 45
 prerequisites:
   - intro-to-robotics
 references:
-  - Marco Ben-Ari & Francesco Mondada (2018). Elements of Robotics (Chapter 2). Springer Open.
-  - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 1). Springer.
+  - "Gilbert Strang (2016). Introduction to Linear Algebra (5th Edition). Wellesley-Cambridge Press."
+  - "Deepak Herath & David St-Onge (2022). Foundations of Robotics. Springer."
+  - "Sebastian Thrun et al. (2005). Probabilistic Robotics (Chapter 2 & 3). MIT Press."
 components:
   - CoordinateFrameExplorer
   - VectorVisualizer
@@ -21,83 +24,111 @@ components:
 
 # Mathematical & Geometric Foundations for Robotics
 
-> "Why is linear algebra, trigonometry, and coordinate geometry the universal language spoken by every autonomous robot?"
+> "Why do linear algebra, multivariate calculus, and probability theory constitute the universal language powering every autonomous robot algorithm worldwide?"
 
-To navigate physical space, manipulate tools, or stabilize flight, every autonomous robot must represent continuous geometry through discrete numbers.
-
----
-
-## 1. Physical Position Vectors & Cartesian Frames
-
-In planar 2D robotics, the position of a robot landmark or sensor detection relative to origin $\{O\}$ is represented by a 2D Euclidean column vector:
-
-$$
-\mathbf{p} = \begin{bmatrix} x \\ y \end{bmatrix} \in \mathbb{R}^2
-$$
-
-### Vector Magnitude (Euclidean $L_2$ Distance):
-By the Pythagorean theorem:
-
-$$
-\|\mathbf{p}\| = \sqrt{x^2 + y^2}
-$$
-
-### Unit Direction Vector:
-$$
-\mathbf{\hat{u}} = \frac{\mathbf{p}}{\|\mathbf{p}\|} = \begin{bmatrix} \frac{x}{\sqrt{x^2 + y^2}} \\ \frac{y}{\sqrt{x^2 + y^2}} \end{bmatrix} = \begin{bmatrix} \cos\theta \\ \sin\theta \end{bmatrix}
-$$
+To navigate continuous real-world environments, actuate multi-link articulated robot arms, filter sensor noise, or optimize non-linear SLAM factor graphs, a robot must mathematically map spatial geometry into precise numerical algorithms. This module introduces the four indispensable mathematical pillars powering the entire RoboAtlas curriculum.
 
 ---
 
-## 2. Interactive Coordinate Frame & Vector Visualizer
+## 1. Vector Spaces & Spatial Distance Metrics ($\mathbb{R}^n$)
 
-Drag the vector point $(x, y)$ on the interactive grid below to observe real-time vector projections and Pythagorean calculations:
+The physical position of an obstacle, goal landmark, or robot end-effector is expressed as a column vector:
+
+$$
+\mathbf{p} = \begin{bmatrix} x \\ y \\ z \end{bmatrix} \in \mathbb{R}^3, \quad \mathbf{\hat{u}} = \frac{\mathbf{p}}{\|\mathbf{p}\|} \quad (\text{Unit Direction Vector})
+$$
+
+```text
+┌───────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Metric Norm Definition    │ Mathematical Formula                     │ Robotics Application Role                              │
+├───────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ L2 Euclidean Norm         │ ||p||_2 = sqrt(x^2 + y^2 + z^2)          │ Straight-line LiDAR range, camera raycasting           │
+│ L1 Manhattan Norm         │ ||p||_1 = |x| + |y| + |z|                │ 4-connected grid A* graph search heuristic             │
+│ L-Infinity Chebyshev Norm │ ||p||_inf = max(|x|, |y|, |z|)           │ 8-connected grid motion with uniform diagonal cost     │
+│ Mahalanobis Distance      │ D_M = sqrt((p - mu)^T Sigma^-1 (p - mu)) │ Statistical outlier rejection in EKF/MCL data assoc.   │
+└───────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+### Interactive Vector Visualizer:
+Drag the coordinate handles on the canvas below to explore real-time Euclidean Pythagoras norms, Cartesian projections, and unit directional angles:
 
 <VectorVisualizer />
 
 ---
 
-## 3. The Dot Product & Directional Alignment
+## 2. Matrix Algebra, The Special Orthogonal Group $SO(n)$, & SVD
 
-When a robot tracks a path or computes sensor projections, it calculates the **inner dot product** between velocity vector $\mathbf{v}$ and target path vector $\mathbf{d}$:
+Matrices perform spatial linear transformations across reference frames:
+
+1. **Matrix Multiplication & Transposition**: $(\mathbf{A}\mathbf{B})^T = \mathbf{B}^T \mathbf{A}^T$ and $(\mathbf{A}\mathbf{B})^{-1} = \mathbf{B}^{-1} \mathbf{A}^{-1}$.
+2. **Special Orthogonal Rotation Groups $SO(2)$ & $SO(3)$**:
+   $$\mathbf{R}^T \mathbf{R} = \mathbf{I}, \quad \det(\mathbf{R}) = +1$$
+   *(Preserves Euclidean lengths and mutual angular relationships rigidly without shear or volume distortion).*
+3. **Singular Value Decomposition (SVD)**:
+   $$\mathbf{A} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^T$$
+   Used fundamentally in closed-form *Iterative Closest Point (ICP)* rotation alignment and the *Moore-Penrose Pseudoinverse* $\mathbf{J}^+ = \mathbf{V} \mathbf{\Sigma}^+ \mathbf{U}^T$ for redundant robot arm inverse kinematics.
+
+---
+
+## 3. Multivariate Calculus: Gradients, Jacobians, & Hessians
+
+Physical robot forward kinematics and sensor observation models are inherently non-linear ($\mathbf{y} = \mathbf{f}(\mathbf{x})$). Multivariate calculus enables analytical linear approximation via Taylor series expansion:
 
 $$
-\mathbf{a} \cdot \mathbf{b} = a_x b_x + a_y b_y = \|\mathbf{a}\| \|\mathbf{b}\| \cos\theta
+\mathbf{f}(\mathbf{x}) \approx \mathbf{f}(\mathbf{x}_0) + \mathbf{J}(\mathbf{x}_0)(\mathbf{x} - \mathbf{x}_0) + \frac{1}{2}(\mathbf{x} - \mathbf{x}_0)^T \mathbf{H}(\mathbf{x}_0)(\mathbf{x} - \mathbf{x}_0)
 $$
 
-### Geometric Interpretations:
-1. **$\mathbf{a} \cdot \mathbf{b} > 0$** ($\theta < 90^\circ$): Moving towards target direction.
-2. **$\mathbf{a} \cdot \mathbf{b} = 0$** ($\theta = 90^\circ$): Strictly orthogonal / perpendicular.
-3. **$\mathbf{a} \cdot \mathbf{b} < 0$** ($\theta > 90^\circ$): Moving away from target direction.
+1. **Gradient Vector ($\nabla f$)**: The vector pointing in the direction of greatest rate of increase; powers Gradient Descent and Artificial Potential Field obstacle avoidance.
+2. **Jacobian Matrix ($\mathbf{J} = \frac{\partial \mathbf{f}}{\partial \mathbf{x}}$)**: The first-order partial derivative matrix mapping joint velocities to end-effector velocities ($\mathbf{\dot{x}} = \mathbf{J}\mathbf{\dot{q}}$) and linearizing EKF motion/sensor models ($\mathbf{F}_t, \mathbf{H}_t$).
+3. **Hessian Matrix ($\mathbf{H} = \nabla^2 f$)**: The second-order curvature matrix required by non-linear least squares optimizers in Pose Graph SLAM (*Gauss-Newton* and *Levenberg-Marquardt*).
+
+---
+
+## 4. Multivariate Probability & Covariance Propagation
+
+Because physical actuators and sensors are subject to random noise, robot states are modeled as multivariate Gaussian random vectors $\mathbf{x} \sim \mathcal{N}(\boldsymbol{\mu}, \mathbf{\Sigma})$:
+
+$$
+p(\mathbf{x}) = \frac{1}{(2\pi)^{n/2} |\mathbf{\Sigma}|^{1/2}} \exp\left( -\frac{1}{2} (\mathbf{x} - \boldsymbol{\mu})^T \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right)
+$$
+
+### The Law of Linear Covariance Propagation:
+If a random vector $\mathbf{x}$ with covariance matrix $\mathbf{\Sigma}_x$ undergoes an affine linear transformation $\mathbf{y} = \mathbf{A}\mathbf{x} + \mathbf{b}$, its output covariance $\mathbf{\Sigma}_y$ is:
+
+$$
+\mathbf{\Sigma}_y = \mathbf{A} \mathbf{\Sigma}_x \mathbf{A}^T
+$$
+
+*(This fundamental law governs motion uncertainty expansion in Extended Kalman Filtering and FastSLAM).*
 
 <DotProductExplorer />
 
 ---
 
-## 4. Concept Check
+## 5. Concept Verification
 
 <ConceptCheck
   id="quiz-math-foundations"
-  question="If vector a = [3, 4] and vector b = [4, -3], what is their dot product a . b?"
+  question="If a robot state vector x with covariance matrix Sigma_x undergoes an affine linear transformation y = A * x + b, what is the exact formula for the resulting covariance matrix Sigma_y?"
   options={[
     {
       id: "A",
-      text: "0 (They are mutually perpendicular / orthogonal).",
+      text: "Sigma_y = A * Sigma_x * A^T",
       isCorrect: true,
-      explanation: "Exact! a . b = (3 * 4) + (4 * -3) = 12 - 12 = 0."
+      explanation: "Correct! The constant displacement vector b contributes zero covariance variance, and linear matrix A pre- and post-multiplies the covariance as A * Sigma_x * A^T."
     },
     {
       id: "B",
-      text: "25",
+      text: "Sigma_y = A * Sigma_x + b",
       isCorrect: false,
-      explanation: "Incorrect."
+      explanation: "Incorrect. Covariance is a second-order quadratic operator; the constant offset b vanishes."
     },
     {
       id: "C",
-      text: "7",
+      text: "Sigma_y = Sigma_x / A",
       isCorrect: false,
-      explanation: "Incorrect."
+      explanation: "Incorrect. Matrix division is undefined in linear algebra."
     }
   ]}
-  hint="Calculate a_x * b_x + a_y * b_y."
+  hint="Recall the basic covariance operator rule: Cov(Ax) = A * Cov(x) * A^T."
 />
