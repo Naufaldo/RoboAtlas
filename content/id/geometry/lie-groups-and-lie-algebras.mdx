@@ -1,0 +1,112 @@
+---
+id: lie-groups-and-lie-algebras
+title: "Grup Lie Matriks SO(3)/SE(3) & Aljabar Lie so(3)/se(3)"
+slug: lie-groups-and-lie-algebras
+domain: geometry
+level: 2
+tier: Foundations
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-rotation-matrices
+  - 3d-geometry
+references:
+  - "Joan Solà, Jeremie Deray, Dinesh Atchuthan (2018). A Micro Lie Theory for State Estimation in Robotics. arXiv:1812.01537."
+  - "Timothy D. Barfoot (2017). State Estimation for Robotics. Cambridge University Press."
+components:
+  - LieGroupAlgebraSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Grup Lie Matriks SO(3)/SE(3) & Aljabar Lie so(3)/se(3)
+
+> "Mengapa representasi sudut Euler menderita gimbal lock, matriks rotasi $3 \times 3$ berlebih 9-parameter dengan 6 kendala ortogonalitas, dan bagaimana Teori Grup Lie menyelesaikan optimasi kalkulus spasial tanpa singularitas?"
+
+Dalam robotika tingkat lanjut (Visual-Inertial Odometry, SLAM Graf Faktor, dan Kendali Trajektori Manipulator), rotasi spasial $SO(3)$ dan transformasi rigid-body $SE(3)$ tidak membentuk ruang vektor linear Euklides biasa, melainkan **Manifold Diferensiabel (Grup Lie)**.
+
+---
+
+## 1. Grup Lie $SO(3)$ & Aljabar Lie Ruang Singgung $\mathfrak{so}(3)$
+
+Grup ortogonal khusus $SO(3)$ didefinisikan sebagai:
+
+$$
+SO(3) = \{ \mathbf{R} \in \mathbb{R}^{3 \times 3} \mid \mathbf{R}^T \mathbf{R} = \mathbf{I}, \, \det(\mathbf{R}) = +1 \}
+$$
+
+Ruang singgung (*tangent space*) di sekitar elemen identitas $\mathbf{I}$ disebut **Aljabar Lie $\mathfrak{so}(3)$**, yang beranggotakan matriks *skew-symmetric* $3 \times 3$:
+
+$$
+[\boldsymbol{\omega}]_\times = \begin{bmatrix} 0 & -\omega_3 & \omega_2 \\ \omega_3 & 0 & -\omega_1 \\ -\omega_2 & \omega_1 & 0 \end{bmatrix} \in \mathfrak{so}(3), \quad \boldsymbol{\omega} \in \mathbb{R}^3
+$$
+
+---
+
+## 2. Peta Eksponensial Rodrigues & Logaritma Matriks
+
+Hubungan antara ruang singgung $\mathfrak{so}(3)$ dan manifold $SO(3)$ dihubungkan melalui **Peta Eksponensial**:
+
+$$
+\mathbf{R} = \exp([\boldsymbol{\omega}]_\times) = \mathbf{I} + \frac{\sin\theta}{\theta} [\boldsymbol{\omega}]_\times + \frac{1 - \cos\theta}{\theta^2} [\boldsymbol{\omega}]_\times^2, \quad \theta = \|\boldsymbol{\omega}\|
+$$
+
+### Peta Logaritma ($\log: SO(3) \to \mathfrak{so}(3)$):
+
+$$
+\theta = \arccos\left(\frac{\text{tr}(\mathbf{R}) - 1}{2}\right), \quad [\boldsymbol{\omega}]_\times = \frac{\theta}{2\sin\theta}(\mathbf{R} - \mathbf{R}^T)
+$$
+
+---
+
+## 3. Perturbasi Manifold & Operasi "Plus/Minus" ($\boxplus / \boxminus$)
+
+Karena operasi penjumlahan matriks $\mathbf{R}_1 + \mathbf{R}_2 \notin SO(3)$, optimasi kalkulus pada manifold menggunakan operator perturbasi geodetik:
+
+$$
+\mathbf{R} \boxplus \boldsymbol{\delta} = \mathbf{R} \exp([\boldsymbol{\delta}]_\times) \in SO(3)
+$$
+
+$$
+\mathbf{R}_1 \boxminus \mathbf{R}_2 = \log(\mathbf{R}_2^T \mathbf{R}_1)^\vee \in \mathbb{R}^3
+$$
+
+---
+
+## 4. Simulator Interaktif: Peta Eksponensial Ruang Singgung $\mathfrak{so}(3)$
+
+Ubah vektor putaran $\boldsymbol{\omega}$ pada ruang singgung dan amati aliran geodetik yang memetakan vektor ke rotasi rigid 3D pada manifold $SO(3)$:
+
+<LieGroupAlgebraSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-lie-groups-and-lie-algebras"
+  question="Mengapa estimasi status SLAM modern (seperti GTSAM, ORB-SLAM, dan FAST-LIO) melakukan optimasi galat pada Aljabar Lie ruang singgung dan bukan langsung pada matriks rotasi R?"
+  options={[
+    {
+      id: "A",
+      text: "Karena Aljabar Lie adalah ruang vektor linear R^3 tanpa kendala, sehingga turunan parsial dan optimasi Gauss-Newton dapat dijalankan bebas tanpa merusak sifat ortogonalitas R^T R = I dan bebas dari singularitas gimbal lock.",
+      isCorrect: true,
+      explanation: "Tepat! Mengoptimasi vektor delta di ruang singgung R^3 lalu memetakannya kembali dengan exp(delta) menjamin hasil akhir selalu berupa matriks rotasi SO(3) yang valid."
+    },
+    {
+      id: "B",
+      text: "Karena matriks rotasi 3x3 tidak bisa dikalikan dengan angka biasa.",
+      isCorrect: false,
+      explanation: "Salah. Matriks bisa dikalikan skalar, namun penjumlahannya tidak menghasilkan matriks rotasi yang valid."
+    },
+    {
+      id: "C",
+      text: "Karena Aljabar Lie hanya bekerja pada bilangan bulat.",
+      isCorrect: false,
+      explanation: "Salah. Aljabar Lie adalah ruang vektor kontinu bernilai riil R^3."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi jika Anda menjumlahkan dua matriks rotasi R_1 + R_2: apakah hasilnya masih memiliki determinan +1 dan R^T R = I?"
+/>

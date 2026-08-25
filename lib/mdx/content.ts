@@ -35,6 +35,7 @@ const LESSON_INDEX: Record<string, string> = {
   'en/mathematics/dot-product-and-projection': 'en/mathematics/dot-product-and-projection.mdx',
   'en/mathematics/probability-for-robotics': 'en/mathematics/probability-for-robotics.mdx',
   'en/geometry/2d-geometry': 'en/geometry/2d-geometry.mdx',
+  'en/geometry/lie-groups-and-lie-algebras': 'en/geometry/lie-groups-and-lie-algebras.mdx',
   'en/geometry/3d-geometry': 'en/geometry/3d-geometry.mdx',
   'en/geometry/2d-rotation-matrices': 'en/geometry/2d-rotation-matrices.mdx',
   'en/geometry/coordinate-frames-and-transforms': 'en/geometry/coordinate-frames-and-transforms.mdx',
@@ -79,6 +80,10 @@ const LESSON_INDEX: Record<string, string> = {
   'en/advanced/fastslam-1': 'en/advanced/fastslam-1.mdx',
   'en/advanced/2d-lidar-slam': 'en/advanced/2d-lidar-slam.mdx',
   'en/advanced/3d-lidar-and-vslam': 'en/advanced/3d-lidar-and-vslam.mdx',
+  'en/advanced/factor-graph-optimization': 'en/advanced/factor-graph-optimization.mdx',
+  'en/advanced/3d-gaussian-splatting-slam': 'en/advanced/3d-gaussian-splatting-slam.mdx',
+  'en/advanced/sim-to-real-and-domain-randomization': 'en/advanced/sim-to-real-and-domain-randomization.mdx',
+  'en/advanced/vla-and-diffusion-policies': 'en/advanced/vla-and-diffusion-policies.mdx',
   'en/advanced/laplacian-consensus': 'en/advanced/laplacian-consensus.mdx',
 
   // Indonesian Lessons
@@ -91,6 +96,7 @@ const LESSON_INDEX: Record<string, string> = {
   'id/mathematics/dot-product-and-projection': 'id/mathematics/dot-product-and-projection.mdx',
   'id/mathematics/probability-for-robotics': 'id/mathematics/probability-for-robotics.mdx',
   'id/geometry/2d-geometry': 'id/geometry/2d-geometry.mdx',
+  'id/geometry/lie-groups-and-lie-algebras': 'id/geometry/lie-groups-and-lie-algebras.mdx',
   'id/geometry/3d-geometry': 'id/geometry/3d-geometry.mdx',
   'id/geometry/2d-rotation-matrices': 'id/geometry/2d-rotation-matrices.mdx',
   'id/geometry/coordinate-frames-and-transforms': 'id/geometry/coordinate-frames-and-transforms.mdx',
@@ -135,6 +141,10 @@ const LESSON_INDEX: Record<string, string> = {
   'id/advanced/fastslam-1': 'id/advanced/fastslam-1.mdx',
   'id/advanced/2d-lidar-slam': 'id/advanced/2d-lidar-slam.mdx',
   'id/advanced/3d-lidar-and-vslam': 'id/advanced/3d-lidar-and-vslam.mdx',
+  'id/advanced/factor-graph-optimization': 'id/advanced/factor-graph-optimization.mdx',
+  'id/advanced/3d-gaussian-splatting-slam': 'id/advanced/3d-gaussian-splatting-slam.mdx',
+  'id/advanced/sim-to-real-and-domain-randomization': 'id/advanced/sim-to-real-and-domain-randomization.mdx',
+  'id/advanced/vla-and-diffusion-policies': 'id/advanced/vla-and-diffusion-policies.mdx',
   'id/advanced/laplacian-consensus': 'id/advanced/laplacian-consensus.mdx',
 };
 

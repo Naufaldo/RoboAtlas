@@ -1,0 +1,113 @@
+---
+id: factor-graph-optimization
+title: "Optimasi Graf Faktor & Non-Linear Least Squares untuk SLAM"
+slug: factor-graph-optimization
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - slam-fundamentals
+  - 2d-lidar-slam
+  - lie-groups-and-lie-algebras
+references:
+  - "Frank Dellaert & Michael Kaess (2017). Factor Graphs for Robot Perception. Foundations and Trends in Robotics."
+  - "Rainer Kümmerle et al. (2011). g2o: A General Framework for Graph Optimization. IEEE ICRA."
+components:
+  - FactorGraphOptimizerSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Optimasi Graf Faktor & Non-Linear Least Squares untuk SLAM
+
+> "Mengapa filter EKF-SLAM menderita kompleksitas kuadratik $O(N^2)$ dan inkonsistensi linearisasi permanen, sementara metode smoothing berbasis Graf Faktor mampu mengoptimasi ribuan pose robot secara efisien dalam hitungan milidetik?"
+
+Dalam SLAM modern (seperti GTSAM, g2o, dan Ceres Solver), masalah lokalisasi dan pemetaan serentak dirumuskan sebagai **Graf Bipartit Faktor (*Factor Graph*)**, yang memodelkan distribusi probabilitas gabungan maksimum *a posteriori* (MAP) melalui optimasi kuadrat terkecil non-linear (*Non-Linear Least Squares*).
+
+---
+
+## 1. Topologi Graf Faktor & Estimasi Maximum A Posteriori (MAP)
+
+Graf faktor terdiri atas dua jenis simpul:
+1. **Simpul Variabel ($\Theta = \{ \mathbf{x}_1, \dots, \mathbf{x}_N, \mathbf{l}_1, \dots, \mathbf{l}_M \}$)**: Pose robot dan posisi landmark yang diestimasi.
+2. **Simpul Faktor ($\phi_k(\Theta_k)$)**: Peluang pengukuran sensor (faktor prior, odometri, dan pengamatan landmark).
+
+$$
+P(\Theta \mid Z) \propto \prod_{k} \phi_k(\Theta_k) = \prod_{k} \exp\left( -\frac{1}{2} \|\mathbf{e}_k(\Theta_k)\|_{\mathbf{\Sigma}_k}^2 \right)
+$$
+
+### Fungsi Objektif Kuadrat Terkecil Non-Linear:
+
+$$
+\Theta^* = \arg\min_{\Theta} \sum_{k} \mathbf{e}_k(\Theta_k)^T \mathbf{\Omega}_k \mathbf{e}_k(\Theta_k), \quad \mathbf{\Omega}_k = \mathbf{\Sigma}_k^{-1} \, (\text{Matriks Informasi})
+$$
+
+---
+
+## 2. Iterasi Gauss-Newton & Persamaan Normal Tersebar (*Sparse Normal Equations*)
+
+Pada setiap langkah iterasi, vektor galat dilinearisasikan menggunakan matriks Jacobian $\mathbf{J}_k = \frac{\partial \mathbf{e}_k}{\partial \Theta}$:
+
+$$
+\mathbf{H} \Delta \Theta = -\mathbf{b}
+$$
+
+Di mana:
+
+$$
+\mathbf{H} = \sum_{k} \mathbf{J}_k^T \mathbf{\Omega}_k \mathbf{J}_k \quad (\text{Matriks Informasi Gabungan Tersebar / Sparse Hessian})
+$$
+
+$$
+\mathbf{b} = \sum_{k} \mathbf{J}_k^T \mathbf{\Omega}_k \mathbf{e}_k
+$$
+
+### Pembaruan Retraksi Manifold Lie:
+
+$$
+\Theta \leftarrow \Theta \boxplus \Delta \Theta
+$$
+
+Karena robot hanya berinteraksi dengan rintangan dan simpul waktu terdekat, matriks $\mathbf{H}$ memiliki sifat **sangat tersebar (*extremely sparse*)**, sehingga dapat diselesaikan dalam waktu $O(N)$ menggunakan faktorisasi Cholesky / QR terurut (*iSAM2 bayes tree*).
+
+---
+
+## 3. Simulator Interaktif: Optimasi Graf Faktor SLAM
+
+Amati simpul-simpul pose robot yang mengalami drift odometri ditarik kembali secara optimal oleh kendala *loop closure* dan faktor landmark:
+
+<FactorGraphOptimizerSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-factor-graph-optimization"
+  question="Apa keunggulan utama solver SLAM berbasis Graf Faktor (seperti iSAM2 / GTSAM) dibandingkan Extended Kalman Filter (EKF) tradisional?"
+  options={[
+    {
+      id: "A",
+      text: "Graf faktor mempertahankan matriks informasi yang sangat tersebar (sparse) dan memungkinkan linearisasi ulang (relinerization) seluruh riwayat lintasan pose di sekitar estimasi terbaik saat terjadi loop closure, menghindari akumulasi galat linearisasi permanen.",
+      isCorrect: true,
+      explanation: "Tepat! EKF melinearisasi status hanya satu kali dan tidak bisa mengoreksi kesalahan masa lalu, sedangkan graf faktor menyimpan seluruh kendala dan mengoptimasi ulang secara fleksibel."
+    },
+    {
+      id: "B",
+      text: "Graf faktor tidak membutuhkan komputasi matriks sama sekali.",
+      isCorrect: false,
+      explanation: "Salah. Graf faktor mengandalkan aljabar matriks tersebar (sparse matrix factorizations)."
+    },
+    {
+      id: "C",
+      text: "Graf faktor hanya bisa berjalan di lingkungan 1 dimensi.",
+      isCorrect: false,
+      explanation: "Salah. Graf faktor bekerja pada ruang SE(2), SE(3), dan manifold non-Euclidean berdimensi tinggi."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi jika EKF salah mengestimasi pose di tikungan tajam: apakah EKF bisa memperbaiki pose lama setelah menemukan loop closure?"
+/>

@@ -1,0 +1,96 @@
+---
+id: sim-to-real-and-domain-randomization
+title: "Sim-to-Real Transfer, Randomisasi Domain & Privileged RL"
+slug: sim-to-real-and-domain-randomization
+domain: advanced
+level: 10
+tier: Advanced Embodiments
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - legged-robotics-fundamentals
+references:
+  - "Josh Tobin et al. (2017). Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World. IEEE IROS."
+  - "Jemin Hwangbo et al. (2019). Learning Agile and Dynamic Motor Skills for Legged Robots. Science Robotics."
+components:
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Sim-to-Real Transfer, Randomisasi Domain & Privileged RL
+
+> "Mengapa kebijakan kecerdasan buatan (Reinforcement Learning) yang terlatih sempurna di simulator fisika sering kali gagal total saat diuji pada robot fisik di dunia nyata, dan bagaimana teknik Sim-to-Real menjembatani jurang realitas (reality gap) ini?"
+
+Dalam robotika modern (terutama robot berkaki *Boston Dynamics Spot / Unitree* dan manipulasi lengan robotik), melatih model pembelajaran penguatan (*Reinforcement Learning / RL*) langsung pada perangkat keras nyata berisiko merusak motor dan sangat memakan waktu. Simulator fisika (seperti Isaac Gym, MuJoCo, dan Drake) dapat mengumpulkan ribuan tahun data interaksi dalam hitungan jam. Namun, kebijakan tersebut terancam **Reality Gap** (perbedaan antara model fisika simulator dan hukum alam nyata).
+
+---
+
+## 1. Anatomi Jurang Realitas (*The Reality Gap*)
+
+Jurang realitas timbul akibat tiga faktor fisik yang sulit dimodelkan secara sempurna:
+1. **Dinamika Non-Ideal**: Keterlambatan sinyal komunikasi (*actuator latency* $\Delta t$), redaman gesekan non-linear, dan histeresis motor penggerak.
+2. **Derau Sensor**: Ketidakakuratan sensor IMU, deviasi kalibrasi kamera, dan pembacaan enkoder yang bergetar.
+3. **Ketidakpastian Lingkungan**: Koefisien gesekan lantai $\mu$, perubahan massa beban $m$, dan gangguan gaya eksternal tak terduga.
+
+---
+
+## 2. Randomisasi Domain (*Domain Randomization - DR*)
+
+Alih-alih mencoba membuat satu simulator yang 100% sempurna, **Domain Randomization** memvariasikan parameter fisika secara acak selama pelatihan:
+
+$$
+\theta_{\text{env}} \sim \mathcal{P}(\Theta)
+$$
+
+Di mana vektor parameter $\theta_{\text{env}}$ mencakup:
+- Massa tautan robot $m_i \sim \mathcal{U}(0.85 m_0, 1.15 m_0)$
+- Koefisien gesekan permukaan $\mu \sim \mathcal{U}(0.2, 1.2)$
+- Waktu latensi perintah aktuator $\tau_{\text{delay}} \sim \mathcal{U}(5\text{ ms}, 35\text{ ms})$
+- Gain kekakuan sendi $K_p \sim \mathcal{U}(0.8 K_{p,0}, 1.2 K_{p,0})$
+
+Dengan mengekspos jaringan saraf pada rentang variasi yang sangat luas di simulator, dunia nyata dipandang oleh model sebagai salah satu variasi acak yang telah dipelajari!
+
+---
+
+## 3. Paradigma Pembelajaran Privileged (Teacher-Student Training)
+
+Dalam metode state-of-the-art robot berkaki (seperti *ANYmal* dan *Unitree*):
+1. **Tahap 1 (Privileged Teacher Policy)**: Dilatih menggunakan status dunia nyata simulator yang sempurna (informasi istimewa seperti kontak gaya tanah eksak, peta ketinggian terrain, dan koefisien gesekan $\mathbf{s}_{\text{priv}}$).
+2. **Tahap 2 (Student Sensor Policy)**: Melatih jaringan *Student* yang hanya memiliki sensor nyata (riwayat pembacaan IMU dan enkoder sendi $\mathbf{o}_t$) untuk meniru keputusan *Teacher* melalui *Behavioral Cloning* / Estimasi Status Rekursif (*Recurrent Neural Network / Temporal Convolutions*).
+
+$$
+\mathcal{L}_{\text{student}} = \|\pi_{\text{student}}(\mathbf{o}_{t-H:t}) - \pi_{\text{teacher}}(\mathbf{s}_t, \mathbf{s}_{\text{priv}})\|^2
+$$
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-sim-to-real-and-domain-randomization"
+  question="Bagaimana arsitektur Teacher-Student Privileged Learning memungkinkan robot berkaki berjalan di medan berbatu ekstrem tanpa memerlukan sensor LiDAR 3D yang mahal?"
+  options={[
+    {
+      id: "A",
+      text: "Jaringan Student belajar menyimpulkan (infer) sifat fisik tanah dan kontur ketinggian terrain secara implisit dari riwayat getaran sensor IMU dan deviasi torsi enkoder sendi masa lalu, meniru kebijakan Teacher yang memiliki akses visual sempurna.",
+      isCorrect: true,
+      explanation: "Tepat! Jaringan student menggunakan memori temporal (seperti GRU/TCN) untuk mengestimasi interaksi kontak kaki dengan tanah secara 'haptik/proprioceptive'."
+    },
+    {
+      id: "B",
+      text: "Robot student mematikan seluruh motornya saat menyentuh batu.",
+      isCorrect: false,
+      explanation: "Salah. Robot berkaki harus aktif melangkah untuk mempertahankan keseimbangan dinamis."
+    },
+    {
+      id: "C",
+      text: "Simulator dihapus dan robot diprogram ulang secara manual dari awal.",
+      isCorrect: false,
+      explanation: "Salah. Paradigma Sim-to-Real justru memanfaatkan data simulasi masif untuk menghasilkan perilaku otonom tangguh."
+    }
+  ]}
+  hint="Pikirkan bagaimana manusia bisa berjalan di ruangan gelap gulita hanya dengan merasakan sensasi sentuhan dan reaksi kaki saat melangkah."
+/>

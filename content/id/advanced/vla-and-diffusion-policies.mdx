@@ -1,0 +1,104 @@
+---
+id: vla-and-diffusion-policies
+title: "Vision-Language-Action (VLA) & Diffusion Policy untuk Manipulasi Robot"
+slug: vla-and-diffusion-policies
+domain: advanced
+level: 10
+tier: Advanced Embodiments
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - 2dof-inverse-kinematics
+  - sim-to-real-and-domain-randomization
+references:
+  - "Cheng Chi et al. (2023). Diffusion Policy: Visuomotor Policy Learning via Action Diffusion. Robotics: Science and Systems (RSS)."
+  - "Moo Jin Kim et al. (2024). OpenVLA: An Open-Source Vision-Language-Action Model. arXiv:2406.09246."
+components:
+  - DiffusionPolicyVlaSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Vision-Language-Action (VLA) & Diffusion Policy untuk Manipulasi Robot
+
+> "Mengapa regresi aksi neural network standar (seperti MLP atau Transformer diskrit) sering menghasilkan gerakan lengan robot yang tersendat (*action stuttering*) atau gagal menangani tugas multi-modal, dan bagaimana model Difusi Generatif (Diffusion Policy) merevolusi manipulasi visuomotor otonom?"
+
+Dalam era Robotika Berwujud (*Embodied AI*), model fondasi telah berkembang dari pemrosesan teks (LLM) dan citra (VLM) menjadi **Vision-Language-Action (VLA)** (seperti *OpenVLA*, *RT-2*, dan *Diffusion Policy*), yang menghubungkan instruksi bahasa alami manusia dan citra kamera dengan trajektori aksi motorik kontinu berfrekuensi tinggi (10–50 Hz).
+
+---
+
+## 1. Masalah Multi-Modalitas dalam Manipulasi Robotik
+
+Ketika robot diperintahkan: *"Ambil salah satu balok di atas meja"*, terdapat beberapa pilihan trajektori yang sama-sama benar (memilih balok kiri atau balok kanan).
+
+```text
+┌────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────┐
+│ Jenis Model Kebijakan Aksi             │ Respon Terhadap Pilihan Multi-Modal                                    │
+├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ 1. Regresi Deterministik (Mean L2 Loss)│ Mengambil rata-rata dari kedua balok -> Robot bergerak ke tengah kosong│
+│ 2. Autoregresif Diskrit (Discretized)  │ Membagi ruang aksi menjadi bin diskrit -> Akumulasi galat dan kaku     │
+│ 3. Diffusion Policy (Distribusi Kontinu│ Memodelkan distribusi probabilitas multi-modal penuh p(A | O, C)       │
+└────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Formulasi Matematika Diffusion Policy
+
+Kebijakan difusi memandang pembangkitan urutan aksi horizon $H$ ($\mathbf{A}_t = [\mathbf{a}_t, \mathbf{a}_{t+1}, \dots, \mathbf{a}_{t+H-1}]$) sebagai proses **Denoising Difusi Bersyarat**:
+
+1. **Proses Maju (Forward Gaussian Noise Injection)**:
+   $$\mathbf{A}^K \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$$
+2. **Proses Balik (Conditional Denoising Steps $k = K \to 0$)**:
+   $$\mathbf{A}^{k-1} = \frac{1}{\sqrt{\alpha_k}}\left( \mathbf{A}^k - \frac{1 - \alpha_k}{\sqrt{1 - \bar{\alpha}_k}} \boldsymbol{\epsilon}_\theta(\mathbf{A}^k, \mathbf{O}_t, \mathbf{c}_{\text{lang}}, k) \right) + \sigma_k \mathbf{z}$$
+
+Di mana jaringan saraf $\boldsymbol{\epsilon}_\theta$ memprediksi derau yang harus dikurangkan dari trajektori aksi pada setiap langkah $k$, terkondisi pada observasi visual kamera $\mathbf{O}_t$ dan embedding perintah teks $\mathbf{c}_{\text{lang}}$.
+
+---
+
+## 3. Eksekusi Horison Resepsi (*Receding Horizon Execution*)
+
+Untuk menghindari diskontinuitas gerak:
+- Diffusion Policy memprediksi potongan masa depan sepanjang $H = 16$ langkah aksi sekaligus.
+- Robot hanya mengeksekusi $T_{\text{exec}} = 8$ langkah pertama.
+- Robot mengamati citra kamera terbaru dan memprediksi kembali horizon berikutnya, menjamin responsivitas waktu-nyata yang sangat mulus dan tahan terhadap gangguan fisik eksternal.
+
+---
+
+## 4. Simulator Interaktif: Diffusion Policy & VLA Trajectory Denoising
+
+Pilih perintah teks tugas manipulasi dan amati proses pembersihan derau Gaussian acak $\mathbf{a}_K$ menjadi trajektori mulus kontinu $\mathbf{a}_0$:
+
+<DiffusionPolicyVlaSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-vla-and-diffusion-policies"
+  question="Apa alasan utama Diffusion Policy sangat efektif untuk manipulasi lengan robotik dibandingkan regresi L2 standar?"
+  options={[
+    {
+      id: "A",
+      text: "Diffusion policy mampu memodelkan distribusi aksi multi-modal kontinu secara ekspresif tanpa terjebak pada averaging artifisial, dan memprediksi horizon aksi temporal sekaligus untuk menghasilkan trajektori yang mulus dan konsisten.",
+      isCorrect: true,
+      explanation: "Tepat! Diffusion Policy menyelesaikan 'mode collapse' dan 'action averaging' yang selama ini menjadi penyebab utama kegagalan kebijakan manipulasi robot konvensional."
+    },
+    {
+      id: "B",
+      text: "Karena Diffusion Policy mengubah robot menjadi mobil beroda empat.",
+      isCorrect: false,
+      explanation: "Salah. Diffusion Policy adalah algoritma pembelajaran kebijakan aksi spasial."
+    },
+    {
+      id: "C",
+      text: "Karena Diffusion Policy tidak membutuhkan data pengamatan kamera.",
+      isCorrect: false,
+      explanation: "Salah. Diffusion Policy mengondisikan aksinya pada fitur visual kamera resolusi tinggi."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi jika ada dua rute yang sama-sama valid: model regresi biasa akan mengambil rata-rata garis tengah yang justru menabrak rintangan."
+/>

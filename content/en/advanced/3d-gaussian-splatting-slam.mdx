@@ -1,0 +1,111 @@
+---
+id: 3d-gaussian-splatting-slam
+title: "3D Gaussian Splatting SLAM (3DGS-SLAM) & Radiance Fields"
+slug: 3d-gaussian-splatting-slam
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - 3d-lidar-and-vslam
+  - factor-graph-optimization
+references:
+  - "Bernhard Kerbl et al. (2023). 3D Gaussian Splatting for Real-Time Radiance Field Rendering. ACM Transactions on Graphics (SIGGRAPH)."
+  - "Hidenobu Matsuki et al. (2024). Gaussian Splatting SLAM. IEEE CVPR."
+components:
+  - GaussianSplattingSlamSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# 3D Gaussian Splatting SLAM (3DGS-SLAM) & Radiance Fields
+
+> "Why are traditional Neural Radiance Fields (NeRFs) computationally bottlenecked by millions of neural network evaluations per frame, while 3D Gaussian Splatting (3DGS) renders photorealistic volumetric scenes at 60+ FPS while simultaneously tracking 6-DOF camera poses?"
+
+**3D Gaussian Splatting (3DGS)** has revolutionized Spatial AI and robotic scene representation. Unlike implicit continuous neural representations that require dense raymarching with thousands of MLP queries per pixel, 3DGS parameterizes physical environments as millions of **Explicit Anisotropic 3D Gaussian Ellipsoids**.
+
+---
+
+## 1. Mathematical Formulation of 3D Gaussian Primitives
+
+Each 3D Gaussian primitive $G(\mathbf{x})$ located in Euclidean space $\mathbb{R}^3$ evaluates to:
+
+$$
+G(\mathbf{x}) = \exp\left( -\frac{1}{2} (\mathbf{x} - \boldsymbol{\mu})^T \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right)
+$$
+
+To enforce positive semi-definiteness on the covariance matrix $\mathbf{\Sigma} \in \mathbb{R}^{3 \times 3}$, $\mathbf{\Sigma}$ is parameterized via rotation quaternion matrix $\mathbf{R}$ and scaling diagonal matrix $\mathbf{S} = \text{diag}(s_x, s_y, s_z)$:
+
+$$
+\mathbf{\Sigma} = \mathbf{R} \mathbf{S} \mathbf{S}^T \mathbf{R}^T
+$$
+
+Each Gaussian additionally stores an opacity $\alpha \in [0, 1]$ and view-dependent radiance colors modeled through **Spherical Harmonics (SH)** coefficients.
+
+---
+
+## 2. 2D Projective Splatting (EWA) & Differentiable Tile Rasterization
+
+When observed by a camera with world-to-camera matrix $\mathbf{W}$ and pinhole Jacobian $\mathbf{J}$, the 2D projected screen covariance $\mathbf{\Sigma}' \in \mathbb{R}^{2 \times 2}$ is computed in closed form:
+
+$$
+\mathbf{\Sigma}' = \mathbf{J} \mathbf{W} \mathbf{\Sigma} \mathbf{W}^T \mathbf{J}^T
+$$
+
+### Opacity-Weighted Front-to-Back Alpha Blending:
+
+Pixel color $C$ is computed across sorted overlapping Gaussians:
+
+$$
+C = \sum_{i \in \mathcal{N}} c_i \alpha_i \prod_{j=1}^{i-1} (1 - \alpha_j)
+$$
+
+---
+
+## 3. Real-Time Camera Tracking & Dynamic Densification
+
+3DGS-SLAM orchestrates two concurrent GPU threads:
+1. **Camera Pose Tracking**: Minimizes photometric rendering loss against incoming camera frames:
+   $$\mathcal{L}_{\text{tracking}} = (1 - \lambda) \|I - \hat{I}\|_1 + \lambda \, \text{D-SSIM}(I, \hat{I})$$
+2. **Adaptive Densification & Pruning**: Splits high-gradient Gaussians in under-reconstructed areas and purges transparent primitives ($\alpha < 0.05$).
+
+---
+
+## 4. Interactive Simulator: 3D Gaussian Splatting SLAM
+
+Orbit the virtual sensor camera to witness real-time 3D Gaussian splat rasterization and trigger the **Densify Splats** button to refine spatial geometry:
+
+<GaussianSplattingSlamSimulator />
+
+---
+
+## 5. Concept Verification
+
+<ConceptCheck
+  id="quiz-3d-gaussian-splatting-slam"
+  question="Why does 3D Gaussian Splatting drastically outperform NeRF in real-time robotic SLAM applications?"
+  options={[
+    {
+      id: "A",
+      text: "3DGS uses explicit Gaussian primitives that project directly onto 2D image tiles in closed form, enabling parallel hardware rasterization at 60+ FPS without requiring computationally prohibitive neural raymarching.",
+      isCorrect: true,
+      explanation: "Correct! Replacing costly per-pixel MLP evaluations with GPU-accelerated closed-form linear algebra enables real-time photorealistic mapping and camera tracking."
+    },
+    {
+      id: "B",
+      text: "Because 3DGS completely ignores camera image inputs.",
+      isCorrect: false,
+      explanation: "Incorrect. 3DGS heavily relies on photometric RGB/RGB-D camera streams."
+    },
+    {
+      id: "C",
+      text: "Because 3DGS only works on flat 2D planes.",
+      isCorrect: false,
+      explanation: "Incorrect. 3DGS fully reconstructs rich 3D volumetric environments."
+    }
+  ]}
+  hint="Consider the speed difference between querying a deep neural network thousands of times per pixel versus splatting analytic 2D ellipses with the GPU rasterizer."
+/>

@@ -1,0 +1,96 @@
+---
+id: sim-to-real-and-domain-randomization
+title: "Sim-to-Real Transfer, Domain Randomization & Privileged RL"
+slug: sim-to-real-and-domain-randomization
+domain: advanced
+level: 10
+tier: Advanced Embodiments
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - legged-robotics-fundamentals
+references:
+  - "Josh Tobin et al. (2017). Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World. IEEE IROS."
+  - "Jemin Hwangbo et al. (2019). Learning Agile and Dynamic Motor Skills for Legged Robots. Science Robotics."
+components:
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Sim-to-Real Transfer, Domain Randomization & Privileged RL
+
+> "Why do Reinforcement Learning policies that achieve perfect scores in physics simulators frequently fail catastrophically when deployed onto physical robot hardware—and how does modern Sim-to-Real bridge this reality gap?"
+
+In modern robotics (particularly legged quadrupeds and robot arm manipulation), collecting millions of trial-and-error interactions directly on physical hardware risks motor burnout and severe mechanical damage. Massively parallel physics simulators (Isaac Gym, MuJoCo, Drake) synthesize decades of experience in hours. However, deploying policies onto hardware exposes the notorious **Reality Gap**.
+
+---
+
+## 1. Anatomy of the Reality Gap
+
+The disparity between simulation and physical deployment originates from three physical factors:
+1. **Unmodeled Dynamic Effects**: Actuator communication latency ($\Delta t$), non-linear friction, backlash, and motor thermal degradation.
+2. **Sensor Noise & Discrepancies**: High-frequency IMU vibrations, camera exposure calibration errors, and encoder quantization.
+3. **Environmental Variations**: Unpredictable ground friction coefficients $\mu$, payload mass shifts $m$, and unmodeled contact compliance.
+
+---
+
+## 2. The Domain Randomization (DR) Paradigm
+
+Rather than attempting to construct an impossibly perfect simulator, **Domain Randomization** samples physical environment parameters randomly across distributions during training:
+
+$$
+\theta_{\text{env}} \sim \mathcal{P}(\Theta)
+$$
+
+Where parameter vector $\theta_{\text{env}}$ randomizes:
+- Link masses $m_i \sim \mathcal{U}(0.85 m_0, 1.15 m_0)$
+- Contact friction coefficients $\mu \sim \mathcal{U}(0.2, 1.2)$
+- Actuator control delays $\tau_{\text{delay}} \sim \mathcal{U}(5\text{ ms}, 35\text{ ms})$
+- Joint PD gains $K_p \sim \mathcal{U}(0.8 K_{p,0}, 1.2 K_{p,0})$
+
+By forcing the neural network policy to master a vast spectrum of physical variations in simulation, the real world is experienced by the agent as simply another randomized configuration within its learned distribution.
+
+---
+
+## 3. Privileged Teacher-Student Learning
+
+For dynamic quadrupedal and bipedal locomotion (e.g., ANYmal, Boston Dynamics Spot):
+1. **Stage 1 (Privileged Teacher Policy)**: Trained with full access to ground-truth simulation states (exact foot contact forces, terrain heightmaps, and friction parameters $\mathbf{s}_{\text{priv}}$).
+2. **Stage 2 (Student Sensor Policy)**: A lightweight policy deployed on physical robots that receives only onboard sensor histories (IMU streams and joint encoder readings $\mathbf{o}_t$), trained to mimic the teacher via distillation:
+
+$$
+\mathcal{L}_{\text{student}} = \|\pi_{\text{student}}(\mathbf{o}_{t-H:t}) - \pi_{\text{teacher}}(\mathbf{s}_t, \mathbf{s}_{\text{priv}})\|^2
+$$
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-sim-to-real-and-domain-randomization"
+  question="How does Teacher-Student Privileged Learning enable legged robots to traverse blind, rough terrain without expensive 3D LiDAR vision sensors?"
+  options={[
+    {
+      id: "A",
+      text: "The student network learns to implicitly infer terrain height variations and contact friction from temporal histories of proprioceptive joint torques and IMU vibrations, mimicking the teacher policy that had full privileged visibility.",
+      isCorrect: true,
+      explanation: "Correct! The student network utilizes temporal memory (e.g., GRU or 1D-CNN) to build a 'haptic proprioceptive representation' of the ground contact dynamics."
+    },
+    {
+      id: "B",
+      text: "By shutting off the robot motors whenever a stone is encountered.",
+      isCorrect: false,
+      explanation: "Incorrect. The robot must actively step to maintain dynamic balance."
+    },
+    {
+      id: "C",
+      text: "By replacing the physical robot with a virtual hologram.",
+      isCorrect: false,
+      explanation: "Incorrect. The goal is robust real-world physical deployment."
+    }
+  ]}
+  hint="Consider how human beings navigate pitch-black rooms by sensing foot reactions and balance feedback."
+/>

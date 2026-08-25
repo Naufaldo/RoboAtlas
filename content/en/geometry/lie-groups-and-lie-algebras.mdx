@@ -1,0 +1,112 @@
+---
+id: lie-groups-and-lie-algebras
+title: "Matrix Lie Groups SO(3)/SE(3) & Lie Algebras so(3)/se(3)"
+slug: lie-groups-and-lie-algebras
+domain: geometry
+level: 2
+tier: Foundations
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-rotation-matrices
+  - 3d-geometry
+references:
+  - "Joan Solà, Jeremie Deray, Dinesh Atchuthan (2018). A Micro Lie Theory for State Estimation in Robotics. arXiv:1812.01537."
+  - "Timothy D. Barfoot (2017). State Estimation for Robotics. Cambridge University Press."
+components:
+  - LieGroupAlgebraSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Matrix Lie Groups SO(3)/SE(3) & Lie Algebras so(3)/se(3)
+
+> "Why do Euler angles suffer from catastrophic gimbal lock, while $3 \times 3$ rotation matrices carry 9 parameters burdened by 6 non-linear orthonormality constraints—and how does Lie Group theory enable singularity-free spatial optimization?"
+
+In modern robotics (Visual-Inertial Odometry, Factor Graph SLAM, and Manipulator Control), 3D spatial rotations $SO(3)$ and rigid body transformations $SE(3)$ do not form standard Euclidean vector spaces under addition. Instead, they constitute smooth **Differentiable Manifolds (Lie Groups)**.
+
+---
+
+## 1. The Lie Group $SO(3)$ & Its Tangent Lie Algebra $\mathfrak{so}(3)$
+
+The Special Orthogonal Group $SO(3)$ is defined as:
+
+$$
+SO(3) = \{ \mathbf{R} \in \mathbb{R}^{3 \times 3} \mid \mathbf{R}^T \mathbf{R} = \mathbf{I}, \, \det(\mathbf{R}) = +1 \}
+$$
+
+The tangent space attached to the identity element $\mathbf{I}$ is the **Lie Algebra $\mathfrak{so}(3)$**, comprising $3 \times 3$ skew-symmetric matrices parameterized by twist vector $\boldsymbol{\omega} \in \mathbb{R}^3$:
+
+$$
+[\boldsymbol{\omega}]_\times = \begin{bmatrix} 0 & -\omega_3 & \omega_2 \\ \omega_3 & 0 & -\omega_1 \\ -\omega_2 & \omega_1 & 0 \end{bmatrix} \in \mathfrak{so}(3)
+$$
+
+---
+
+## 2. The Exponential Map & Rodrigues' Formula
+
+The Exponential Map ($\exp: \mathfrak{so}(3) \to SO(3)$) seamlessly projects tangent vectors onto the curved manifold:
+
+$$
+\mathbf{R} = \exp([\boldsymbol{\omega}]_\times) = \mathbf{I} + \frac{\sin\theta}{\theta} [\boldsymbol{\omega}]_\times + \frac{1 - \cos\theta}{\theta^2} [\boldsymbol{\omega}]_\times^2, \quad \theta = \|\boldsymbol{\omega}\|
+$$
+
+### The Matrix Logarithm ($\log: SO(3) \to \mathfrak{so}(3)$):
+
+$$
+\theta = \arccos\left(\frac{\text{tr}(\mathbf{R}) - 1}{2}\right), \quad [\boldsymbol{\omega}]_\times = \frac{\theta}{2\sin\theta}(\mathbf{R} - \mathbf{R}^T)
+$$
+
+---
+
+## 3. Manifold Perturbations & The Plus/Minus Operators ($\boxplus / \boxminus$)
+
+Because naive matrix addition $\mathbf{R}_1 + \mathbf{R}_2 \notin SO(3)$, manifold optimization updates are defined via geodesic retraction:
+
+$$
+\mathbf{R} \boxplus \boldsymbol{\delta} = \mathbf{R} \exp([\boldsymbol{\delta}]_\times) \in SO(3)
+$$
+
+$$
+\mathbf{R}_1 \boxminus \mathbf{R}_2 = \log(\mathbf{R}_2^T \mathbf{R}_1)^\vee \in \mathbb{R}^3
+$$
+
+---
+
+## 4. Interactive Simulator: $\mathfrak{so}(3)$ Tangent Space Exponential Map
+
+Adjust the angular twist vector $\boldsymbol{\omega}$ on the tangent plane and observe the geodesic flow yielding the orthogonal rotation matrix $\mathbf{R} \in SO(3)$:
+
+<LieGroupAlgebraSimulator />
+
+---
+
+## 5. Concept Verification
+
+<ConceptCheck
+  id="quiz-lie-groups-and-lie-algebras"
+  question="Why do modern state estimation frameworks (e.g., GTSAM, ORB-SLAM, and FAST-LIO) optimize state perturbations on the Lie Algebra tangent space rather than directly on rotation matrix elements?"
+  options={[
+    {
+      id: "A",
+      text: "Because the Lie Algebra is an unconstrained 3D linear vector space, allowing standard gradient descent and Gauss-Newton steps to be computed freely while guaranteeing that exp(delta) retractions always stay strictly on the valid SO(3) manifold without gimbal lock.",
+      isCorrect: true,
+      explanation: "Correct! Optimizing in the local unconstrained Euclidean tangent space R^3 and wrapping back via the exponential map preserves exact orthonormality R^T R = I."
+    },
+    {
+      id: "B",
+      text: "Because 3x3 matrices cannot be multiplied by floating-point numbers.",
+      isCorrect: false,
+      explanation: "Incorrect. Matrix multiplication by scalars is standard, but addition leaves the SO(3) manifold."
+    },
+    {
+      id: "C",
+      text: "Because Lie groups are only defined for integer coordinates.",
+      isCorrect: false,
+      explanation: "Incorrect. Lie groups are smooth continuous differential manifolds."
+    }
+  ]}
+  hint="Consider what happens if you add two rotation matrices R_1 + R_2: is the resulting sum an orthogonal matrix with determinant +1?"
+/>

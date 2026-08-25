@@ -49,6 +49,10 @@ import { SafeCorridorExplorationSimulator } from '@/components/simulation/SafeCo
 import { QuadrotorDynamicsSimulator } from '@/components/simulation/QuadrotorDynamicsSimulator';
 import { MarineHydrodynamicsSimulator } from '@/components/simulation/MarineHydrodynamicsSimulator';
 import { LeggedZmpSimulator } from '@/components/simulation/LeggedZmpSimulator';
+import { LieGroupAlgebraSimulator } from '@/components/simulation/LieGroupAlgebraSimulator';
+import { FactorGraphOptimizerSimulator } from '@/components/simulation/FactorGraphOptimizerSimulator';
+import { GaussianSplattingSlamSimulator } from '@/components/simulation/GaussianSplattingSlamSimulator';
+import { DiffusionPolicyVlaSimulator } from '@/components/simulation/DiffusionPolicyVlaSimulator';
 import {
   Compass,
   Cpu,
@@ -668,6 +672,58 @@ export default function LabsPage() {
       icon: '🦿',
       lessonHref: '/learn/fundamentals/legged-robotics-fundamentals',
       component: <LeggedZmpSimulator />,
+    },
+    {
+      id: 'lie-group-algebra',
+      category: 'math',
+      paths: ['slam', 'manipulation'],
+      titleEn: 'Lie Groups SO(3) & Lie Algebra so(3) Lab',
+      titleId: 'Laboratorium Grup Lie SO(3) & Aljabar Lie so(3)',
+      descEn: 'Map tangent vectors in so(3) to 3D rotation matrices on the SO(3) manifold via Rodrigues exponential map.',
+      descId: 'Petakan vektor ruang singgung so(3) ke matriks rotasi manifold SO(3) menggunakan peta eksponensial Rodrigues.',
+      levelBadge: 'Level 2',
+      icon: '📦',
+      lessonHref: '/learn/geometry/lie-groups-and-lie-algebras',
+      component: <LieGroupAlgebraSimulator />,
+    },
+    {
+      id: 'factor-graph-optimizer',
+      category: 'estimation',
+      paths: ['slam'],
+      titleEn: 'Factor Graph SLAM & Non-Linear Least Squares Lab',
+      titleId: 'Laboratorium Graf Faktor & Non-Linear Least Squares SLAM',
+      descEn: 'Iterate Gauss-Newton steps to minimize non-linear residual errors across odometry, landmark, and loop factors.',
+      descId: 'Lakukan iterasi langkah Gauss-Newton untuk meminimalkan galat residual non-linear pada faktor odometri dan landmark.',
+      levelBadge: 'Level 10',
+      icon: '🔀',
+      lessonHref: '/learn/advanced/factor-graph-optimization',
+      component: <FactorGraphOptimizerSimulator />,
+    },
+    {
+      id: '3dgs-slam-radiance',
+      category: 'estimation',
+      paths: ['slam'],
+      titleEn: '3D Gaussian Splatting SLAM (3DGS-SLAM) Lab',
+      titleId: 'Laboratorium 3D Gaussian Splatting SLAM (3DGS-SLAM)',
+      descEn: 'Orbit a virtual camera to observe real-time differentiable 3D anisotropic Gaussian rasterization and densification.',
+      descId: 'Orbitkan kamera virtual untuk mengamati rasterisasi dan densifikasi 3D Gaussian anisotropik secara real-time.',
+      levelBadge: 'Level 10',
+      icon: '✨',
+      lessonHref: '/learn/advanced/3d-gaussian-splatting-slam',
+      component: <GaussianSplattingSlamSimulator />,
+    },
+    {
+      id: 'vla-diffusion-policy',
+      category: 'manipulation',
+      paths: ['manipulation'],
+      titleEn: 'VLA Diffusion Policy Trajectory Synthesis Lab',
+      titleId: 'Laboratorium Sintesis Trajektori Diffusion Policy VLA',
+      descEn: 'Denoise Gaussian action noise into smooth, continuous manipulation trajectories conditioned on language prompts.',
+      descId: 'Lakukan proses denoising dari derau Gaussian menjadi trajektori manipulasi robot yang mulus terkondisi teks.',
+      levelBadge: 'Level 10',
+      icon: '🦾',
+      lessonHref: '/learn/advanced/vla-and-diffusion-policies',
+      component: <DiffusionPolicyVlaSimulator />,
     },
   ];
 

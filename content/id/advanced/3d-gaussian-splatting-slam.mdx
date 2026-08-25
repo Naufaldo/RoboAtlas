@@ -1,0 +1,111 @@
+---
+id: 3d-gaussian-splatting-slam
+title: "3D Gaussian Splatting SLAM (3DGS-SLAM) & Radiance Fields"
+slug: 3d-gaussian-splatting-slam
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - 3d-lidar-and-vslam
+  - factor-graph-optimization
+references:
+  - "Bernhard Kerbl et al. (2023). 3D Gaussian Splatting for Real-Time Radiance Field Rendering. ACM Transactions on Graphics (SIGGRAPH)."
+  - "Hidenobu Matsuki et al. (2024). Gaussian Splatting SLAM. IEEE CVPR."
+components:
+  - GaussianSplattingSlamSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# 3D Gaussian Splatting SLAM (3DGS-SLAM) & Radiance Fields
+
+> "Mengapa pemetaan NeRF (*Neural Radiance Fields*) lambat dan boros komputasi, sementara 3D Gaussian Splatting (3DGS) mampu merender rekonstruksi volumetrik fotorealistik lingkungan pada 60+ FPS sambil melacak pose kamera robot secara real-time?"
+
+**3D Gaussian Splatting (3DGS)** telah merevolusi bidang persepsi robotika spasial (*Spatial AI*). Tidak seperti representasi implisit neural jaringan NeRF yang membutuhkan raymarching tebal ribuan sampel per piksel, 3DGS merepresentasikan dunia fisik sebagai jutaan elipsoid **Gaussian 3D Eksplisit Anisotropik**.
+
+---
+
+## 1. Parameterisasi Matematis Elipsoid 3D Gaussian
+
+Setiap primitif Gaussian 3D $G(\mathbf{x})$ di ruang Euclidean $\mathbb{R}^3$ memiliki nilai probabilitas:
+
+$$
+G(\mathbf{x}) = \exp\left( -\frac{1}{2} (\mathbf{x} - \boldsymbol{\mu})^T \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right)
+$$
+
+Agar matriks kovariansi $\mathbf{\Sigma} \in \mathbb{R}^{3 \times 3}$ selalu bernilai definit positif, $\mathbf{\Sigma}$ didekomposisi menjadi faktor rotasi kuaternion $\mathbf{R}$ dan faktor skala $\mathbf{S} = \text{diag}(s_x, s_y, s_z)$:
+
+$$
+\mathbf{\Sigma} = \mathbf{R} \mathbf{S} \mathbf{S}^T \mathbf{R}^T
+$$
+
+Setiap Gaussian juga menyimpan nilai opasitas $\alpha \in [0, 1]$ dan warna RGB yang bergantung pada sudut pandang melalui **Koefisien Harmonik Bola (*Spherical Harmonics*)**.
+
+---
+
+## 2. Proyeksi Perspektif 2D (EWA Splatting) & Rasterisasi Diferensiabel
+
+Ketika diamati oleh kamera robot dengan matriks rotasi pose $\mathbf{W}$ dan matriks Jacobian proyeksi kamera pinhole $\mathbf{J}$, kovariansi 2D pada layar kamera $\mathbf{\Sigma}' \in \mathbb{R}^{2 \times 2}$ bernilai:
+
+$$
+\mathbf{\Sigma}' = \mathbf{J} \mathbf{W} \mathbf{\Sigma} \mathbf{W}^T \mathbf{J}^T
+$$
+
+### Rendering Warna Piksel Berbobot Opasitas (*Alpha Blending*):
+
+Warna piksel $C$ dihitung dengan mengurutkan seluruh Gaussian dari depan ke belakang (*front-to-back*):
+
+$$
+C = \sum_{i \in \mathcal{N}} c_i \alpha_i \prod_{j=1}^{i-1} (1 - \alpha_j)
+$$
+
+---
+
+## 3. Pelacakan Pose Kamera & Densifikasi Peta Real-Time
+
+3DGS-SLAM menjalankan dua proses paralel:
+1. **Camera Tracking**: Mengoptimasi pose kamera $\mathbf{T}_{WC} \in SE(3)$ dengan meminimalkan galat fotometrik antara citra sensor nyata $I$ dan citra hasil render $\hat{I}$:
+   $$\mathcal{L}_{\text{tracking}} = (1 - \lambda) \|I - \hat{I}\|_1 + \lambda \, \text{D-SSIM}(I, \hat{I})$$
+2. **Map Densification & Pruning**: Menambah elipsoid Gaussian baru di area yang memiliki gradien spasial besar, dan menghapus Gaussian transparan ($\alpha < 0.05$).
+
+---
+
+## 4. Simulator Interaktif: 3D Gaussian Splatting SLAM
+
+Orbitkan kamera visual robot untuk melihat rasterisasi fotometrik Gaussian secara langsung dan uji tombol **Densify Splats** untuk meningkatkan ketajaman detail geometri:
+
+<GaussianSplattingSlamSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-3d-gaussian-splatting-slam"
+  question="Apa alasan utama 3D Gaussian Splatting jauh lebih unggul dan cepat untuk SLAM robotika dibandingkan Neural Radiance Fields (NeRF) tradisional?"
+  options={[
+    {
+      id: "A",
+      text: "3DGS menggunakan representasi eksplisit elipsoid Gaussian yang dapat diproyeksikan langsung ke layar 2D melalui rasterisasi berbasis ubin (tile-based rasterizer) tanpa memerlukan ray-marching MLP berat berulang-ulang, memungkinkan rendering fotorealistik 60+ FPS.",
+      isCorrect: true,
+      explanation: "Tepat! 3DGS menggantikan evaluasi neural network per piksel yang lambat dengan operasi aljabar linier GPU paralel yang sangat cepat."
+    },
+    {
+      id: "B",
+      text: "Karena 3DGS tidak membutuhkan data kamera sama sekali.",
+      isCorrect: false,
+      explanation: "Salah. 3DGS mengandalkan citra kamera RGB/RGB-D secara intensif."
+    },
+    {
+      id: "C",
+      text: "Karena 3DGS hanya bisa merender warna hitam putih.",
+      isCorrect: false,
+      explanation: "Salah. 3DGS mendukung warna penuh dengan ketergantungan sudut pandang Spherical Harmonics."
+    }
+  ]}
+  hint="Pikirkan perbedaan antara menanyakan jaringan neural (MLP) ribuan kali per piksel vs memproyeksikan elips secara langsung dengan GPU."
+/>

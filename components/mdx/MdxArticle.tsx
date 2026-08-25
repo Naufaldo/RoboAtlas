@@ -51,6 +51,10 @@ import { SafeCorridorExplorationSimulator } from '@/components/simulation/SafeCo
 import { QuadrotorDynamicsSimulator } from '@/components/simulation/QuadrotorDynamicsSimulator';
 import { MarineHydrodynamicsSimulator } from '@/components/simulation/MarineHydrodynamicsSimulator';
 import { LeggedZmpSimulator } from '@/components/simulation/LeggedZmpSimulator';
+import { LieGroupAlgebraSimulator } from '@/components/simulation/LieGroupAlgebraSimulator';
+import { FactorGraphOptimizerSimulator } from '@/components/simulation/FactorGraphOptimizerSimulator';
+import { GaussianSplattingSlamSimulator } from '@/components/simulation/GaussianSplattingSlamSimulator';
+import { DiffusionPolicyVlaSimulator } from '@/components/simulation/DiffusionPolicyVlaSimulator';
 import { ConceptCheck, QuizOption } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { CodeBlock } from '@/components/mdx/CodeBlock';
@@ -525,6 +529,26 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<LeggedZmpSimulator')) {
         nodes.push(<LeggedZmpSimulator key={`comp-lzs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<LieGroupAlgebraSimulator')) {
+        nodes.push(<LieGroupAlgebraSimulator key={`comp-lgas-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<FactorGraphOptimizerSimulator')) {
+        nodes.push(<FactorGraphOptimizerSimulator key={`comp-fgos-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<GaussianSplattingSlamSimulator')) {
+        nodes.push(<GaussianSplattingSlamSimulator key={`comp-gsss-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<DiffusionPolicyVlaSimulator')) {
+        nodes.push(<DiffusionPolicyVlaSimulator key={`comp-dpvs-${i}`} />);
         i++;
         continue;
       }

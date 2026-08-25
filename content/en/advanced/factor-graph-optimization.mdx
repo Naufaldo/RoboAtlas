@@ -1,0 +1,113 @@
+---
+id: factor-graph-optimization
+title: "Factor Graph Optimization & Non-Linear Least Squares for SLAM"
+slug: factor-graph-optimization
+domain: advanced
+level: 10
+tier: Spatial Intelligence
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - slam-fundamentals
+  - 2d-lidar-slam
+  - lie-groups-and-lie-algebras
+references:
+  - "Frank Dellaert & Michael Kaess (2017). Factor Graphs for Robot Perception. Foundations and Trends in Robotics."
+  - "Rainer Kümmerle et al. (2011). g2o: A General Framework for Graph Optimization. IEEE ICRA."
+components:
+  - FactorGraphOptimizerSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Factor Graph Optimization & Non-Linear Least Squares for SLAM
+
+> "Why did classical EKF-SLAM suffer from quadratic $O(N^2)$ computational complexity and irreversible early linearization errors, while modern Factor Graph smoothing optimizes thousands of robot poses in milliseconds?"
+
+In modern robotics (GTSAM, g2o, Ceres Solver, and Cartographer), full Simultaneous Localization and Mapping is formulated as a bipartite **Factor Graph**, modeling the Maximum A Posteriori (MAP) joint state distribution via Non-Linear Least Squares optimization.
+
+---
+
+## 1. Factor Graph Topology & Maximum A Posteriori (MAP) Formulation
+
+A factor graph comprises two node types:
+1. **Variable Nodes ($\Theta = \{ \mathbf{x}_1, \dots, \mathbf{x}_N, \mathbf{l}_1, \dots, \mathbf{l}_M \}$)**: Unknown robot poses and spatial landmark positions.
+2. **Factor Nodes ($\phi_k(\Theta_k)$)**: Probabilistic sensor constraints (priors, odometry relative links, and landmark observations).
+
+$$
+P(\Theta \mid Z) \propto \prod_{k} \phi_k(\Theta_k) = \prod_{k} \exp\left( -\frac{1}{2} \|\mathbf{e}_k(\Theta_k)\|_{\mathbf{\Sigma}_k}^2 \right)
+$$
+
+### Non-Linear Least Squares Objective:
+
+$$
+\Theta^* = \arg\min_{\Theta} \sum_{k} \mathbf{e}_k(\Theta_k)^T \mathbf{\Omega}_k \mathbf{e}_k(\Theta_k), \quad \mathbf{\Omega}_k = \mathbf{\Sigma}_k^{-1} \, (\text{Information Matrix})
+$$
+
+---
+
+## 2. Gauss-Newton Iteration & Sparse Normal Equations
+
+At each iteration, residual error vectors are linearized using Jacobians $\mathbf{J}_k = \frac{\partial \mathbf{e}_k}{\partial \Theta}$:
+
+$$
+\mathbf{H} \Delta \Theta = -\mathbf{b}
+$$
+
+Where:
+
+$$
+\mathbf{H} = \sum_{k} \mathbf{J}_k^T \mathbf{\Omega}_k \mathbf{J}_k \quad (\text{Sparse Information Matrix / System Hessian})
+$$
+
+$$
+\mathbf{b} = \sum_{k} \mathbf{J}_k^T \mathbf{\Omega}_k \mathbf{e}_k
+$$
+
+### Manifold Retraction Step:
+
+$$
+\Theta \leftarrow \Theta \boxplus \Delta \Theta
+$$
+
+Because robots only observe local landmarks and temporally adjacent poses, the information matrix $\mathbf{H}$ is **strictly sparse**, enabling linear-time $O(N)$ solution via incremental variable elimination (*iSAM2 Bayes tree*).
+
+---
+
+## 3. Interactive Simulator: Factor Graph SLAM Optimizer
+
+Observe noisy, drifting robot poses snap into global consistency as loop closure constraints and Gauss-Newton steps minimize total Chi-Square residual error:
+
+<FactorGraphOptimizerSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-factor-graph-optimization"
+  question="What is the key architectural advantage of Factor Graph smoothing (e.g., iSAM2 / GTSAM) over classical filtering (EKF)?"
+  options={[
+    {
+      id: "A",
+      text: "Factor graphs exploit structural sparsity and support non-linear relinearization of past trajectory history upon detecting loop closures, completely preventing irreversible early linearization drift.",
+      isCorrect: true,
+      explanation: "Correct! EKF irreversibly fixes its linearization point at step t, whereas factor graphs re-evaluate the full trajectory history around the global optimal estimate."
+    },
+    {
+      id: "B",
+      text: "Factor graphs do not require matrix operations.",
+      isCorrect: false,
+      explanation: "Incorrect. Factor graphs rely on sparse Cholesky / QR matrix factorizations."
+    },
+    {
+      id: "C",
+      text: "Factor graphs can only solve 1D localization problems.",
+      isCorrect: false,
+      explanation: "Incorrect. Factor graphs operate on complex SE(2), SE(3), and high-dimensional manifolds."
+    }
+  ]}
+  hint="Consider whether an EKF can go back in time and correct a miscalculated turn after closing a massive building loop."
+/>

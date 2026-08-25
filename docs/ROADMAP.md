@@ -75,12 +75,12 @@ M9: SLAM & Autonomy ───► M10: Robot Platforms ───► M11: Advanced
   - 🦿 **Legged Robot (Quadruped & Humanoid)** (ZMP, LIPM, Gait sequencing, Balance)
 - [x] Cross-platform learning panel showing universal mathematical foundations applied per embodiment.
 
-### 🟡 Milestone 11: Advanced Robotics & Lie Groups (In Progress — v0.5.0)
-- [ ] Matrix Lie groups $SO(3)$ / $SE(3)$ and Lie algebras $\mathfrak{so}(3)$ / $\mathfrak{se}(3)$.
-- [ ] Exponential map, matrix logarithm, and adjoint representations.
-- [ ] Factor Graph optimization for landmark SLAM and pose graph optimization.
+### 🟢 Milestone 11: Advanced Robotics & Lie Groups (Completed — v0.5.0)
+- [x] Matrix Lie groups $SO(3)$ / $SE(3)$ and Lie algebras $\mathfrak{so}(3)$ / $\mathfrak{se}(3)$ (`content/{en,id}/geometry/lie-groups-and-lie-algebras.mdx`).
+- [x] Exponential map, Rodrigues formula, and matrix logarithm interactive simulator (`LieGroupAlgebraSimulator.tsx`).
+- [x] Factor Graph optimization for landmark SLAM and sparse non-linear least squares solver (`FactorGraphOptimizerSimulator.tsx`, `content/{en,id}/advanced/factor-graph-optimization.mdx`).
 
-### ⚪ Milestone 12: Frontier Robotics Research (Future Phase)
-- [ ] Neural Radiance Fields (NeRF-SLAM & 3D Gaussian Splatting) for spatial robotics.
-- [ ] Sim-to-real transfer and domain randomization with reinforcement learning.
-- [ ] Vision-Language-Action (VLA) foundation models for embodied robotic autonomy.
+### 🟢 Milestone 12: Frontier Robotics Research (Completed — v0.5.0)
+- [x] 3D Gaussian Splatting SLAM (3DGS-SLAM) & volumetric radiance field simulator (`GaussianSplattingSlamSimulator.tsx`, `content/{en,id}/advanced/3d-gaussian-splatting-slam.mdx`).
+- [x] Sim-to-real transfer, domain randomization, and privileged teacher-student reinforcement learning (`content/{en,id}/advanced/sim-to-real-and-domain-randomization.mdx`).
+- [x] Vision-Language-Action (VLA) foundation models & Diffusion Policy action trajectory synthesis (`DiffusionPolicyVlaSimulator.tsx`, `content/{en,id}/advanced/vla-and-diffusion-policies.mdx`).
