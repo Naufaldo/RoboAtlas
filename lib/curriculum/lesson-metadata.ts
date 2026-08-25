@@ -584,6 +584,60 @@ export const LESSON_PEDAGOGY_MAP: Record<string, LessonPedagogyData> = {
     progressionStepsEn: ['Graph Laplacian L=D-A', 'Fiedler Spectral Value', 'Interactive Swarm Lab', 'Leader-Follower Flocking'],
     progressionStepsId: ['Graf Laplacian L=D-A', 'Nilai Spektral Fiedler', 'Lab Swarm Interaktif', 'Formasi Leader-Follower'],
   },
+  'denavit-hartenberg-parameters': {
+    learningObjectivesEn: [
+      'Master the standard 4-parameter Denavit-Hartenberg (DH) convention: link length (a), link twist (α), link offset (d), and joint angle (θ).',
+      'Derive the 4x4 homogeneous transformation matrix Ai = Rot_z(θ) Trans_z(d) Trans_x(a) Rot_x(α).',
+      'Construct the complete forward kinematics transform chain T_0^n for multi-DOF industrial robot arms.',
+      'Assign coordinate frames systematically according to standard DH right-handed rules.',
+    ],
+    learningObjectivesId: [
+      'Menguasai konvensi standar 4 parameter Denavit-Hartenberg (DH): panjang link (a), putir link (α), offset link (d), dan sudut sendi (θ).',
+      'Menurunkan matriks transformasi homogen 4x4 Ai = Rot_z(θ) Trans_z(d) Trans_x(a) Rot_x(α).',
+      'Menyusun rantai transformasi kinematika maju T_0^n untuk lengan robot industri multi-DOF.',
+      'Menetapkan kerangka koordinat secara sistematis mengikuti kaidah tangan kanan DH standar.',
+    ],
+    whyItMattersEn: 'Standardizes the geometric kinematic modeling of all industrial robot arms (PUMA 560, UR5, SCARA) universally across CAD, ROS, and motion planners.',
+    whyItMattersId: 'Menstandarkan pemodelan kinematika geometris seluruh lengan robot industri secara universal pada CAD, ROS, dan motion planner.',
+    progressionStepsEn: ['DH Frame Rules', '4 Canonical Parameters', 'Homogeneous Matrix A_i', 'Forward Kinematic Chain'],
+    progressionStepsId: ['Kaidah Kerangka DH', '4 Parameter Kanonikal', 'Matriks Homogen A_i', 'Rantai Kinematika Maju'],
+  },
+  'pinhole-camera-and-calibration': {
+    learningObjectivesEn: [
+      'Derive perspective projection geometry from continuous 3D Euclidean coordinates to 2D image sensors.',
+      'Formulate the Camera Intrinsic Matrix K (focal lengths fx, fy and principal point cx, cy).',
+      'Combine Extrinsic [R|t] pose transforms and Intrinsic K projections into full camera projection matrix P = K[R|t].',
+      'Analyze radial (k1, k2, k3) and tangential (p1, p2) lens distortion correction models.',
+    ],
+    learningObjectivesId: [
+      'Menurunkan geometri proyeksi perspektif dari koordinat 3D Euclidean kontinu ke sensor gambar 2D.',
+      'Merumuskan Matriks Intrinsik Kamera K (panjang fokus fx, fy dan titik utama cx, cy).',
+      'Menggabungkan transformasi pose Ekstrinsik [R|t] dan proyeksi Intrinsik K menjadi matriks proyeksi penuh P = K[R|t].',
+      'Menganalisis model koreksi distorsi lensa radial (k1, k2, k3) dan tangensial (p1, p2).',
+    ],
+    whyItMattersEn: 'Every computer vision and Visual SLAM algorithm begins with precise camera geometric model calibration.',
+    whyItMattersId: 'Setiap algoritma computer vision dan Visual SLAM bermula dari kalibrasi model geometris kamera yang akurat.',
+    progressionStepsEn: ['Perspective Geometry', 'Intrinsic Matrix K', 'Extrinsic Transforms', 'Lens Distortion Calibration'],
+    progressionStepsId: ['Geometri Perspektif', 'Matriks Intrinsik K', 'Transformasi Ekstrinsik', 'Kalibrasi Distorsi Lensa'],
+  },
+  'matrix-decompositions-svd-cholesky': {
+    learningObjectivesEn: [
+      'Factor arbitrary rectangular matrices via Singular Value Decomposition (SVD): A = U Σ V^T.',
+      'Compute the Moore-Penrose Pseudoinverse A^+ for underdetermined and redundant robotic kinematics.',
+      'Derive closed-form optimal 3D rigid rotation using SVD in Arun\'s ICP scan matching method.',
+      'Apply Cholesky factorization P = L L^T for multivariate Gaussian noise sampling in Kalman Filters and Graph SLAM.',
+    ],
+    learningObjectivesId: [
+      'Memfaktorkan matriks persegi panjang sembarang via Singular Value Decomposition (SVD): A = U Σ V^T.',
+      'Menghitung Pseudoinvers Moore-Penrose A^+ untuk kinematika robot arm redundan dan underdetermined.',
+      'Menurunkan solusi analitik rotasi 3D optimal menggunakan SVD pada metode Arun untuk ICP scan matching.',
+      'Menerapkan faktorisasi Cholesky P = L L^T untuk sampling derau Gaussian pada Filter Kalman dan Graph SLAM.',
+    ],
+    whyItMattersEn: 'Provides the numerically stable computational engine behind robot arm velocity solvers, ICP registration, and covariance estimation.',
+    whyItMattersId: 'Menyediakan mesin komputasi yang stabil secara numerik di balik solver kecepatan robot arm, registrasi ICP, dan estimasi kovariansi.',
+    progressionStepsEn: ['SVD Factorization', 'Moore-Penrose Pseudoinverse', 'Arun ICP Rotation', 'Cholesky SLAM Sampling'],
+    progressionStepsId: ['Faktorisasi SVD', 'Pseudoinvers Moore-Penrose', 'Rotasi ICP Metode Arun', 'Sampling SLAM Cholesky'],
+  },
 };
 
 export function getLessonPedagogy(slug: string, isId: boolean) {

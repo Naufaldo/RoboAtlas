@@ -1,0 +1,147 @@
+---
+id: pinhole-camera-and-calibration
+title: "Pinhole Camera Model, Perspective Projection & Intrinsic Calibration"
+slug: pinhole-camera-and-calibration
+domain: perception
+category: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - 3d-geometry
+  - coordinate-frames-and-transforms
+references:
+  - "Richard Hartley & Andrew Zisserman (2004). Multiple View Geometry in Computer Vision (2nd Edition). Cambridge University Press."
+  - "Zhengyou Zhang (2000). A Flexible New Technique for Camera Calibration. IEEE TPAMI."
+  - "Gary Bradski & Adrian Kaehler (2008). Learning OpenCV. O'Reilly Media."
+components:
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Pinhole Camera Model, Perspective Projection & Intrinsic Calibration
+
+> "How does a robot camera map photons bouncing off 3D objects in the physical world into discrete 2D pixel coordinates $(u, v)$ on a digital sensor array?"
+
+Vision is arguably the richest sensing modality in autonomous robotics. Whether guiding self-driving cars, enabling Visual SLAM (ORB-SLAM / FAST-LIO), or detecting graspable objects for robotic arms, the **Pinhole Camera Model** establishes the fundamental projective geometry bridging continuous 3D Euclidean space and 2D digital image planes.
+
+---
+
+<VideoEmbed
+  title="The Pinhole Camera Model and Camera Calibration Explained"
+  videoId="k5E1Z_T7y5g"
+  provider="youtube"
+  duration="15:30"
+  author="Cyrill Stachniss / Photogrammetry & Robotics"
+/>
+
+---
+
+## 1. Geometric Perspective Projection
+
+Under ideal pinhole projection without optical lenses, light rays from a 3D physical point $\mathbf{P}_C = [X_C, Y_C, Z_C]^T$ in the camera optical frame pass through an infinitesimally small aperture (*the pinhole*) and project onto an image plane located at focal length $f$ along the optical $Z$-axis:
+
+$$
+x = f \frac{X_C}{Z_C}, \quad y = f \frac{Y_C}{Z_C}
+$$
+
+Notice that perspective projection introduces non-linear perspective division by depth $Z_C$. Points further away project closer to the optical center.
+
+---
+
+## 2. Intrinsic Camera Calibration Matrix ($K$)
+
+To convert continuous normalized image coordinates $(x, y)$ in metric units (meters or millimeters) into discrete digital pixel coordinates $(u, v)$ with pixel scaling factors $m_x, m_y$ (pixels/mm) and principal point $(c_x, c_y)$:
+
+$$
+\begin{aligned}
+u &= f_x \frac{X_C}{Z_C} + c_x \\
+v &= f_y \frac{Y_C}{Z_C} + c_y
+\end{aligned}
+$$
+
+Where $f_x = f \cdot m_x$ and $f_y = f \cdot m_y$ denote the effective focal lengths in pixel units. In homogeneous coordinates, this linear projective relationship is expressed compactly via the **Camera Intrinsic Matrix $K$**:
+
+$$
+s \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = K \begin{bmatrix} X_C \\ Y_C \\ Z_C \end{bmatrix} = \begin{bmatrix} f_x & s_{xy} & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} X_C \\ Y_C \\ Z_C \end{bmatrix}
+$$
+
+*(where $s_{xy}$ is the skew coefficient, typically 0 for rectangular modern CMOS/CCD sensors, and $s = Z_C$ is the projective scale factor).*
+
+---
+
+## 3. The Complete Projective Pipeline: Extrinsics + Intrinsics
+
+When the 3D landmark $\mathbf{P}_W = [X_W, Y_W, Z_W, 1]^T$ is specified in the global world frame $\{W\}$, it must first be transformed into camera frame $\{C\}$ via the **Extrinsic Matrix $[R | \mathbf{t}]$** before applying intrinsic projection:
+
+$$
+s \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = \underbrace{\begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}}_{K \text{ (Intrinsics, } 3\times3\text{)}} \underbrace{\begin{bmatrix} R_{11} & R_{12} & R_{13} & t_x \\ R_{21} & R_{22} & R_{23} & t_y \\ R_{31} & R_{32} & R_{33} & t_z \end{bmatrix}}_{[R|\mathbf{t}] \text{ (Extrinsics, } 3\times4\text{)}} \begin{bmatrix} X_W \\ Y_W \\ Z_W \\ 1 \end{bmatrix}
+$$
+
+The combined matrix $P = K [R | \mathbf{t}] \in \mathbb{R}^{3 \times 4}$ is the **Full Camera Projection Matrix**.
+
+---
+
+## 4. Lens Distortion: Radial & Tangential Models
+
+Real-world optical glass lenses introduce geometric distortions (barrel, pincushion, and sensor misalignment):
+
+### Radial Distortion (Brown-Conrady Model):
+$$
+\begin{aligned}
+x_{\text{dist}} &= x (1 + k_1 r^2 + k_2 r^4 + k_3 r^6) \\
+y_{\text{dist}} &= y (1 + k_1 r^2 + k_2 r^4 + k_3 r^6)
+\end{aligned}
+$$
+where $r^2 = x^2 + y^2$.
+
+### Tangential Distortion (Non-parallel lens-sensor plane):
+$$
+\begin{aligned}
+x_{\text{dist}} &= x_{\text{radial}} + [2 p_1 x y + p_2 (r^2 + 2x^2)] \\
+y_{\text{dist}} &= y_{\text{radial}} + [p_1 (r^2 + 2y^2) + 2 p_2 x y]
+\end{aligned}
+$$
+
+Camera calibration routines (e.g., OpenCV `cv2.calibrateCamera` using planar checkerboards) estimate the 5 distortion coefficients $\mathbf{D} = [k_1, k_2, p_1, p_2, k_3]$ and intrinsic matrix $K$.
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-pinhole-camera"
+  question="In the camera intrinsic matrix K, what do the parameters (cx, cy) represent geometrically?"
+  options={[
+    {
+      id: "A",
+      text: "The Principal Point, which is the pixel coordinate where the optical z-axis pierces the image sensor plane.",
+      isCorrect: true,
+      explanation: "Exact! The principal point (cx, cy) marks the optical center on the sensor grid, typically near (width/2, height/2)."
+    },
+    {
+      id: "B",
+      text: "The physical dimensions of the camera body in meters.",
+      isCorrect: false,
+      explanation: "Incorrect. The matrix K operates strictly in normalized and pixel image coordinates."
+    },
+    {
+      id: "C",
+      text: "The rotation angle of the camera relative to the world origin.",
+      isCorrect: false,
+      explanation: "Incorrect. Orientation is governed by the extrinsic rotation matrix R, not the intrinsic matrix K."
+    },
+    {
+      id: "D",
+      text: "The shutter speed and exposure time.",
+      isCorrect: false,
+      explanation: "Incorrect. Exposure is a photometric setting, not a geometric intrinsic parameter."
+    }
+  ]}
+  hint="Think about where the perpendicular ray through the center of the lens strikes the 2D sensor."
+/>

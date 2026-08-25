@@ -1,0 +1,130 @@
+---
+id: matrix-decompositions-svd-cholesky
+title: "Dekomposisi Matriks: SVD, Cholesky & Nilai Eigen dalam Robotika (M31)"
+slug: matrix-decompositions-svd-cholesky
+domain: mathematics
+category: mathematics
+level: 1
+tier: Foundations
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - vectors-and-coordinate-geometry
+  - dot-product-and-projection
+references:
+  - "Gilbert Strang (2016). Introduction to Linear Algebra (5th Edition). Wellesley-Cambridge Press."
+  - "Gene H. Golub & Charles F. Van Loan (2013). Matrix Computations (4th Edition). Johns Hopkins University Press."
+  - "K. S. Arun, T. S. Huang, & S. D. Blostein (1987). Least-Squares Fitting of Two 3-D Point Sets. IEEE TPAMI."
+components:
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Dekomposisi Matriks: SVD, Cholesky & Nilai Eigen dalam Robotika
+
+> "Mengapa Singular Value Decomposition (SVD) dan faktorisasi Cholesky menjadi tulang punggung komputasi di balik registrasi point cloud ICP, propagasi kovariansi Filter Kalman, dan analisis elipsoid manipulabilitas Jacobian?"
+
+Dalam robotika teoretis dan terapan, persamaan matriks sering kali menjadi *ill-conditioned*, tidak dapat dibalik secara langsung, atau tidak stabil secara numerik. **Dekomposisi (Faktorisasi) Matriks** memecah transformasi linier kompleks menjadi komponen geometris elementer: rotasi murni, peregangan skala sepanjang sumbu utama, dan substitusi segitiga yang efisien.
+
+---
+
+<VideoEmbed
+  title="Singular Value Decomposition (SVD): Mathematical Foundations & Intuition"
+  videoId="vSczTbgc8Rc"
+  provider="youtube"
+  duration="16:10"
+  author="Steve Brunton / University of Washington"
+/>
+
+---
+
+## 1. Dekomposisi Nilai Singular (SVD)
+
+Untuk sembarang matriks real persegi panjang $A \in \mathbb{R}^{m \times n}$, SVD membuktikan bahwa transformasi tersebut selalu dapat difaktorkan menjadi:
+
+$$
+A = U \Sigma V^T
+$$
+
+Dimana:
+- $U \in \mathbb{R}^{m \times m}$ adalah matriks ortogonal dengan kolom-kolom berupa **vektor singular kiri** (vektor eigen dari $A A^T$).
+- $\Sigma \in \mathbb{R}^{m \times n}$ adalah matriks diagonal yang memuat **nilai singular** non-negatif $\sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_r > 0$.
+- $V \in \mathbb{R}^{n \times n}$ adalah matriks ortogonal dengan kolom-kolom berupa **vektor singular kanan** (vektor eigen dari $A^T A$).
+
+```text
+┌─────────────────────────┐     ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
+│     MATRIKS A (m x n)   │  =  │   U (m x m)   │ │ Sigma (m x n) │ │  V^T (n x n)  │
+│  [ Transformasi Bebas ] │     │  [ Rotasi 1 ] │ │  [ Skalasi ]  │ │  [ Rotasi 2 ] │
+└─────────────────────────┘     └───────────────┘ └───────────────┘ └───────────────┘
+```
+
+### Aplikasi Kunci SVD dalam Robotika:
+1. **Pseudoinvers Moore-Penrose ($A^+$)**: Menyelesaikan solusi kuadrat terkecil (*least squares*) untuk persamaan kinematika robot arm $J \dot{\mathbf{q}} = \mathbf{v}$:
+   $$A^+ = V \Sigma^+ U^T, \quad \text{dimana } \Sigma^+_{ii} = \frac{1}{\sigma_i} \text{ untuk } \sigma_i > 0$$
+2. **Metode Arun untuk Scan Matching ICP**: Diberikan korespondensi titik 3D $\{\mathbf{p}_i, \mathbf{q}_i\}$, matriks kovariansi silang $H = \sum \mathbf{p}_i \mathbf{q}_i^T$ difaktorkan via SVD ($H = U \Sigma V^T$) untuk menghasilkan matriks rotasi optimal:
+   $$R^* = V \begin{bmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & \det(V U^T) \end{bmatrix} U^T$$
+
+---
+
+## 2. Dekomposisi Cholesky ($L L^T$)
+
+Untuk sembarang matriks simetris dan definit-positif $P \in \mathbb{R}^{n \times n}$ (seperti **matriks kovariansi** $\Sigma$ pada EKF atau SLAM):
+
+$$
+P = L L^T
+$$
+
+Dimana $L$ adalah matriks segitiga bawah (*lower-triangular*) unik dengan elemen diagonal bernilai positif.
+
+### Manfaat Utama Cholesky dalam Robotika:
+1. **Sampling Distribusi Gaussian Cepat**: Untuk membangkitkan sampel status acak dari distribusi normal multivariat $\mathcal{N}(\boldsymbol{\mu}, \Sigma)$ (misalnya pada Filter Partikel MCL), kita membangkitkan derau putih standar $\mathbf{w} \sim \mathcal{N}(\mathbf{0}, I)$ lalu menerapkan transformasi linier:
+   $$\mathbf{x} = \boldsymbol{\mu} + L \mathbf{w}$$
+2. **Penyelesaian Persamaan Normal Graf SLAM**: Optimasi graf SLAM menyelesaikan $H \Delta \mathbf{x} = -\mathbf{b}$ dimana $H = J^T \Omega J$. Faktorisasi Cholesky menyelesaikannya secara efisien tanpa perlu menghitung invers $H^{-1}$ secara langsung.
+
+---
+
+## 3. Nilai Eigen & Analisis Komponen Utama (PCA)
+
+Untuk matriks persegi $M \in \mathbb{R}^{n \times n}$, vektor eigen $\mathbf{v}$ dan nilai eigen $\lambda$ memenuhi:
+
+$$
+M \mathbf{v} = \lambda \mathbf{v}
+$$
+
+### Aplikasi:
+- **Estimasi Vektor Normal Permukaan LiDAR**: Kovariansi titik tetangga terdekat menghasilkan nilai eigen $\lambda_1 \le \lambda_2 \le \lambda_3$. Vektor eigen $\mathbf{v}_1$ yang bersesuaian dengan $\lambda_1$ terkecil mengarah langsung ke **vektor normal permukaan**.
+- **Elipsoid Manipulabilitas**: Nilai eigen dari $J J^T$ menentukan sumbu mayor dan minor dari kapasitas kecepatan linear efektor ujung manipulator.
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-svd-cholesky"
+  question="Mengapa metode Arun memanfaatkan dekomposisi SVD untuk penyelarasan titik pada Iterative Closest Point (ICP)?"
+  options={[
+    {
+      id: "A",
+      text: "SVD mengekstrak matriks rotasi ortogonal optimal R yang meminimalkan galat kuadrat Euclidean tanpa risiko divergensi atau distorsi skala.",
+      isCorrect: true,
+      explanation: "Tepat! Metode Arun memfaktorkan kovariansi silang H = U Sigma V^T, menjamin bahwa R = V U^T adalah matriks rotasi ortonormal murni yang memenuhi det(R) = +1."
+    },
+    {
+      id: "B",
+      text: "Untuk mengonversi data LiDAR menjadi gambar visual 2D.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Untuk menghemat konsumsi daya baterai mikrokontroler.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan bagaimana cara memisahkan komponen rotasi murni dari matriks kovariansi silang 3D."
+/>

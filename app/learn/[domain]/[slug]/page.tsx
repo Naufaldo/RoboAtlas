@@ -18,11 +18,13 @@ export function generateStaticParams() {
   const paramsMap = new Map<string, { domain: string; slug: string }>();
 
   for (const lesson of allLessons) {
-    const domain = lesson.frontmatter.category;
+    const domain = lesson.frontmatter.domain || lesson.frontmatter.category;
     const slug = lesson.frontmatter.slug;
-    const key = `${domain}___${slug}`;
-    if (!paramsMap.has(key)) {
-      paramsMap.set(key, { domain, slug });
+    if (domain && slug) {
+      const key = `${domain}___${slug}`;
+      if (!paramsMap.has(key)) {
+        paramsMap.set(key, { domain, slug });
+      }
     }
   }
 

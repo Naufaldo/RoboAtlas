@@ -1,0 +1,130 @@
+---
+id: matrix-decompositions-svd-cholesky
+title: "Matrix Decompositions: SVD, Cholesky & Eigenvalues in Robotics (M31)"
+slug: matrix-decompositions-svd-cholesky
+domain: mathematics
+category: mathematics
+level: 1
+tier: Foundations
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - mathematical-foundations
+  - vectors-and-coordinate-geometry
+  - dot-product-and-projection
+references:
+  - "Gilbert Strang (2016). Introduction to Linear Algebra (5th Edition). Wellesley-Cambridge Press."
+  - "Gene H. Golub & Charles F. Van Loan (2013). Matrix Computations (4th Edition). Johns Hopkins University Press."
+  - "K. S. Arun, T. S. Huang, & S. D. Blostein (1987). Least-Squares Fitting of Two 3-D Point Sets. IEEE TPAMI."
+components:
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Matrix Decompositions: SVD, Cholesky & Eigenvalues in Robotics
+
+> "Why are Singular Value Decomposition (SVD) and Cholesky factorization the fundamental computational backbones powering ICP point-cloud registration, Kalman Filter covariance propagation, and Jacobian manipulability analysis?"
+
+In theoretical and applied robotics, raw matrix equations frequently become ill-conditioned, non-invertible, or computationally unstable. **Matrix Factorization (Decomposition)** breaks complex transformations down into canonical geometric primitives: pure rotations, axial scalings, and triangular triangular substitutions.
+
+---
+
+<VideoEmbed
+  title="Singular Value Decomposition (SVD): Mathematical Foundations & Intuition"
+  videoId="vSczTbgc8Rc"
+  provider="youtube"
+  duration="16:10"
+  author="Steve Brunton / University of Washington"
+/>
+
+---
+
+## 1. Singular Value Decomposition (SVD)
+
+For any arbitrary real rectangular matrix $A \in \mathbb{R}^{m \times n}$, SVD proves that the linear transformation can always be factored into:
+
+$$
+A = U \Sigma V^T
+$$
+
+Where:
+- $U \in \mathbb{R}^{m \times m}$ is an orthogonal matrix whose columns are the **left singular vectors** (eigenvectors of $A A^T$).
+- $\Sigma \in \mathbb{R}^{m \times n}$ is a diagonal matrix containing non-negative **singular values** $\sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_r > 0$.
+- $V \in \mathbb{R}^{n \times n}$ is an orthogonal matrix whose columns are the **right singular vectors** (eigenvectors of $A^T A$).
+
+```text
+┌─────────────────────────┐     ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
+│     MATRIX A (m x n)    │  =  │   U (m x m)   │ │ Sigma (m x n) │ │  V^T (n x n)  │
+│  [ Arbitrary Transform ]│     │  [ Rotation ] │ │  [ Scaling ]  │ │  [ Rotation ] │
+└─────────────────────────┘     └───────────────┘ └───────────────┘ └───────────────┘
+```
+
+### Key Robotic Applications of SVD:
+1. **Moore-Penrose Pseudoinverse ($A^+$)**: Computes the least-squares solution to underdetermined or overdetermined robot kinematic equations $J \dot{\mathbf{q}} = \mathbf{v}$:
+   $$A^+ = V \Sigma^+ U^T, \quad \text{where } \Sigma^+_{ii} = \frac{1}{\sigma_i} \text{ for } \sigma_i > 0$$
+2. **Arun's Method for ICP Scan Matching**: Given matched 3D point correspondences $\{\mathbf{p}_i, \mathbf{q}_i\}$, the cross-covariance correlation matrix $H = \sum \mathbf{p}_i \mathbf{q}_i^T$ is factored via SVD ($H = U \Sigma V^T$) to yield the globally optimal 3D rotation matrix:
+   $$R^* = V \begin{bmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & \det(V U^T) \end{bmatrix} U^T$$
+
+---
+
+## 2. Cholesky Decomposition ($L L^T$)
+
+For any symmetric, positive-definite matrix $P \in \mathbb{R}^{n \times n}$ (such as an estimation **covariance matrix** $\Sigma$ in EKF or SLAM):
+
+$$
+P = L L^T
+$$
+
+Where $L$ is a unique lower-triangular matrix with strictly positive diagonal entries.
+
+### Why Cholesky is Essential in Robotics:
+1. **Efficient Gaussian Sampling**: To generate $N$ random state samples drawn from a multivariate normal distribution $\mathcal{N}(\boldsymbol{\mu}, \Sigma)$ (e.g., in MCL Particle Filters), one generates standard white noise $\mathbf{w} \sim \mathcal{N}(\mathbf{0}, I)$ and applies the linear transformation:
+   $$\mathbf{x} = \boldsymbol{\mu} + L \mathbf{w}$$
+2. **Solving Normal Equations in SLAM**: Graph SLAM optimization solves $H \Delta \mathbf{x} = -\mathbf{b}$ where $H = J^T \Omega J$ is symmetric positive semi-definite. Cholesky factorization solves this via fast forward and back substitution without explicitly computing $H^{-1}$.
+
+---
+
+## 3. Eigenvalues & Principal Component Analysis (PCA)
+
+For a square matrix $M \in \mathbb{R}^{n \times n}$, an eigenvector $\mathbf{v}$ and eigenvalue $\lambda$ satisfy:
+
+$$
+M \mathbf{v} = \lambda \mathbf{v}
+$$
+
+### Applications:
+- **LiDAR Point Cloud Surface Normal Estimation**: The covariance of nearest neighbors yields eigenvalues $\lambda_1 \le \lambda_2 \le \lambda_3$. The eigenvector $\mathbf{v}_1$ corresponding to the smallest eigenvalue $\lambda_1$ points directly along the **surface normal vector**.
+- **Manipulability Ellipsoids**: The eigenvalues of $J J^T$ define the major and minor axes of maximum and minimum end-effector Cartesian velocity capacity.
+
+---
+
+## 4. Concept Check
+
+<ConceptCheck
+  id="quiz-svd-cholesky"
+  question="Why is SVD used in Arun's method for Iterative Closest Point (ICP) point-cloud alignment?"
+  options={[
+    {
+      id: "A",
+      text: "It computes the optimal orthogonal rotation matrix R that minimizes Euclidean squared error between corresponding 3D points without numerical divergence.",
+      isCorrect: true,
+      explanation: "Exact! Arun's method factors cross-covariance H = U Sigma V^T, guaranteeing that R = V U^T is a strictly orthonormal matrix satisfying det(R) = +1."
+    },
+    {
+      id: "B",
+      text: "It converts LiDAR points to JPEG images.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "It reduces battery power consumption on microcontrollers.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about how to extract pure rotation from a cross-covariance matrix."
+/>

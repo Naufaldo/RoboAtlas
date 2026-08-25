@@ -1,0 +1,147 @@
+---
+id: pinhole-camera-and-calibration
+title: "Model Kamera Lubang Jarum (Pinhole), Proyeksi Perspektif & Kalibrasi Intrinsik"
+slug: pinhole-camera-and-calibration
+domain: perception
+category: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - 2d-geometry
+  - 3d-geometry
+  - coordinate-frames-and-transforms
+references:
+  - "Richard Hartley & Andrew Zisserman (2004). Multiple View Geometry in Computer Vision (2nd Edition). Cambridge University Press."
+  - "Zhengyou Zhang (2000). A Flexible New Technique for Camera Calibration. IEEE TPAMI."
+  - "Gary Bradski & Adrian Kaehler (2008). Learning OpenCV. O'Reilly Media."
+components:
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Model Kamera Lubang Jarum (Pinhole), Proyeksi Perspektif & Kalibrasi Intrinsik
+
+> "Bagaimana kamera robot memetakan pantulan foton cahaya dari objek 3D fisik ke dalam koordinat piksel diskrit 2D $(u, v)$ pada sensor digital?"
+
+Penglihatan komputer (*Computer Vision*) adalah modalitas sensor paling kaya informasi dalam robotika otonom. Baik pada mobil otonom, Visual SLAM (ORB-SLAM / FAST-LIO), maupun deteksi objek untuk lengan manipulator, **Model Kamera Pinhole** menyediakan fondasi geometri proyektif yang menghubungkan ruang Euclidean 3D dengan bidang gambar 2D.
+
+---
+
+<VideoEmbed
+  title="The Pinhole Camera Model and Camera Calibration Explained"
+  videoId="k5E1Z_T7y5g"
+  provider="youtube"
+  duration="15:30"
+  author="Cyrill Stachniss / Photogrammetry & Robotics"
+/>
+
+---
+
+## 1. Proyeksi Perspektif Geometris
+
+Pada model proyeksi lubang jarum (*pinhole*) ideal tanpa lensa, berkas cahaya dari titik fisik 3D $\mathbf{P}_C = [X_C, Y_C, Z_C]^T$ pada kerangka optik kamera melewati celah apertur kecil dan terproyeksikan ke bidang gambar pada jarak fokus $f$ di sepanjang sumbu optik $Z$:
+
+$$
+x = f \frac{X_C}{Z_C}, \quad y = f \frac{Y_C}{Z_C}
+$$
+
+Perhatikan bahwa proyeksi perspektif memperkenalkan pembagian non-linear oleh kedalaman $Z_C$. Objek yang lebih jauh akan terproyeksikan lebih kecil dan mendekati pusat optik.
+
+---
+
+## 2. Matriks Kalibrasi Intrinsik Kamera ($K$)
+
+Untuk mengonversi koordinat gambar ternormalisasi $(x, y)$ dalam satuan metrik (milimeter) ke dalam koordinat piksel diskrit $(u, v)$ dengan faktor skala piksel $m_x, m_y$ (piksel/mm) dan titik utama (*principal point*) $(c_x, c_y)$:
+
+$$
+\begin{aligned}
+u &= f_x \frac{X_C}{Z_C} + c_x \\
+v &= f_y \frac{Y_C}{Z_C} + c_y
+\end{aligned}
+$$
+
+Dimana $f_x = f \cdot m_x$ dan $f_y = f \cdot m_y$ menyatakan panjang fokus efektif dalam satuan piksel. Dalam koordinat homogen, hubungan linier ini ditulis ringkas menggunakan **Matriks Intrinsik Kamera $K$**:
+
+$$
+s \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = K \begin{bmatrix} X_C \\ Y_C \\ Z_C \end{bmatrix} = \begin{bmatrix} f_x & s_{xy} & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} X_C \\ Y_C \\ Z_C \end{bmatrix}
+$$
+
+*(dengan koefisien kemiringan $s_{xy} \approx 0$ untuk sensor modern, dan $s = Z_C$ sebagai faktor skala proyektif).*
+
+---
+
+## 3. Jalur Proyeksi Lengkap: Ekstrinsik + Intrinsik
+
+Ketika titik 3D $\mathbf{P}_W = [X_W, Y_W, Z_W, 1]^T$ dinyatakan dalam kerangka dunia global $\{W\}$, titik tersebut harus ditransformasikan ke kerangka kamera $\{C\}$ menggunakan **Matriks Ekstrinsik $[R | \mathbf{t}]$** sebelum diproyeksikan:
+
+$$
+s \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = \underbrace{\begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}}_{K \text{ (Intrinsik, } 3\times3\text{)}} \underbrace{\begin{bmatrix} R_{11} & R_{12} & R_{13} & t_x \\ R_{21} & R_{22} & R_{23} & t_y \\ R_{31} & R_{32} & R_{33} & t_z \end{bmatrix}}_{[R|\mathbf{t}] \text{ (Ekstrinsik, } 3\times4\text{)}} \begin{bmatrix} X_W \\ Y_W \\ Z_W \\ 1 \end{bmatrix}
+$$
+
+Matriks gabungan $P = K [R | \mathbf{t}] \in \mathbb{R}^{3 \times 4}$ disebut **Matriks Proyeksi Kamera Penuh**.
+
+---
+
+## 4. Distorsi Lensa: Model Radial & Tangensial
+
+Lensa optik nyata memperkenalkan distorsi geometris (*barrel* atau *pincushion*):
+
+### Distorsi Radial (Model Brown-Conrady):
+$$
+\begin{aligned}
+x_{\text{dist}} &= x (1 + k_1 r^2 + k_2 r^4 + k_3 r^6) \\
+y_{\text{dist}} &= y (1 + k_1 r^2 + k_2 r^4 + k_3 r^6)
+\end{aligned}
+$$
+dengan $r^2 = x^2 + y^2$.
+
+### Distorsi Tangensial (Ketidaksejajaran sensor dan lensa):
+$$
+\begin{aligned}
+x_{\text{dist}} &= x_{\text{radial}} + [2 p_1 x y + p_2 (r^2 + 2x^2)] \\
+y_{\text{dist}} &= y_{\text{radial}} + [p_1 (r^2 + 2y^2) + 2 p_2 x y]
+\end{aligned}
+$$
+
+Proses kalibrasi kamera (seperti algoritma papan catur Zhang di OpenCV) mengestimasi 5 parameter distorsi $\mathbf{D} = [k_1, k_2, p_1, p_2, k_3]$ serta matriks intrinsik $K$.
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-pinhole-camera"
+  question="Pada matriks intrinsik kamera K, apa arti geometris dari parameter (cx, cy)?"
+  options={[
+    {
+      id: "A",
+      text: "Titik Utama (Principal Point), yaitu koordinat piksel di mana sumbu optik z menembus bidang sensor gambar.",
+      isCorrect: true,
+      explanation: "Tepat! Titik utama (cx, cy) adalah pusat optik pada sensor, biasanya berada di dekat koordinat (lebar/2, tinggi/2)."
+    },
+    {
+      id: "B",
+      text: "Dimensi fisik badan kamera dalam satuan meter.",
+      isCorrect: false,
+      explanation: "Salah. Matriks K beroperasi pada koordinat piksel dan ternormalisasi."
+    },
+    {
+      id: "C",
+      text: "Sudut rotasi kamera terhadap titik asal dunia.",
+      isCorrect: false,
+      explanation: "Salah. Orientasi kamera diatur oleh matriks rotasi ekstrinsik R, bukan matriks intrinsik K."
+    },
+    {
+      id: "D",
+      text: "Kecepatan rana (shutter speed) dan waktu pencahayaan.",
+      isCorrect: false,
+      explanation: "Salah. Pencahayaan adalah parameter fotometrik, bukan geometris."
+    }
+  ]}
+  hint="Pikirkan di mana garis tegak lurus yang melewati bagian tengah lensa jatuh pada sensor gambar 2D."
+/>

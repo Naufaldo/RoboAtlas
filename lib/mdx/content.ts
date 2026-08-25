@@ -6,7 +6,8 @@ export interface LessonFrontmatter {
   id: string;
   title: string;
   slug: string;
-  category: string;
+  category?: string;
+  domain?: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   language: 'en' | 'id';
   interactive: boolean;
@@ -14,6 +15,8 @@ export interface LessonFrontmatter {
   prerequisites?: string[];
   references?: string[];
   components?: string[];
+  tier?: string;
+  level?: number;
 }
 
 export interface LessonContent {
@@ -35,6 +38,7 @@ const LESSON_INDEX: Record<string, string> = {
   'en/mathematics/dot-product-and-projection': 'en/mathematics/dot-product-and-projection.mdx',
   'en/mathematics/probability-for-robotics': 'en/mathematics/probability-for-robotics.mdx',
   'en/mathematics/numerical-stability-euler-vs-rk4': 'en/mathematics/numerical-stability-euler-vs-rk4.mdx',
+  'en/mathematics/matrix-decompositions-svd-cholesky': 'en/mathematics/matrix-decompositions-svd-cholesky.mdx',
   'en/geometry/2d-geometry': 'en/geometry/2d-geometry.mdx',
   'en/geometry/lie-groups-and-lie-algebras': 'en/geometry/lie-groups-and-lie-algebras.mdx',
   'en/geometry/3d-geometry': 'en/geometry/3d-geometry.mdx',
@@ -45,6 +49,7 @@ const LESSON_INDEX: Record<string, string> = {
   'en/kinematics/velocity-kinematics-2d': 'en/kinematics/velocity-kinematics-2d.mdx',
   'en/kinematics/differential-drive-kinematics': 'en/kinematics/differential-drive-kinematics.mdx',
   'en/kinematics/non-holonomic-constraints': 'en/kinematics/non-holonomic-constraints.mdx',
+  'en/kinematics/denavit-hartenberg-parameters': 'en/kinematics/denavit-hartenberg-parameters.mdx',
   'en/sensors/sensor-fundamentals': 'en/sensors/sensor-fundamentals.mdx',
   'en/sensors/sensor-noise-and-uncertainty': 'en/sensors/sensor-noise-and-uncertainty.mdx',
   'en/sensors/lidar-raycasting': 'en/sensors/lidar-raycasting.mdx',
@@ -73,6 +78,7 @@ const LESSON_INDEX: Record<string, string> = {
   'en/perception/lidar-to-grid-map': 'en/perception/lidar-to-grid-map.mdx',
   'en/perception/kmeans-object-clustering': 'en/perception/kmeans-object-clustering.mdx',
   'en/perception/rectangle-fitting': 'en/perception/rectangle-fitting.mdx',
+  'en/perception/pinhole-camera-and-calibration': 'en/perception/pinhole-camera-and-calibration.mdx',
   'en/manipulation/2dof-forward-kinematics': 'en/manipulation/2dof-forward-kinematics.mdx',
   'en/manipulation/2dof-inverse-kinematics': 'en/manipulation/2dof-inverse-kinematics.mdx',
   'en/manipulation/jacobian-and-singularity': 'en/manipulation/jacobian-and-singularity.mdx',
@@ -99,6 +105,7 @@ const LESSON_INDEX: Record<string, string> = {
   'id/mathematics/dot-product-and-projection': 'id/mathematics/dot-product-and-projection.mdx',
   'id/mathematics/probability-for-robotics': 'id/mathematics/probability-for-robotics.mdx',
   'id/mathematics/numerical-stability-euler-vs-rk4': 'id/mathematics/numerical-stability-euler-vs-rk4.mdx',
+  'id/mathematics/matrix-decompositions-svd-cholesky': 'id/mathematics/matrix-decompositions-svd-cholesky.mdx',
   'id/geometry/2d-geometry': 'id/geometry/2d-geometry.mdx',
   'id/geometry/lie-groups-and-lie-algebras': 'id/geometry/lie-groups-and-lie-algebras.mdx',
   'id/geometry/3d-geometry': 'id/geometry/3d-geometry.mdx',
@@ -109,6 +116,7 @@ const LESSON_INDEX: Record<string, string> = {
   'id/kinematics/velocity-kinematics-2d': 'id/kinematics/velocity-kinematics-2d.mdx',
   'id/kinematics/differential-drive-kinematics': 'id/kinematics/differential-drive-kinematics.mdx',
   'id/kinematics/non-holonomic-constraints': 'id/kinematics/non-holonomic-constraints.mdx',
+  'id/kinematics/denavit-hartenberg-parameters': 'id/kinematics/denavit-hartenberg-parameters.mdx',
   'id/sensors/sensor-fundamentals': 'id/sensors/sensor-fundamentals.mdx',
   'id/sensors/sensor-noise-and-uncertainty': 'id/sensors/sensor-noise-and-uncertainty.mdx',
   'id/sensors/lidar-raycasting': 'id/sensors/lidar-raycasting.mdx',
@@ -137,6 +145,7 @@ const LESSON_INDEX: Record<string, string> = {
   'id/perception/lidar-to-grid-map': 'id/perception/lidar-to-grid-map.mdx',
   'id/perception/kmeans-object-clustering': 'id/perception/kmeans-object-clustering.mdx',
   'id/perception/rectangle-fitting': 'id/perception/rectangle-fitting.mdx',
+  'id/perception/pinhole-camera-and-calibration': 'id/perception/pinhole-camera-and-calibration.mdx',
   'id/manipulation/2dof-forward-kinematics': 'id/manipulation/2dof-forward-kinematics.mdx',
   'id/manipulation/2dof-inverse-kinematics': 'id/manipulation/2dof-inverse-kinematics.mdx',
   'id/manipulation/jacobian-and-singularity': 'id/manipulation/jacobian-and-singularity.mdx',
@@ -193,8 +202,15 @@ export function getLesson(
   const fileContents = fs.readFileSync(targetPath, 'utf8');
   const { data, content } = matter(fileContents);
 
+  const resolvedDomain = (data.domain || data.category || safeCategory) as string;
+  const resolvedCategory = (data.category || data.domain || safeCategory) as string;
+
   return {
-    frontmatter: data as LessonFrontmatter,
+    frontmatter: {
+      ...data,
+      domain: resolvedDomain,
+      category: resolvedCategory,
+    } as LessonFrontmatter,
     content,
   };
 }
@@ -213,8 +229,17 @@ export function getAllLessons(language: 'en' | 'id'): LessonContent[] {
     if (fs.existsSync(targetPath)) {
       const fileContents = fs.readFileSync(targetPath, 'utf8');
       const { data, content } = matter(fileContents);
+      const keyParts = key.split('/');
+      const keyDomain = keyParts[1] || '';
+      const domain = (data.domain || data.category || keyDomain) as string;
+      const category = (data.category || data.domain || keyDomain) as string;
+
       lessons.push({
-        frontmatter: data as LessonFrontmatter,
+        frontmatter: {
+          ...data,
+          domain,
+          category,
+        } as LessonFrontmatter,
         content,
       });
     }

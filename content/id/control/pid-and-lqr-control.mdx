@@ -2,6 +2,7 @@
 id: pid-and-lqr-control
 title: Kendali Umpan Balik PID & Regulasi Ruang Status Optimal LQR
 slug: pid-and-lqr-control
+domain: control
 category: control
 difficulty: intermediate
 language: id
@@ -15,6 +16,7 @@ references:
   - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 6). Springer.
 components:
   - PidTuningSimulator
+  - VideoEmbed
   - FormulaExplainer
   - MathCodeBridge
   - ConceptCheck
@@ -25,6 +27,16 @@ components:
 > "Ketika hembusan angin, gesekan mekanis, dan gangguan torsi motor menggeser posisi robot, bagaimana kontroler umpan balik secara aktif mengembalikan sistem ke titik kesetimbangan?"
 
 Perintah loop terbuka (*open-loop*) tidak mampu mengatasi ketidakpastian dunia nyata. **Kendali umpan balik (*Feedback Control*)** terus-menerus mengukur galat (*error*) antara target acuan $r(t)$ dan kondisi aktual $y(t)$, lalu menghasilkan aksi koreksi kendali $u(t)$ secara dinamis.
+
+---
+
+<VideoEmbed
+  title="Understanding PID Control: Proportional, Integral, and Derivative Gains"
+  videoId="sFOEsA0Irjs"
+  provider="youtube"
+  duration="14:20"
+  author="Brian Douglas / MATLAB Tech Talks"
+/>
 
 ---
 

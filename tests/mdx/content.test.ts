@@ -59,6 +59,24 @@ describe('RoboAtlas MDX Content Architecture', () => {
     expect(lesson).not.toBeNull();
     expect(lesson?.frontmatter.id).toBe('a-star');
     expect(lesson?.frontmatter.category).toBe('planning');
+    expect(lesson?.frontmatter.domain).toBe('planning');
     expect(lesson?.content).toContain('Evaluation Function');
+  });
+
+  it('should ensure all lessons provide valid domain and category for generateStaticParams', () => {
+    const enLessons = getAllLessons('en');
+    const idLessons = getAllLessons('id');
+    const allLessons = [...enLessons, ...idLessons];
+
+    for (const lesson of allLessons) {
+      const domain = lesson.frontmatter.domain || lesson.frontmatter.category;
+      const slug = lesson.frontmatter.slug;
+      expect(domain, `Lesson ${lesson.frontmatter.id} must have a valid domain`).toBeDefined();
+      expect(typeof domain).toBe('string');
+      expect(domain?.length).toBeGreaterThan(0);
+      expect(slug, `Lesson ${lesson.frontmatter.id} must have a valid slug`).toBeDefined();
+      expect(typeof slug).toBe('string');
+      expect(slug?.length).toBeGreaterThan(0);
+    }
   });
 });

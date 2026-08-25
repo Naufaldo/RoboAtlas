@@ -2,6 +2,7 @@
 id: pid-and-lqr-control
 title: PID Feedback Control & State-Space Optimal Regulation
 slug: pid-and-lqr-control
+domain: control
 category: control
 difficulty: intermediate
 language: en
@@ -15,6 +16,7 @@ references:
   - Deepak Herath & David St-Onge (2022). Foundations of Robotics (Chapter 6). Springer.
 components:
   - PidTuningSimulator
+  - VideoEmbed
   - FormulaExplainer
   - MathCodeBridge
   - ConceptCheck
@@ -25,6 +27,16 @@ components:
 > "When external wind gusts, friction, and motor disturbances knock a robot off course, how does a feedback controller actively restore equilibrium?"
 
 Open-loop commands fail in physical environments. **Feedback control** measures the actual error between desired reference state $r(t)$ and measured state $y(t)$, continuously generating corrective control action $u(t)$.
+
+---
+
+<VideoEmbed
+  title="Understanding PID Control: Proportional, Integral, and Derivative Gains"
+  videoId="sFOEsA0Irjs"
+  provider="youtube"
+  duration="14:20"
+  author="Brian Douglas / MATLAB Tech Talks"
+/>
 
 ---
 

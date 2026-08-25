@@ -1,0 +1,152 @@
+---
+id: denavit-hartenberg-parameters
+title: "Denavit-Hartenberg (DH) Parameters & Serial Manipulator Forward Kinematics"
+slug: denavit-hartenberg-parameters
+domain: kinematics
+category: kinematics
+level: 3
+tier: Foundations
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - 2d-rotation-matrices
+  - transform-composition-and-chains
+  - coordinate-frames-and-transforms
+references:
+  - "John J. Craig (2005). Introduction to Robotics: Mechanics and Control (3rd Edition). Pearson."
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control. Cambridge University Press."
+  - "Mark W. Spong, Seth Hutchinson, & M. Vidyasagar (2005). Robot Modeling and Control. Wiley."
+components:
+  - ArmKinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Denavit-Hartenberg (DH) Parameters & Serial Manipulator Forward Kinematics
+
+> "How do industrial robotic arms with 6 or more rotating revolute and prismatic joints establish a universally standardized coordinate transformation chain from the fixed base to the end-effector gripper?"
+
+In serial multi-link robot manipulators, establishing arbitrary coordinate frames on every link quickly leads to geometric confusion and redundant parameterizations. In 1955, Jacques Denavit and Richard Hartenberg introduced a compact, minimal convention that attaches coordinate frames to successive robot joints using only **4 geometric parameters per link**.
+
+---
+
+<VideoEmbed
+  title="Robot Forward Kinematics & Denavit-Hartenberg (DH) Convention"
+  videoId="rA9tm0gTln8"
+  provider="youtube"
+  duration="18:45"
+  author="Angela Sodemann / RoboHub"
+/>
+
+---
+
+## 1. The Four Canonical DH Parameters
+
+Between two successive coordinate frames $\{i-1\}$ and $\{i\}$, the spatial relationship is completely described by four scalar values:
+
+```text
+┌───────────────────────────────┬────────────┬────────────────────────────────────────────────────────────────────────┐
+│ Parameter Name                │ Symbol     │ Geometric Definition along / around Joint Axes                         │
+├───────────────────────────────┼────────────┼────────────────────────────────────────────────────────────────────────┤
+│ 1. Link Length (a_i)          │ a_i        │ Distance along x_i axis from z_{i-1} to z_i (Common normal distance)  │
+│ 2. Link Twist (alpha_i)       │ \alpha_i   │ Angle of rotation around x_i axis from z_{i-1} to z_i                  │
+│ 3. Link Offset (d_i)          │ d_i        │ Distance along z_{i-1} axis from x_{i-1} to x_i (Joint variable for P)│
+│ 4. Joint Angle (theta_i)      │ \theta_i   │ Angle of rotation around z_{i-1} axis from x_{i-1} to x_i (Var for R) │
+└───────────────────────────────┴────────────┴────────────────────────────────────────────────────────────────────────┘
+```
+
+- For **Revolute (R) joints**: $\theta_i$ is the active controlled joint variable, while $a_i, \alpha_i, d_i$ are constant physical link dimensions.
+- For **Prismatic (P) joints**: $d_i$ is the active joint displacement variable, while $a_i, \alpha_i, \theta_i$ are constant geometric properties.
+
+---
+
+## 2. Standard Homogeneous Transformation Matrix ($A_i$)
+
+The relative homogeneous transformation matrix $T_{i-1, i}$ representing frame $\{i\}$ relative to frame $\{i-1\}$ is evaluated as a sequence of four fundamental spatial transformations:
+
+$$
+T_{i-1, i} = \text{Rot}_z(\theta_i) \, \text{Trans}_z(d_i) \, \text{Trans}_x(a_i) \, \text{Rot}_x(\alpha_i)
+$$
+
+Multiplying these four elementary matrices yields the general $4 \times 4$ Denavit-Hartenberg transformation matrix:
+
+$$
+T_{i-1, i} = \begin{bmatrix}
+\cos\theta_i & -\sin\theta_i\cos\alpha_i & \sin\theta_i\sin\alpha_i & a_i\cos\theta_i \\
+\sin\theta_i & \cos\theta_i\cos\alpha_i & -\cos\theta_i\sin\alpha_i & a_i\sin\theta_i \\
+0 & \sin\alpha_i & \cos\alpha_i & d_i \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+$$
+
+---
+
+## 3. Forward Kinematics Chain ($T_0^n$)
+
+For an $n$-degree-of-freedom serial robot arm, the total forward kinematics transform from the stationary robot base frame $\{0\}$ to the end-effector tool frame $\{n\}$ is computed by chained post-multiplication:
+
+$$
+T_0^n(\mathbf{q}) = T_0^1(q_1) \cdot T_1^2(q_2) \cdot T_2^3(q_3) \cdots T_{n-1}^n(q_n) = \begin{bmatrix} R_0^n(\mathbf{q}) & \mathbf{p}_0^n(\mathbf{q}) \\ \mathbf{0}_{1\times3} & 1 \end{bmatrix}
+$$
+
+Where:
+- $\mathbf{q} = [q_1, q_2, \dots, q_n]^T$ is the joint configuration vector in joint space $\mathcal{Q}$.
+- $R_0^n \in SO(3)$ is the orientation matrix of the end-effector tool.
+- $\mathbf{p}_0^n = [x, y, z]^T \in \mathbb{R}^3$ is the global Cartesian position of the tool tip.
+
+---
+
+## 4. Interactive Serial Arm Kinematics Simulator
+
+Adjust the joint angles below to observe how the chained transformation matrices propagate through each articulated link in real time:
+
+<ArmKinematicsSimulator />
+
+---
+
+## 5. Standard DH Frame Assignment Rules
+
+To construct a valid DH parameter table for any serial arm:
+1. Align the $z_i$ axis along the axis of revolution (or axis of translation for prismatic joints) of joint $i+1$.
+2. Locate the origin $O_i$ at the intersection of the $z_i$ axis and the common normal between $z_{i-1}$ and $z_i$.
+3. Direct the $x_i$ axis along the common normal from $z_{i-1}$ to $z_i$. If the axes intersect, choose $x_i \perp \text{span}(z_{i-1}, z_i)$.
+4. Complete the right-handed coordinate frame by setting $y_i = z_i \times x_i$.
+
+---
+
+## 6. Concept Check
+
+<ConceptCheck
+  id="quiz-dh-parameters"
+  question="In the standard Denavit-Hartenberg (DH) convention for a revolute robot joint, which parameter is the active dynamic variable controlled by the actuator?"
+  options={[
+    {
+      id: "A",
+      text: "Joint angle (theta_i) representing rotation around the z_{i-1} axis.",
+      isCorrect: true,
+      explanation: "Correct! For revolute joints, theta_i changes as the joint rotates, while link length (a_i), link twist (alpha_i), and link offset (d_i) remain constant mechanical dimensions."
+    },
+    {
+      id: "B",
+      text: "Link twist (alpha_i) representing the angle between joint axes.",
+      isCorrect: false,
+      explanation: "Incorrect. Link twist alpha_i is a fixed mechanical property determined by the rigid structure of the link."
+    },
+    {
+      id: "C",
+      text: "Link length (a_i) representing the common normal distance.",
+      isCorrect: false,
+      explanation: "Incorrect. Link length a_i is constant for rigid links."
+    },
+    {
+      id: "D",
+      text: "Determinant of the transformation matrix.",
+      isCorrect: false,
+      explanation: "Incorrect. The determinant of any rigid body homogeneous transformation matrix is always strictly +1."
+    }
+  ]}
+  hint="Think about which parameter varies when a servo motor turns an articulated joint."
+/>

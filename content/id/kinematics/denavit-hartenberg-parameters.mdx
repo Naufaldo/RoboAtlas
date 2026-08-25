@@ -1,0 +1,152 @@
+---
+id: denavit-hartenberg-parameters
+title: "Parameter Denavit-Hartenberg (DH) & Kinematika Maju Manipulator Serial"
+slug: denavit-hartenberg-parameters
+domain: kinematics
+category: kinematics
+level: 3
+tier: Foundations
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - 2d-rotation-matrices
+  - transform-composition-and-chains
+  - coordinate-frames-and-transforms
+references:
+  - "John J. Craig (2005). Introduction to Robotics: Mechanics and Control (3rd Edition). Pearson."
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control. Cambridge University Press."
+  - "Mark W. Spong, Seth Hutchinson, & M. Vidyasagar (2005). Robot Modeling and Control. Wiley."
+components:
+  - ArmKinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Parameter Denavit-Hartenberg (DH) & Kinematika Maju Manipulator Serial
+
+> "Bagaimana lengan robot industri dengan 6 sendi rotasi atau lebih menetapkan rantai transformasi koordinat terstandar dari basis statis hingga ke gripper end-effector?"
+
+Pada robot manipulator serial multi-link, menempatkan kerangka acuan secara sembarang pada setiap link memicu kebingungan geometris dan parameter yang redundan. Pada tahun 1955, Jacques Denavit dan Richard Hartenberg merumuskan konvensi minimal yang menghubungkan kerangka koordinat pada setiap sendi robot hanya dengan **4 parameter geometris per link**.
+
+---
+
+<VideoEmbed
+  title="Robot Forward Kinematics & Denavit-Hartenberg (DH) Convention"
+  videoId="rA9tm0gTln8"
+  provider="youtube"
+  duration="18:45"
+  author="Angela Sodemann / RoboHub"
+/>
+
+---
+
+## 1. Empat Parameter Kanonikal DH
+
+Di antara dua kerangka koordinat berurutan $\{i-1\}$ dan $\{i\}$, hubungan spasial dijelaskan secara lengkap oleh 4 nilai skalar:
+
+```text
+┌───────────────────────────────┬────────────┬────────────────────────────────────────────────────────────────────────┐
+│ Nama Parameter                │ Simbol     │ Definisi Geometris Sepanjang / Mengelilingi Sumbu Sendi                │
+├───────────────────────────────┼────────────┼────────────────────────────────────────────────────────────────────────┤
+│ 1. Panjang Link (a_i)         │ a_i        │ Jarak sepanjang sumbu x_i dari z_{i-1} ke z_i (Common normal)          │
+│ 2. Sudut Putir Link (alpha_i) │ \alpha_i   │ Sudut rotasi mengelilingi sumbu x_i dari z_{i-1} ke z_i                │
+│ 3. Pergeseran Link (d_i)      │ d_i        │ Jarak sepanjang sumbu z_{i-1} dari x_{i-1} ke x_i (Variabel sendi P)  │
+│ 4. Sudut Sendi (theta_i)      │ \theta_i   │ Sudut rotasi mengelilingi sumbu z_{i-1} dari x_{i-1} ke x_i (Var R)   │
+└───────────────────────────────┴────────────┴────────────────────────────────────────────────────────────────────────┘
+```
+
+- Untuk **Sendi Revolute (R)**: $\theta_i$ adalah variabel sendi aktif dinamis, sedangkan $a_i, \alpha_i, d_i$ merupakan dimensi fisik link konstan.
+- Untuk **Sendi Prismatic (P)**: $d_i$ adalah variabel perpindahan translasi aktif, sedangkan $a_i, \alpha_i, \theta_i$ merupakan konstanta geometris.
+
+---
+
+## 2. Matriks Transformasi Homogen Standar ($A_i$)
+
+Matriks transformasi homogen relatif $T_{i-1, i}$ yang merepresentasikan kerangka $\{i\}$ terhadap kerangka $\{i-1\}$ dihitung melalui 4 transformasi spasial berurutan:
+
+$$
+T_{i-1, i} = \text{Rot}_z(\theta_i) \, \text{Trans}_z(d_i) \, \text{Trans}_x(a_i) \, \text{Rot}_x(\alpha_i)
+$$
+
+Perkalian keempat matriks elementer tersebut menghasilkan matriks transformasi Denavit-Hartenberg $4 \times 4$ umum:
+
+$$
+T_{i-1, i} = \begin{bmatrix}
+\cos\theta_i & -\sin\theta_i\cos\alpha_i & \sin\theta_i\sin\alpha_i & a_i\cos\theta_i \\
+\sin\theta_i & \cos\theta_i\cos\alpha_i & -\cos\theta_i\sin\alpha_i & a_i\sin\theta_i \\
+0 & \sin\alpha_i & \cos\alpha_i & d_i \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+$$
+
+---
+
+## 3. Rantai Kinematika Maju ($T_0^n$)
+
+Untuk lengan robot serial dengan $n$ derajat kebebasan, total transformasi kinematika maju dari basis robot $\{0\}$ ke ujung efektor (*end-effector*) $\{n\}$ dihitung melalui perkalian rantai matriks:
+
+$$
+T_0^n(\mathbf{q}) = T_0^1(q_1) \cdot T_1^2(q_2) \cdot T_2^3(q_3) \cdots T_{n-1}^n(q_n) = \begin{bmatrix} R_0^n(\mathbf{q}) & \mathbf{p}_0^n(\mathbf{q}) \\ \mathbf{0}_{1\times3} & 1 \end{bmatrix}
+$$
+
+Dimana:
+- $\mathbf{q} = [q_1, q_2, \dots, q_n]^T$ adalah vektor konfigurasi sendi pada ruang sendi (*joint space*) $\mathcal{Q}$.
+- $R_0^n \in SO(3)$ adalah orientasi arah efektor ujung.
+- $\mathbf{p}_0^n = [x, y, z]^T \in \mathbb{R}^3$ adalah posisi Kartesius global ujung manipulator.
+
+---
+
+## 4. Simulator Kinematika Lengan Serial Interaktif
+
+Ubah sudut-sudut sendi pada slider di bawah ini untuk melihat bagaimana perkalian matriks rantai DH menghitung posisi ujung lengan secara waktu nyata:
+
+<ArmKinematicsSimulator />
+
+---
+
+## 5. Kaidah Penentuan Kerangka DH Standar
+
+Untuk menyusun tabel parameter DH pada lengan robot:
+1. Sejajarkan sumbu $z_i$ sepanjang sumbu rotasi (atau translasi pada sendi prismatik) sendi ke-$(i+1)$.
+2. Tempatkan titik asal $O_i$ pada perpotongan sumbu $z_i$ dan garis tegak lurus bersama (*common normal*) antara $z_{i-1}$ dan $z_i$.
+3. Arahkan sumbu $x_i$ sepanjang common normal dari $z_{i-1}$ ke $z_i$. Jika kedua sumbu berpotongan, pilih $x_i \perp \text{span}(z_{i-1}, z_i)$.
+4. Lengkapi kerangka tangan-kanan (*right-handed frame*) dengan menetapkan $y_i = z_i \times x_i$.
+
+---
+
+## 6. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-dh-parameters"
+  question="Pada konvensi standar Denavit-Hartenberg (DH) untuk sendi revolute (rotasi), parameter manakah yang merupakan variabel dinamis yang dikendalikan oleh motor?"
+  options={[
+    {
+      id: "A",
+      text: "Sudut sendi (theta_i) yang merepresentasikan rotasi mengelilingi sumbu z_{i-1}.",
+      isCorrect: true,
+      explanation: "Tepat! Untuk sendi revolute, nilai theta_i berubah saat motor berputar, sedangkan panjang link (a_i), putir link (alpha_i), dan offset link (d_i) bernilai konstan."
+    },
+    {
+      id: "B",
+      text: "Sudut putir link (alpha_i) yang merepresentasikan sudut kemiringan antar-sumbu.",
+      isCorrect: false,
+      explanation: "Salah. Putir link alpha_i adalah karakteristik dimensi fisik kaku dari link tersebut."
+    },
+    {
+      id: "C",
+      text: "Panjang link (a_i) yang merepresentasikan jarak common normal.",
+      isCorrect: false,
+      explanation: "Salah. Panjang link a_i bersifat konstan pada link kaku."
+    },
+    {
+      id: "D",
+      text: "Determinan dari matriks transformasi.",
+      isCorrect: false,
+      explanation: "Salah. Determinan matriks transformasi kaku selalu bernilai tepat +1."
+    }
+  ]}
+  hint="Pikirkan parameter mana yang nilainya berubah ketika motor servo memutar persendian robot."
+/>
