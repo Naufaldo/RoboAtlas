@@ -1,0 +1,97 @@
+---
+id: gaussian-grid-map
+title: Pemetaan Grid Gaussian & Estimasi Kerapatan Kernel
+slug: gaussian-grid-map
+domain: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - sensor-noise-and-uncertainty
+  - occupancy-grid-mapping
+references:
+  - Sebastian Thrun et al. (2005). Probabilistic Robotics. MIT Press.
+  - Atsushi Sakai (2020). PythonRobotics: Gaussian Grid Map.
+components:
+  - GaussianGridMapSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Pemetaan Grid Gaussian & Estimasi Kerapatan Kernel
+
+> "Bagaimana robot mengakomodasi ketidakpastian posisi pantulan laser tanpa langsung menganggap sel grid sebagai rintangan biner kaku?"
+
+Di dunia nyata, pancaran sinar laser LiDAR memiliki ketidakpastian pengukuran akibat derau instrumen, difraksi optik, dan sudut insidensi permukaan. **Pemetaan Grid Gaussian (*Gaussian Grid Map*)** memodelkan setiap titik pantulan sinar bukan sebagai koordinat tunggal diskrit, melainkan sebagai **fungsi kerapatan probabilitas Gaussian 2D kontinu (*Kernel Density Estimation / KDE*)** yang diakumulasikan ke dalam sel-sel grid di sekitarnya.
+
+![Pemetaan Grid Gaussian di Robotika](/images/sensors/gaussian-grid-map.jpg)
+
+---
+
+## 1. Formulasi Matematis Kernel Gaussian 2D
+
+Ketika sensor laser mendeteksi pantulan pada koordinat dunia $(x_0, y_0)$, kontribusi probabilitas keberadaan materi pada sembarang koordinat sel $(x, y)$ dihitung menggunakan distribusi normal bivariat isotropik dengan varians $\sigma^2$:
+
+$$
+P(x, y) = \frac{1}{2\pi\sigma^2} \exp\left( -\frac{(x - x_0)^2 + (y - y_0)^2}{2\sigma^2} \right)
+$$
+
+### Akumulasi Densitas pada Sel Grid:
+Untuk peta berukuran diskrit dengan resolusi sel $\Delta x$, nilai akumulasi probabilitas pada sel $(i, j)$ setelah $K$ pengukuran adalah:
+
+$$
+M(i, j) = \min\left(1.0, \sum_{k=1}^K P_k(x_i, y_j)\right)
+$$
+
+Di mana:
+- $\sigma$ mengontrol seberapa luas ketidakpastian spasial disebarkan ke sel tetangga (*kernel bandwidth*).
+- Sel pada pusat pantulan menerima kontribusi probabilitas tertinggi, sementara sel di sekitarnya mengalami penurunan eksponensial halus.
+
+---
+
+## 2. Keunggulan Gaussian Grid Map Dibandingkan Grid Biner
+
+1. **Diferensiabilitas Ruang Status**: Peta densitas Gaussian menghasilkan permukaan energi (*potential surface*) yang kontinu dan mulus, memungkinkan algoritma perencanaan berbasis gradien (*Gradient Descent / Trajectory Optimization*) bekerja tanpa diskontinuitas.
+2. **Robust terhadap Derau Titik Tunggal**: Titik pantulan palsu (*outlier noise*) tidak langsung membuat sel menjadi rintangan absolut, melainkan membutuhkan penguatan dari beberapa pemindaian berulang.
+3. **Zona Penyangga Alami (*Implicit Inflation Layer*)**: Parameter $\sigma$ secara otomatis berfungsi sebagai margin keamanan di sekitar rintangan.
+
+---
+
+## 3. Simulator Interaktif: Gaussian Grid Map & Kernel Density
+
+Eksperimenkan penyebaran kernel probabilitas Gaussian saat robot bergerak dan memindai rintangan:
+
+<GaussianGridMapSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-gaussian-grid-map"
+  question="Apa efek memperbesar nilai parameter standar deviasi sigma pada pembuatan Gaussian Grid Map?"
+  options={[
+    {
+      id: "A",
+      text: "Peta menjadi lebih menyebar dan kabur, memperluas area ketidakpastian di sekitar setiap rintangan.",
+      isCorrect: true,
+      explanation: "Tepat! Nilai sigma yang lebih besar meningkatkan lebar kernel Gaussian, menyebarkan probabilitas ke lebih banyak sel tetangga."
+    },
+    {
+      id: "B",
+      text: "Peta menjadi semakin tajam dan biner menyerupai kisi piksel tunggal.",
+      isCorrect: false,
+      explanation: "Salah. Memperkecil sigma (bukan memperbesar) yang membuat kernel semakin sempit dan tajam."
+    },
+    {
+      id: "C",
+      text: "Jumlah sinar laser LiDAR yang dipancarkan robot berkurang secara drastis.",
+      isCorrect: false,
+      explanation: "Salah. Parameter sigma mengatur fungsi probabilitas kernel, bukan frekuensi pemindaian sensor."
+    }
+  ]}
+  hint="Perhatikan pengaruh varians sigma^2 pada penyebut eksponensial distribusi normal."
+/>

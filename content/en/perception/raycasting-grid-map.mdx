@@ -1,0 +1,108 @@
+---
+id: raycasting-grid-map
+title: Ray Casting Grid Map & Bresenham Line Traversal
+slug: raycasting-grid-map
+domain: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - occupancy-grid-mapping
+  - lidar-raycasting
+references:
+  - J. E. Bresenham (1965). Algorithm for computer control of a digital plotter. IBM Systems Journal.
+  - Atsushi Sakai (2020). PythonRobotics: Ray Casting Grid Map.
+components:
+  - RayCastingGridMapSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Ray Casting Grid Map & Bresenham Line Traversal
+
+> "How does a robot determine exactly which spatial grid cells are traversed by a laser beam between sensor and target without expensive floating-point trigonometric operations?"
+
+In occupancy grid mapping, a laser return provides two vital pieces of evidence: it reveals an obstacle at the terminal hit point, and it proves that **every grid cell traversed along the beam is free space**. To discretize and trace these rays rapidly across spatial matrices, autonomous robots utilize **Bresenham's Line Algorithm** to execute $O(N)$ discrete raycasting with pure integer arithmetic.
+
+![Ray Casting Grid Map Using Bresenham Line Algorithm](/images/sensors/raycasting-grid-map.jpg)
+
+---
+
+## 1. Bresenham's Integer Line Traversal on 2D Grids
+
+Given sensor origin cell $(c_0, r_0)$ and terminal collision cell $(c_1, r_1)$ in integer grid coordinates:
+
+1. Compute coordinate spans: $\Delta x = |c_1 - c_0|, \quad \Delta y = |r_1 - r_0|$.
+2. Determine stepping directions: $s_x = \text{sgn}(c_1 - c_0), \quad s_y = \text{sgn}(r_1 - r_0)$.
+3. Initialize the integer decision error accumulator: $\text{err} = \Delta x - \Delta y$.
+4. At each visited cell $(x_0, y_0)$:
+   - Intermediate traversal cells: apply free space log-odds decrement $-l_{\text{free}}$.
+   - Terminal endpoint ($x_0 = c_1 \land y_0 = r_1$): apply obstacle occupancy log-odds increment $+l_{\text{occ}}$.
+
+---
+
+## 2. Recursive Log-Odds Bayesian Formulation
+
+Each cell $m_i$ stores an accumulated log-odds value $l_t(m_i)$:
+
+$$
+l_t(m_i) = l_{t-1}(m_i) + \text{inv\_sensor}(m_i, z_t) - l_0
+$$
+
+Where the inverse sensor measurement model is defined piecewise as:
+
+$$
+\text{inv\_sensor}(m_i, z_t) = 
+\begin{cases}
+l_{\text{occ}} & \text{if cell is the terminal ray obstacle reflection point} \\
+l_{\text{free}} & \text{if cell is traversed along the laser beam path} \\
+l_0 = 0 & \text{if cell is beyond the maximum sensor range}
+\end{cases}
+$$
+
+Recovering the physical probability $p(m_i) \in [0, 1]$:
+
+$$
+p(m_i) = 1 - \frac{1}{1 + \exp(l_t(m_i))}
+$$
+
+---
+
+## 3. Interactive Simulator: Ray Casting Grid Map & Bresenham
+
+Rotate the laser scanner or modify the log-odds weights to observe real-time grid cell updates:
+
+<RayCastingGridMapSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-raycasting-grid-map"
+  question="Why is Bresenham's line algorithm preferred for real-time raycasting on embedded robot processors?"
+  options={[
+    {
+      id: "A",
+      text: "It relies purely on fast integer addition, subtraction, and bit shifts, avoiding expensive floating-point divisions.",
+      isCorrect: true,
+      explanation: "Correct! Bresenham avoids floating-point operations entirely, allowing robots to process tens of thousands of rays per second on low-power CPUs."
+    },
+    {
+      id: "B",
+      text: "It automatically smooths curved splines along the laser beam path.",
+      isCorrect: false,
+      explanation: "Incorrect. Laser beams travel in straight lines; Bresenham is designed for exact discrete rasterization."
+    },
+    {
+      id: "C",
+      text: "It doubles the physical range of laser hardware sensors.",
+      isCorrect: false,
+      explanation: "Incorrect. Physical range is governed by laser emitter power and optics, not the rasterization algorithm."
+    }
+  ]}
+  hint="Consider computation efficiency on processors without specialized floating-point units (FPUs)."
+/>

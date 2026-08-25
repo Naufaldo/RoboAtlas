@@ -1,0 +1,98 @@
+---
+id: lidar-to-grid-map
+title: LiDAR to Grid Map Polar-to-Cartesian Conversion
+slug: lidar-to-grid-map
+domain: perception
+level: 5
+tier: Core Autonomy
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 35
+prerequisites:
+  - lidar-raycasting
+  - coordinate-frames-and-transforms
+references:
+  - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots. MIT Press.
+  - Atsushi Sakai (2020). PythonRobotics: Lidar to Grid Map.
+components:
+  - LidarToGridMapSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# LiDAR to Grid Map Polar-to-Cartesian Conversion
+
+> "How does a raw LiDAR sensor stream of range-bearing pairs (r, θ) transform into a globally consistent 2D discrete spatial obstacle grid?"
+
+LiDAR hardware acquires environmental measurements in **polar sensor coordinates**: range $r_i$ at azimuth scan angle $\theta_i$. To integrate these readings for autonomous path planning and obstacle avoidance, data must undergo a **three-stage sequential transformation pipeline**:
+1. Polar to Local Cartesian Conversion
+2. Rigid Body $SE(2)$ Transform to Global World Coordinates
+3. Spatial Discretization (*Grid Binning*) into Matrix Cells
+
+![LiDAR to Grid Map Conversion Pipeline](/images/sensors/lidar-to-grid-map.jpg)
+
+---
+
+## 1. The Three-Stage Transformation Pipeline
+
+### Stage 1: Polar to Local Sensor Frame $\{L\}$
+For each $i$-th laser beam return:
+
+$$
+\begin{bmatrix} x_i^L \\ y_i^L \end{bmatrix} = \begin{bmatrix} r_i \cos\theta_i \\ r_i \sin\theta_i \end{bmatrix}
+$$
+
+### Stage 2: Rigid Body $SE(2)$ Transformation to World Frame $\{W\}$
+Using the estimated robot pose $(x_R, y_R, \theta_R)$:
+
+$$
+\begin{bmatrix} x_i^W \\ y_i^W \end{bmatrix} = \begin{bmatrix} \cos\theta_R & -\sin\theta_R \\ \sin\theta_R & \cos\theta_R \end{bmatrix} \begin{bmatrix} x_i^L \\ y_i^L \end{bmatrix} + \begin{bmatrix} x_R \\ y_R \end{bmatrix}
+$$
+
+### Stage 3: Spatial Discretization (*Grid Binning*)
+Given grid cell resolution $\Delta x$ and map origin $(X_{\text{origin}}, Y_{\text{origin}})$:
+
+$$
+i = \left\lfloor \frac{x_i^W - X_{\text{origin}}}{\Delta x} \right\rfloor, \quad j = \left\lfloor \frac{y_i^W - Y_{\text{origin}}}{\Delta y} \right\rfloor
+$$
+
+Each cell accumulates hits: $\text{Grid}[j][i] = \text{Grid}[j][i] + 1$.
+
+---
+
+## 2. Interactive Simulator: LiDAR to Grid Map Pipeline
+
+Observe raw laser points being transformed into global coordinates and accumulated in real time:
+
+<LidarToGridMapSimulator />
+
+---
+
+## 3. Concept Verification
+
+<ConceptCheck
+  id="quiz-lidar-to-grid-map"
+  question="If the grid map cell resolution is refined from 0.5 meters to 0.05 meters (5 cm), what is the primary computational consequence?"
+  options={[
+    {
+      id: "A",
+      text: "Obstacle spatial fidelity increases dramatically, but memory consumption grows by a factor of 100.",
+      isCorrect: true,
+      explanation: "Correct! Because grids are 2D spatial matrices, scaling the resolution by 10 increases total cell count by 10^2 = 100x."
+    },
+    {
+      id: "B",
+      text: "The robot physical drive speed increases tenfold.",
+      isCorrect: false,
+      explanation: "Incorrect. Map grid resolution is a spatial memory representation, not an actuator velocity limit."
+    },
+    {
+      id: "C",
+      text: "The physical range of the LiDAR sensor decreases to 1 meter.",
+      isCorrect: false,
+      explanation: "Incorrect. Memory discretization does not alter physical sensor hardware range."
+    }
+  ]}
+  hint="Consider the quadratic relationship between 2D area (width x height) and grid cell density."
+/>

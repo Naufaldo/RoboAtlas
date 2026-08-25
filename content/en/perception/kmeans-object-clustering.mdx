@@ -1,0 +1,94 @@
+---
+id: kmeans-object-clustering
+title: k-Means Point Cloud Obstacle Object Clustering
+slug: kmeans-object-clustering
+domain: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - lidar-to-grid-map
+  - vectors-and-coordinate-geometry
+references:
+  - J. MacQueen (1967). Some methods for classification and analysis of multivariate observations.
+  - Atsushi Sakai (2020). PythonRobotics: k-means object clustering.
+components:
+  - KMeansClusteringSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# k-Means Point Cloud Obstacle Object Clustering
+
+> "How does an autonomous robot separate thousands of unstructured laser return points into distinct physical objects such as vehicles, pedestrians, or structural pillars?"
+
+In advanced robotic spatial perception, an autonomous system cannot treat point returns in isolation. It must group spatial point sets into discrete **obstacle entities (point cloud segmentation)**. The **$k$-Means Clustering** algorithm provides an unsupervised learning framework that partitions an unorganized set of $N$ laser points $\mathcal{P} = \{\mathbf{p}_1, \dots, \mathbf{p}_N\}$ into $K$ distinct clusters by minimizing within-cluster variance.
+
+![k-Means Point Cloud Clustering in Robotics](/images/sensors/kmeans-object-clustering.jpg)
+
+---
+
+## 1. Mathematical Objective Function
+
+The objective of $k$-Means is to find an optimal partition of $K$ cluster sets $\mathcal{C} = \{C_1, C_2, \dots, C_K\}$ and their corresponding centroids $\boldsymbol{\mu}_k$ that minimizes the Within-Cluster Sum of Squares (WCSS):
+
+$$
+J = \sum_{k=1}^K \sum_{\mathbf{p}_i \in C_k} \|\mathbf{p}_i - \boldsymbol{\mu}_k\|^2
+$$
+
+### The Two-Stage Iterative Cycle (Expectation-Maximization):
+
+1. **Assignment Step**:
+   Assign each point $\mathbf{p}_i$ to its closest centroid (forming Voronoi partition boundaries):
+   $$
+   C_k^{(t)} = \left\{ \mathbf{p}_i \mid \|\mathbf{p}_i - \boldsymbol{\mu}_k^{(t)}\|^2 \le \|\mathbf{p}_i - \boldsymbol{\mu}_j^{(t)}\|^2, \quad \forall j \in \{1, \dots, K\} \right\}
+   $$
+
+2. **Centroid Update Step**:
+   Recompute the arithmetic mean (center of mass) of all points belonging to cluster $k$:
+   $$
+   \boldsymbol{\mu}_k^{(t+1)} = \frac{1}{|C_k^{(t)}|} \sum_{\mathbf{p}_i \in C_k^{(t)}} \mathbf{p}_i
+   $$
+
+The algorithm terminates when centroid displacement satisfies $\|\boldsymbol{\mu}_k^{(t+1)} - \boldsymbol{\mu}_k^{(t)}\| < \epsilon$ (convergence).
+
+---
+
+## 2. Interactive Simulator: k-Means 2D Point Cloud Clustering
+
+Run $k$-means clustering step-by-step or auto-converge on synthetic laser point clouds:
+
+<KMeansClusteringSimulator />
+
+---
+
+## 3. Concept Verification
+
+<ConceptCheck
+  id="quiz-kmeans-object-clustering"
+  question="What is the primary operational limitation of standard k-Means clustering in dynamic robotics environments?"
+  options={[
+    {
+      id: "A",
+      text: "The number of clusters K must be pre-specified in advance and the algorithm can converge to local minima if centroid initialization is suboptimal.",
+      isCorrect: true,
+      explanation: "Correct! In real-world environments, the number of obstacles varies continuously, requiring adaptive estimators like DBSCAN or k-Means++ seeding."
+    },
+    {
+      id: "B",
+      text: "k-Means cannot execute on digital computers because it requires non-Euclidean quantum memory.",
+      isCorrect: false,
+      explanation: "Incorrect. k-Means is a standard classical algorithm running efficiently on standard CPUs and MCUs."
+    },
+    {
+      id: "C",
+      text: "The cost function J monotonically increases at every step until it diverges to infinity.",
+      isCorrect: false,
+      explanation: "Incorrect. The objective function J is mathematically proven to decrease or remain constant at every iteration."
+    }
+  ]}
+  hint="Consider what happens when the number of vehicles on a roadway changes from 2 to 5 while K remains fixed at 2."
+/>

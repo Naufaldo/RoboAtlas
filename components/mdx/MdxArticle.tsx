@@ -37,6 +37,11 @@ import { JacobianSingularitySimulator } from '@/components/simulation/JacobianSi
 import { StateSpaceSimulator } from '@/components/simulation/StateSpaceSimulator';
 import { NumericalDiscretizationSimulator } from '@/components/simulation/NumericalDiscretizationSimulator';
 import { RobotClassificationExplorer } from '@/components/simulation/RobotClassificationExplorer';
+import { GaussianGridMapSimulator } from '@/components/simulation/GaussianGridMapSimulator';
+import { RayCastingGridMapSimulator } from '@/components/simulation/RayCastingGridMapSimulator';
+import { LidarToGridMapSimulator } from '@/components/simulation/LidarToGridMapSimulator';
+import { KMeansClusteringSimulator } from '@/components/simulation/KMeansClusteringSimulator';
+import { RectangleFittingSimulator } from '@/components/simulation/RectangleFittingSimulator';
 import { ConceptCheck, QuizOption } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { CodeBlock } from '@/components/mdx/CodeBlock';
@@ -441,6 +446,31 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<RobotClassificationExplorer')) {
         nodes.push(<RobotClassificationExplorer key={`comp-rce-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<GaussianGridMapSimulator')) {
+        nodes.push(<GaussianGridMapSimulator key={`comp-ggms-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<RayCastingGridMapSimulator')) {
+        nodes.push(<RayCastingGridMapSimulator key={`comp-rcgms-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<LidarToGridMapSimulator')) {
+        nodes.push(<LidarToGridMapSimulator key={`comp-ltgms-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<KMeansClusteringSimulator')) {
+        nodes.push(<KMeansClusteringSimulator key={`comp-kmcs-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<RectangleFittingSimulator')) {
+        nodes.push(<RectangleFittingSimulator key={`comp-rfs-${i}`} />);
         i++;
         continue;
       }

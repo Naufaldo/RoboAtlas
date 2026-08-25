@@ -35,6 +35,11 @@ import { ArmInverseKinematicsSimulator } from '@/components/simulation/ArmInvers
 import { JacobianSingularitySimulator } from '@/components/simulation/JacobianSingularitySimulator';
 import { StateSpaceSimulator } from '@/components/simulation/StateSpaceSimulator';
 import { NumericalDiscretizationSimulator } from '@/components/simulation/NumericalDiscretizationSimulator';
+import { GaussianGridMapSimulator } from '@/components/simulation/GaussianGridMapSimulator';
+import { RayCastingGridMapSimulator } from '@/components/simulation/RayCastingGridMapSimulator';
+import { LidarToGridMapSimulator } from '@/components/simulation/LidarToGridMapSimulator';
+import { KMeansClusteringSimulator } from '@/components/simulation/KMeansClusteringSimulator';
+import { RectangleFittingSimulator } from '@/components/simulation/RectangleFittingSimulator';
 import {
   Compass,
   Cpu,
@@ -472,6 +477,71 @@ export default function LabsPage() {
       icon: '⏱️',
       lessonHref: '/learn/control/discrete-time-simulation',
       component: <NumericalDiscretizationSimulator />,
+    },
+    {
+      id: 'gaussian-grid-map',
+      category: 'mapping',
+      paths: ['slam'],
+      titleEn: 'Gaussian Grid Map & Kernel Density Estimation Lab',
+      titleId: 'Laboratorium Pemetaan Grid Gaussian & Estimasi Kernel',
+      descEn: 'Accumulate 2D Gaussian probability density kernels into grid cells to capture laser beam uncertainty.',
+      descId: 'Akumulasikan kernel densitas probabilitas Gaussian 2D ke sel grid untuk memodelkan ketidakpastian laser.',
+      levelBadge: 'Level 9',
+      icon: '🌐',
+      lessonHref: '/learn/perception/gaussian-grid-map',
+      component: <GaussianGridMapSimulator />,
+    },
+    {
+      id: 'raycasting-grid-map',
+      category: 'mapping',
+      paths: ['slam'],
+      titleEn: 'Ray Casting Grid Map & Bresenham Line Traversal Lab',
+      titleId: 'Laboratorium Pemetaan Raycasting & Garis Bresenham',
+      descEn: 'Trace laser rays across discrete pixels using Bresenham algorithm with live log-odds updates.',
+      descId: 'Lakukan raycasting melintasi piksel diskrit dengan algoritma Bresenham dan pembaruan log-odds.',
+      levelBadge: 'Level 9',
+      icon: '🎯',
+      lessonHref: '/learn/perception/raycasting-grid-map',
+      component: <RayCastingGridMapSimulator />,
+    },
+    {
+      id: 'lidar-to-grid-map',
+      category: 'sensors',
+      paths: ['slam'],
+      titleEn: 'LiDAR to Grid Map Polar-to-Cartesian Lab',
+      titleId: 'Laboratorium Konversi LiDAR Polar ke Grid Peta',
+      descEn: 'Convert raw (range, bearing) polar scans to global Cartesian coordinates and bin into discrete grid cells.',
+      descId: 'Ubah pemindaian polar (jarak, sudut) menjadi koordinat Kartesius dunia dan akumulasikan ke sel grid.',
+      levelBadge: 'Level 5',
+      icon: '📡',
+      lessonHref: '/learn/perception/lidar-to-grid-map',
+      component: <LidarToGridMapSimulator />,
+    },
+    {
+      id: 'kmeans-clustering',
+      category: 'mapping',
+      paths: ['slam'],
+      titleEn: 'k-Means Point Cloud Object Clustering Lab',
+      titleId: 'Laboratorium Klasterisasi Objek Point Cloud k-Means',
+      descEn: 'Partition 2D LiDAR point clouds into K distinct obstacle clusters with iterative Voronoi updates.',
+      descId: 'Partisi awan titik LiDAR 2D menjadi K klaster objek rintangan dengan pembaruan iteratif Voronoi.',
+      levelBadge: 'Level 9',
+      icon: '✨',
+      lessonHref: '/learn/perception/kmeans-object-clustering',
+      component: <KMeansClusteringSimulator />,
+    },
+    {
+      id: 'rectangle-fitting',
+      category: 'mapping',
+      paths: ['slam'],
+      titleEn: 'Oriented Rectangle (OBB) & L-Shape Bounding Box Lab',
+      titleId: 'Laboratorium Oriented Bounding Box & Fitting Bentuk-L',
+      descEn: 'Sweep orientation angles to tightly enclose vehicle LiDAR point clusters with minimum area bounding rectangles.',
+      descId: 'Pindai sudut orientasi untuk mengekstrak dimensi panjang, lebar, dan sudut kotak pembatas minimal rintangan.',
+      levelBadge: 'Level 9',
+      icon: '📦',
+      lessonHref: '/learn/perception/rectangle-fitting',
+      component: <RectangleFittingSimulator />,
     },
   ];
 

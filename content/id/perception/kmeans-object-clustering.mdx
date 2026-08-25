@@ -1,0 +1,94 @@
+---
+id: kmeans-object-clustering
+title: Klasterisasi Objek Rintangan Point Cloud k-Means
+slug: kmeans-object-clustering
+domain: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - lidar-to-grid-map
+  - vectors-and-coordinate-geometry
+references:
+  - J. MacQueen (1967). Some methods for classification and analysis of multivariate observations.
+  - Atsushi Sakai (2020). PythonRobotics: k-means object clustering.
+components:
+  - KMeansClusteringSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Klasterisasi Objek Rintangan Point Cloud k-Means
+
+> "Bagaimana robot dapat memisahkan ribuan titik laser mentah menjadi entitas objek-objek rintangan individual seperti kendaraan, pejalan kaki, atau pilar?"
+
+Dalam persepsi otonom tingkat lanjut, robot tidak hanya melihat titik-titik diskrit, melainkan harus mengelompokkan titik-titik tersebut menjadi **objek rintangan terpisah (*obstacle segmentation*)**. Algoritma **$k$-Means Clustering** adalah metode pembelajaran tanpa pengawasan (*unsupervised clustering*) yang mengelompokkan $N$ titik awan laser $\mathcal{P} = \{\mathbf{p}_1, \dots, \mathbf{p}_N\}$ ke dalam $K$ kelompok objek terpisah dengan meminimalkan varians kuadratik dalam klaster.
+
+![Klasterisasi Objek Point Cloud k-Means di Robotika](/images/sensors/kmeans-object-clustering.jpg)
+
+---
+
+## 1. Formulasi Fungsi Objektif
+
+Tujuan dari algoritma $k$-Means adalah menemukan partisi $K$ himpunan klaster $\mathcal{C} = \{C_1, C_2, \dots, C_K\}$ berserta centroidnya $\boldsymbol{\mu}_k$ yang meminimalkan fungsi energi kuadrat (*Within-Cluster Sum of Squares / WCSS*):
+
+$$
+J = \sum_{k=1}^K \sum_{\mathbf{p}_i \in C_k} \|\mathbf{p}_i - \boldsymbol{\mu}_k\|^2
+$$
+
+### Siklus Iterasi 2 Tahap (Expectation-Maximization):
+
+1. **Tahap Penugasan (*Assignment Step*)**:
+   Setiap titik $\mathbf{p}_i$ ditugaskan ke klaster dengan centroid terdekat (membentuk batas partisi Voronoi):
+   $$
+   C_k^{(t)} = \left\{ \mathbf{p}_i \mid \|\mathbf{p}_i - \boldsymbol{\mu}_k^{(t)}\|^2 \le \|\mathbf{p}_i - \boldsymbol{\mu}_j^{(t)}\|^2, \quad \forall j \in \{1, \dots, K\} \right\}
+   $$
+
+2. **Tahap Pembaruan Centroid (*Update Step*)**:
+   Hitung ulang pusat massa (*centroid*) dari seluruh anggota titik dalam klaster ke-$k$:
+   $$
+   \boldsymbol{\mu}_k^{(t+1)} = \frac{1}{|C_k^{(t)}|} \sum_{\mathbf{p}_i \in C_k^{(t)}} \mathbf{p}_i
+   $$
+
+Iterasi berhenti ketika pergeseran posisi seluruh centroid $\|\boldsymbol{\mu}_k^{(t+1)} - \boldsymbol{\mu}_k^{(t)}\| < \epsilon$ (konvergen).
+
+---
+
+## 2. Simulator Interaktif: Klasterisasi Point Cloud k-Means
+
+Uji algoritma $k$-Means langkah demi langkah pada awan titik laser 2D:
+
+<KMeansClusteringSimulator />
+
+---
+
+## 3. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-kmeans-object-clustering"
+  question="Apa kelemahan utama algoritma standar k-Means jika diterapkan langsung pada persepsi rintangan robotika di lingkungan dinamis?"
+  options={[
+    {
+      id: "A",
+      text: "Jumlah klaster K harus ditentukan sebelumnya secara manual di awal dan algoritma rentan terjebak pada minimum lokal jika inisialisasi centroid buruk.",
+      isCorrect: true,
+      explanation: "Tepat! Pada dunia nyata, jumlah rintangan berubah-ubah, sehingga sering dikombinasikan dengan metode penentu K seperti DBSCAN atau k-Means++."
+    },
+    {
+      id: "B",
+      text: "k-Means tidak dapat dijalankan pada komputer digital karena memerlukan memori kuantum.",
+      isCorrect: false,
+      explanation: "Salah. k-Means adalah algoritma klasik berkinerja cepat yang berjalan pada CPU/MCU biasa."
+    },
+    {
+      id: "C",
+      text: "Fungsi objektif k-Means selalu meningkat pada setiap iterasi hingga meledak menjadi tak hingga.",
+      isCorrect: false,
+      explanation: "Salah. Secara matematis, nilai fungsi objektif J dijamin monoton menurun atau konstan pada setiap iterasi."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi jika jumlah rintangan di jalan raya bertambah dari 2 menjadi 5 sementara nilai K tetap 2."
+/>

@@ -1,0 +1,112 @@
+---
+id: rectangle-fitting
+title: Oriented Bounding Box (OBB) & Fitting Kotak Pembatas Bentuk-L
+slug: rectangle-fitting
+domain: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - kmeans-object-clustering
+  - 2d-rotation-matrices
+references:
+  - X. Zhang et al. (2017). Efficient L-shape fitting for vehicle detection using laser scanners. IEEE Transactions on Intelligent Transportation Systems.
+  - Atsushi Sakai (2020). PythonRobotics: Rectangle Fitting.
+components:
+  - RectangleFittingSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Oriented Bounding Box (OBB) & Fitting Kotak Pembatas Bentuk-L
+
+> "Setelah titik-titik laser dikelompokkan menjadi satu klaster objek mobil, bagaimana robot mengekstrak panjang, lebar, pusat, dan sudut orientasi heading kendaraan secara akurat?"
+
+Dalam sistem kendaraan otonom (*Autonomous Vehicles / AV*), sensor LiDAR hanya melihat sisi luar kendaraan yang berhadapan dengan sensor, membentuk pola pantulan sudut siku-siku (**Bentuk-L / *L-Shape Pattern***). Algoritma **Oriented Bounding Box (OBB) / L-Shape Fitting** melakukan pencarian sudut rotasi optimal $\psi^* \in [0^\circ, 90^\circ]$ untuk membatasi klaster titik dengan kotak persegi panjang berorientasi minimal.
+
+![Oriented Rectangle dan L-Shape Fitting pada LiDAR](/images/sensors/rectangle-fitting.jpg)
+
+---
+
+## 1. Algoritma Pencarian Sudut Rotasi Optimal
+
+Diberikan himpunan $N$ titik laser pada klaster objek $\mathcal{P} = \{(x_i, y_i)\}_{i=1}^N$:
+
+### Tahap 1: Rotasi Titik ke Sudut Uji $\psi$
+Untuk setiap sudut uji $\psi \in [0^\circ, 90^\circ)$ dengan resolusi langkah $\Delta \psi$:
+
+$$
+\begin{bmatrix} x_i' \\ y_i' \end{bmatrix} = \begin{bmatrix} \cos(-\psi) & -\sin(-\psi) \\ \sin(-\psi) & \cos(-\psi) \end{bmatrix} \begin{bmatrix} x_i \\ y_i \end{bmatrix}
+$$
+
+### Tahap 2: Ekstraksi Dimensi Kotak Pembatas
+Hitung batas ekstremum pada koordinat terotasi:
+
+$$
+L(\psi) = \max_{i} x_i' - \min_{i} x_i', \quad W(\psi) = \max_{i} y_i' - \min_{i} y_i'
+$$
+
+### Tahap 3: Evaluasi Kriteria Biaya (*Fitting Criteria*)
+
+1. **Kriteria Luas Area Minimal (*Minimum Area Criterion*)**:
+   $$
+   \psi^* = \arg\min_{\psi} \left( L(\psi) \cdot W(\psi) \right)
+   $$
+2. **Kriteria Varians Kompak (*Variance Criterion*)**:
+   Meminimalkan varians residual titik-titik terhadap kedua garis tepi persegi panjang:
+   $$
+   \sigma^2(\psi) = \frac{1}{N-1} \sum_{i=1}^N \min\left( (x_i' - \bar{x}')^2, (y_i' - \bar{y}')^2 \right)
+   $$
+
+---
+
+## 2. Parameter Fisik Objek yang Dihasilkan
+
+Setelah sudut optimal $\psi^*$ ditemukan, posisi pusat $(x_c, y_c)$ dalam koordinat dunia diekstrak dengan mentransformasikan balik pusat lokal $[(x_{\min}' + x_{\max}')/2, (y_{\min}' + y_{\max}')/2]^T$:
+
+$$
+\begin{bmatrix} x_c \\ y_c \end{bmatrix} = \mathbf{R}(\psi^*) \begin{bmatrix} \frac{x_{\min}' + x_{\max}'}{2} \\ \frac{y_{\min}' + y_{\max}'}{2} \end{bmatrix}
+$$
+
+Hasil akhir: Tuple status rintangan lengkap $(x_c, y_c, \psi^*, L, W)$ yang siap dimasukkan ke dalam modul *Tracking* Kalman Filter dan perencanaan manuver menyalip.
+
+---
+
+## 3. Simulator Interaktif: Oriented Rectangle & L-Shape Fitting
+
+Ubah orientasi objek, resolusi pencarian sudut $\Delta \psi$, atau kriteria optimasi untuk melihat estimasi kotak pembatas secara langsung:
+
+<RectangleFittingSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-rectangle-fitting"
+  question="Mengapa rentang pencarian sudut orientasi psi pada fitting persegi panjang cukup dibatasi pada [0°, 90°) alih-alih [0°, 360°)?"
+  options={[
+    {
+      id: "A",
+      text: "Karena bentuk persegi panjang memiliki simetri ortogonal 4 lipat (rotasi sebesar 90°, 180°, dan 270° menghasilkan kotak pembatas dengan dimensi yang ekuivalen).",
+      isCorrect: true,
+      explanation: "Tepat! Karena simetri 90 derajat pada persegi panjang, memindai rentang [0, 90) derajat sudah mencakup seluruh konfigurasi batas minimum yang unik."
+    },
+    {
+      id: "B",
+      text: "Karena sensor LiDAR tidak dapat memindai lebih dari sudut 90 derajat.",
+      isCorrect: false,
+      explanation: "Salah. LiDAR dapat memindai hingga 360 derajat penuh; pembatasan ini murni sifat simetri geometris bangun persegi panjang."
+    },
+    {
+      id: "C",
+      text: "Karena komputasi pada sudut di atas 90 derajat selalu menghasilkan pembagian dengan nol.",
+      isCorrect: false,
+      explanation: "Salah. Matriks rotasi 2D terdefinisi dengan baik pada seluruh domain sudut riil tanpa singularitas pembagian nol."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi jika Anda memutar sebuah kotak persegi panjang sebesar 90 derajat."
+/>

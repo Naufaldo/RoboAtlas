@@ -1,0 +1,97 @@
+---
+id: gaussian-grid-map
+title: Gaussian Grid Mapping & Kernel Density Estimation
+slug: gaussian-grid-map
+domain: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - sensor-noise-and-uncertainty
+  - occupancy-grid-mapping
+references:
+  - Sebastian Thrun et al. (2005). Probabilistic Robotics. MIT Press.
+  - Atsushi Sakai (2020). PythonRobotics: Gaussian Grid Map.
+components:
+  - GaussianGridMapSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Gaussian Grid Mapping & Kernel Density Estimation
+
+> "How can a robot accommodate the physical uncertainty of laser returns without immediately collapsing space into rigid binary obstacle cells?"
+
+In physical environments, laser range measurements contain inherent uncertainty caused by electronic noise, optical divergence, and oblique surface incidence angles. **Gaussian Grid Mapping** represents each laser endpoint not as a single discrete cell, but as a continuous **2D isotropic Gaussian probability density kernel (Kernel Density Estimation / KDE)** that deposits smooth probability masses onto surrounding spatial cells.
+
+![Gaussian Grid Mapping in Robotics](/images/sensors/gaussian-grid-map.jpg)
+
+---
+
+## 1. Mathematical Formulation: 2D Gaussian Kernel
+
+When a range sensor records a collision endpoint at global Cartesian coordinate $(x_0, y_0)$, the probability density contribution at arbitrary cell coordinate $(x, y)$ is evaluated using an isotropic bivariate normal distribution with variance $\sigma^2$:
+
+$$
+P(x, y) = \frac{1}{2\pi\sigma^2} \exp\left( -\frac{(x - x_0)^2 + (y - y_0)^2}{2\sigma^2} \right)
+$$
+
+### Grid Density Accumulation:
+For a discretized grid world with spatial resolution $\Delta x$, the cumulative occupancy score at grid cell $(i, j)$ after $K$ laser returns is given by:
+
+$$
+M(i, j) = \min\left(1.0, \sum_{k=1}^K P_k(x_i, y_j)\right)
+$$
+
+Where:
+- $\sigma$ governs the spatial dispersion bandwidth of sensor uncertainty across neighboring cells.
+- The center cell receives maximum density, decaying smoothly and exponentially outward.
+
+---
+
+## 2. Key Advantages of Gaussian Grid Maps
+
+1. **Continuous Differentiability**: Gaussian density maps form smooth potential energy surfaces, enabling gradient-based motion planners and trajectory optimizers to compute continuous gradients without discrete step discontinuities.
+2. **Robustness to Isolated Noise**: Stray specular reflections or transient dust particles do not create instant impenetrable barriers, requiring repeated multi-beam reinforcement.
+3. **Implicit Safety Inflation**: The $\sigma$ variance parameter inherently functions as a natural safety buffer around obstacle perimeters.
+
+---
+
+## 3. Interactive Simulator: Gaussian Grid Map & Kernel Density
+
+Experiment with Gaussian kernel dispersion and observe how changing variance $\sigma$ shapes the accumulated occupancy heatmap:
+
+<GaussianGridMapSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-gaussian-grid-map"
+  question="What is the primary effect of increasing the Gaussian standard deviation sigma in Gaussian Grid Mapping?"
+  options={[
+    {
+      id: "A",
+      text: "The occupancy heatmap becomes wider and smoother, expanding the spatial uncertainty zone around obstacle boundaries.",
+      isCorrect: true,
+      explanation: "Correct! A larger sigma widens the Gaussian bell curve, dispersing probability mass across more neighboring cells."
+    },
+    {
+      id: "B",
+      text: "The map becomes sharper and collapses into crisp single-pixel binary boundaries.",
+      isCorrect: false,
+      explanation: "Incorrect. Decreasing sigma (not increasing it) makes the kernel narrower and sharper."
+    },
+    {
+      id: "C",
+      text: "The total number of laser beams emitted by the robot decreases drastically.",
+      isCorrect: false,
+      explanation: "Incorrect. Sigma controls the mathematical probability kernel, not sensor hardware pulse frequency."
+    }
+  ]}
+  hint="Recall how variance sigma^2 appears in the denominator of the exponential normal distribution."
+/>

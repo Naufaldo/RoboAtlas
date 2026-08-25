@@ -1,0 +1,108 @@
+---
+id: raycasting-grid-map
+title: Pemetaan Grid Raycasting & Penelusuran Garis Bresenham
+slug: raycasting-grid-map
+domain: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - occupancy-grid-mapping
+  - lidar-raycasting
+references:
+  - J. E. Bresenham (1965). Algorithm for computer control of a digital plotter. IBM Systems Journal.
+  - Atsushi Sakai (2020). PythonRobotics: Ray Casting Grid Map.
+components:
+  - RayCastingGridMapSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Pemetaan Grid Raycasting & Penelusuran Garis Bresenham
+
+> "Bagaimana robot mengetahui secara pasti sel-sel mana saja yang dilewati oleh sinar laser di antara posisi robot dan objek target tanpa operasi floating-point yang mahal?"
+
+Dalam pemetaan grid okupansi, laser tidak hanya memberi tahu di mana rintangan berada, melainkan juga membuktikan bahwa **seluruh ruang di sepanjang lintasan sinar adalah ruang kosong (*free space*)**. Untuk menandai sel-sel ini secara cepat pada matriks grid diskrit, robot menggunakan **Algoritma Garis Bresenham (*Bresenham's Line Algorithm*)** untuk melakukan *raycasting* diskrit dengan efisiensi $O(N)$ berbasis aritmatika bilangan bulat murni.
+
+![Pemetaan Grid Raycasting dengan Algoritma Bresenham](/images/sensors/raycasting-grid-map.jpg)
+
+---
+
+## 1. Algoritma Garis Bresenham pada Kisi Grid
+
+Diberikan titik awal sensor $(c_0, r_0)$ dan titik akhir pantulan $(c_1, r_1)$ dalam koordinat indeks grid integer:
+
+1. Hitung diferensial: $\Delta x = |c_1 - c_0|, \quad \Delta y = |r_1 - r_0|$.
+2. Tentukan arah langkah: $s_x = \text{sgn}(c_1 - c_0), \quad s_y = \text{sgn}(r_1 - r_0)$.
+3. Inisialisasi akumulator galat integer: $\text{err} = \Delta x - \Delta y$.
+4. Pada setiap iterasi sel $(x_0, y_0)$:
+   - Jika sel merupakan titik tengah lintasan: perbarui dengan nilai log-odds ruang bebas $-l_{\text{free}}$.
+   - Jika sel merupakan titik terminasi akhir ($x_0 = c_1 \land y_0 = r_1$): perbarui dengan nilai okupansi rintangan $+l_{\text{occ}}$.
+
+---
+
+## 2. Pembaruan Log-Odds Rekursif
+
+Setiap sel grid $m_i$ mempertahankan nilai log-odds $l_t(m_i)$:
+
+$$
+l_t(m_i) = l_{t-1}(m_i) + \text{inv\_sensor}(m_i, z_t) - l_0
+$$
+
+Di mana fungsi model sensor terbalik didefinisikan sebagai:
+
+$$
+\text{inv\_sensor}(m_i, z_t) = 
+\begin{cases}
+l_{\text{occ}} & \text{jika sel adalah titik akhir pantulan rintangan} \\
+l_{\text{free}} & \text{jika sel dilewati oleh sinar laser (ruang bebas)} \\
+l_0 = 0 & \text{jika sel berada di luar jangkauan sinar}
+\end{cases}
+$$
+
+Konversi balik ke nilai probabilitas riil $p(m_i) \in [0, 1]$:
+
+$$
+p(m_i) = 1 - \frac{1}{1 + \exp(l_t(m_i))}
+$$
+
+---
+
+## 3. Simulator Interaktif: Raycasting Grid Map & Bresenham
+
+Putar pemindai laser atau sesuaikan bobot log-odds untuk melihat pembaruan sel secara langsung:
+
+<RayCastingGridMapSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-raycasting-grid-map"
+  question="Mengapa algoritma Bresenham sangat disukai untuk raycasting grid map pada sistem embedded robot?"
+  options={[
+    {
+      id: "A",
+      text: "Karena hanya menggunakan operasi penjumlahan dan perbandingan bilangan bulat murni (integer arithmetic) tanpa pembagian atau floating point.",
+      isCorrect: true,
+      explanation: "Tepat! Algoritma Bresenham menghindari operasi floating-point mahal sehingga mampu mengeksekusi ribuan sinar laser per detik."
+    },
+    {
+      id: "B",
+      text: "Karena algoritma ini secara otomatis menginterpolasi kurva Bézier pada lintasan sinar.",
+      isCorrect: false,
+      explanation: "Salah. Sinar laser merambat lurus, dan Bresenham digunakan untuk rasterisasi garis lurus diskrit."
+    },
+    {
+      id: "C",
+      text: "Karena algoritma ini menggandakan jangkauan fisik sensor LiDAR.",
+      isCorrect: false,
+      explanation: "Salah. Jangkauan fisik ditentukan oleh daya laser dan optik sensor, bukan algoritma rasterisasi grid."
+    }
+  ]}
+  hint="Pikirkan alasan efisiensi komputasi pada CPU mikrokontroler atau prosesor robot tanpa FPU."
+/>

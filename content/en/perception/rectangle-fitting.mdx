@@ -1,0 +1,112 @@
+---
+id: rectangle-fitting
+title: Oriented Rectangle (OBB) & L-Shape Bounding Box Fitting
+slug: rectangle-fitting
+domain: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - kmeans-object-clustering
+  - 2d-rotation-matrices
+references:
+  - X. Zhang et al. (2017). Efficient L-shape fitting for vehicle detection using laser scanners. IEEE Transactions on Intelligent Transportation Systems.
+  - Atsushi Sakai (2020). PythonRobotics: Rectangle Fitting.
+components:
+  - RectangleFittingSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Oriented Rectangle (OBB) & L-Shape Bounding Box Fitting
+
+> "Once raw laser returns are clustered into an obstacle object, how does an autonomous vehicle accurately estimate the obstacle's length, width, center coordinate, and heading angle?"
+
+In autonomous driving, a 2D LiDAR scanner typically observes only the two nearest perpendicular faces of another vehicle, creating a characteristic **L-Shape point cloud pattern**. The **Oriented Bounding Box (OBB) / L-Shape Fitting** algorithm searches for the optimal orientation angle $\psi^* \in [0^\circ, 90^\circ]$ to tightly enclose the point cluster with a minimal oriented bounding rectangle.
+
+![Oriented Rectangle and L-Shape Fitting for LiDAR Perception](/images/sensors/rectangle-fitting.jpg)
+
+---
+
+## 1. Optimal Search Angle Optimization
+
+Given a segmented obstacle point cluster $\mathcal{P} = \{(x_i, y_i)\}_{i=1}^N$:
+
+### Stage 1: Rotate Points into Trial Orientation $\psi$
+For each trial heading angle $\psi \in [0^\circ, 90^\circ)$ with angular search step $\Delta \psi$:
+
+$$
+\begin{bmatrix} x_i' \\ y_i' \end{bmatrix} = \begin{bmatrix} \cos(-\psi) & -\sin(-\psi) \\ \sin(-\psi) & \cos(-\psi) \end{bmatrix} \begin{bmatrix} x_i \\ y_i \end{bmatrix}
+$$
+
+### Stage 2: Compute Extrema Dimensions
+Calculate bounding spans in the rotated coordinate frame:
+
+$$
+L(\psi) = \max_{i} x_i' - \min_{i} x_i', \quad W(\psi) = \max_{i} y_i' - \min_{i} y_i'
+$$
+
+### Stage 3: Evaluate Fitting Cost Criteria
+
+1. **Minimum Area Criterion**:
+   $$
+   \psi^* = \arg\min_{\psi} \left( L(\psi) \cdot W(\psi) \right)
+   $$
+2. **Variance Criterion (Edge Compactness)**:
+   Minimizes residual variance of points along the two principal orthogonal bounding edges:
+   $$
+   \sigma^2(\psi) = \frac{1}{N-1} \sum_{i=1}^N \min\left( (x_i' - \bar{x}')^2, (y_i' - \bar{y}')^2 \right)
+   $$
+
+---
+
+## 2. Obstacle State Tuple Output
+
+Once the optimal heading $\psi^*$ is found, the obstacle centroid $(x_c, y_c)$ in the global world frame is computed by rotating the local bounding center back to world coordinates:
+
+$$
+\begin{bmatrix} x_c \\ y_c \end{bmatrix} = \mathbf{R}(\psi^*) \begin{bmatrix} \frac{x_{\min}' + x_{\max}'}{2} \\ \frac{y_{\min}' + y_{\max}'}{2} \end{bmatrix}
+$$
+
+Output: A complete physical obstacle state tuple $(x_c, y_c, \psi^*, L, W)$ ready for downstream Extended Kalman Filter object tracking and dynamic overtaking trajectory planners.
+
+---
+
+## 3. Interactive Simulator: Oriented Rectangle & L-Shape Fitting
+
+Adjust target object orientation, search step $\Delta \psi$, or fitting criteria to observe real-time bounding box estimation:
+
+<RectangleFittingSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-rectangle-fitting"
+  question="Why is the search range for orientation angle psi restricted to [0°, 90°) instead of the full [0°, 360°)?"
+  options={[
+    {
+      id: "A",
+      text: "Because a rectangle possesses 4-fold orthogonal symmetry (rotations of 90°, 180°, and 270° yield geometrically identical enclosing bounding boxes).",
+      isCorrect: true,
+      explanation: "Correct! Due to the 90-degree rotational symmetry of rectangles, sweeping [0, 90) degrees covers all unique minimal bounding configurations."
+    },
+    {
+      id: "B",
+      text: "Because LiDAR sensors cannot scan beyond a 90-degree field of view.",
+      isCorrect: false,
+      explanation: "Incorrect. 360-degree LiDARs scan the entire perimeter; the angular constraint is purely a geometric property of rectangular symmetry."
+    },
+    {
+      id: "C",
+      text: "Because computing angles above 90 degrees causes floating-point division by zero.",
+      isCorrect: false,
+      explanation: "Incorrect. 2D rotation matrices are smooth and well-defined across all real angles without singularities."
+    }
+  ]}
+  hint="Consider what happens when you rotate a rectangular box by 90 degrees."
+/>

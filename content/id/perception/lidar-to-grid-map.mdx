@@ -1,0 +1,98 @@
+---
+id: lidar-to-grid-map
+title: Konversi Data LiDAR Polar ke Grid Peta Kartesius
+slug: lidar-to-grid-map
+domain: perception
+level: 5
+tier: Core Autonomy
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 35
+prerequisites:
+  - lidar-raycasting
+  - coordinate-frames-and-transforms
+references:
+  - Roland Siegwart et al. (2011). Introduction to Autonomous Mobile Robots. MIT Press.
+  - Atsushi Sakai (2020). PythonRobotics: Lidar to Grid Map.
+components:
+  - LidarToGridMapSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Konversi Data LiDAR Polar ke Grid Peta Kartesius
+
+> "Bagaimana aliran data mentah dari sensor LiDAR yang berbentuk pasangan jarak dan sudut (r, θ) diubah menjadi peta 2D diskrit dunia nyata?"
+
+LiDAR mengukur lingkungan dalam **sistem koordinat polar sensor**: jarak pantulan $r_i$ pada sudut pemindaian $\theta_i$. Agar dapat digunakan untuk navigasi, perencanaan jalur, dan penghindaran tabrakan, data ini harus melalui **tiga tahap transformasi berurutan**:
+1. Konversi Polar ke Kartesius Lokal Sensor
+2. Transformasi Rigid Body $SE(2)$ ke Kerangka Acuan Dunia
+3. Diskritisasi Spasial (*Spatial Binning*) ke dalam Sel Grid Matriks
+
+![Konversi LiDAR Polar ke Grid Peta](/images/sensors/lidar-to-grid-map.jpg)
+
+---
+
+## 1. Pipeline Transformasi Koordinat 3 Tahap
+
+### Tahap 1: Konversi Polar ke Kartesius Lokal $\{L\}$
+Setiap berkas sinar ke-$i$ menghasilkan koordinat lokal terhadap pusat sensor:
+
+$$
+\begin{bmatrix} x_i^L \\ y_i^L \end{bmatrix} = \begin{bmatrix} r_i \cos\theta_i \\ r_i \sin\theta_i \end{bmatrix}
+$$
+
+### Tahap 2: Transformasi Rigid $SE(2)$ ke Kerangka Dunia $\{W\}$
+Dengan posisi robot $(x_R, y_R)$ dan orientasi $\theta_R$:
+
+$$
+\begin{bmatrix} x_i^W \\ y_i^W \end{bmatrix} = \begin{bmatrix} \cos\theta_R & -\sin\theta_R \\ \sin\theta_R & \cos\theta_R \end{bmatrix} \begin{bmatrix} x_i^L \\ y_i^L \end{bmatrix} + \begin{bmatrix} x_R \\ y_R \end{bmatrix}
+$$
+
+### Tahap 3: Diskritisasi Spasial (*Grid Binning*)
+Dengan resolusi sel $\Delta x$ dan titik asal peta $(X_{\text{origin}}, Y_{\text{origin}})$:
+
+$$
+i = \left\lfloor \frac{x_i^W - X_{\text{origin}}}{\Delta x} \right\rfloor, \quad j = \left\lfloor \frac{y_i^W - Y_{\text{origin}}}{\Delta y} \right\rfloor
+$$
+
+Setiap sel $(i, j)$ mencatat jumlah akumulasi pantulan: $\text{Grid}[j][i] = \text{Grid}[j][i] + 1$.
+
+---
+
+## 2. Simulator Interaktif: Konversi LiDAR ke Grid Peta
+
+Amati proses konversi dari titik pantulan kontinu menjadi akumulasi sel grid secara *real-time*:
+
+<LidarToGridMapSimulator />
+
+---
+
+## 3. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-lidar-to-grid-map"
+  question="Jika resolusi sel grid diperkecil dari 0.5 meter menjadi 0.05 meter (5 cm), apa konsekuensi utamanya?"
+  options={[
+    {
+      id: "A",
+      text: "Detail geometri rintangan menjadi jauh lebih presisi, tetapi ukuran memori matriks grid meningkat 100 kali lipat.",
+      isCorrect: true,
+      explanation: "Tepat! Karena grid adalah representasi 2D, membagi ukuran sel dengan faktor 10 meningkatkan jumlah sel sebesar 10^2 = 100 kali lipat."
+    },
+    {
+      id: "B",
+      text: "Robot bergerak 10 kali lebih cepat.",
+      isCorrect: false,
+      explanation: "Salah. Resolusi grid peta adalah representasi memori spasial, bukan batas kecepatan aktuator fisik."
+    },
+    {
+      id: "C",
+      text: "Jangkauan sensor LiDAR berkurang menjadi hanya 1 meter.",
+      isCorrect: false,
+      explanation: "Salah. Resolusi diskritisasi memori tidak mengubah jangkauan fisik optik sensor."
+    }
+  ]}
+  hint="Pikirkan hubungan kuadratik antara dimensi kisi 2D (lebar x tinggi) terhadap kerapatan sel."
+/>
