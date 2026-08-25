@@ -1,0 +1,102 @@
+---
+id: marine-robotics-fundamentals
+title: "Marine Robotics: Hydrodynamics, Buoyancy & 6-DOF AUV Equations"
+slug: marine-robotics-fundamentals
+domain: fundamentals
+level: 0
+tier: Foundations
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - intro-to-robotics
+references:
+  - "Thor I. Fossen (2011). Handbook of Marine Craft Hydrodynamics and Motion Control. John Wiley & Sons."
+  - "Gianluca Antonelli (2014). Underwater Robots. Springer."
+components:
+  - MarineHydrodynamicsSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Marine Robotics: Hydrodynamics, Buoyancy & 6-DOF AUV Equations
+
+> "Why are GPS and LiDAR unusable in subsea environments, and how do Autonomous Underwater Vehicles (AUVs) maintain precise depth stability in high-pressure ocean currents?"
+
+**Marine Robotics** encompasses Autonomous Surface Vehicles (USVs) and Autonomous Underwater Vehicles (AUVs/ROVs). Subsea vehicle dynamics are governed by fluid mechanics, viscous hydrodynamic drag, and hydrostatic buoyancy equilibria.
+
+---
+
+## 1. Hydrostatic Equilibrium: Gravitational Weight vs Archimedes Buoyancy
+
+According to Archimedes' principle, the upward hydrostatic buoyancy force $B$ and downward gravitational weight $W$ are:
+
+$$
+W = m g, \quad B = \rho_{\text{fluid}} g V_{\text{displaced}}
+$$
+
+Where $\rho_{\text{fluid}}$ is seawater density ($\approx 1025 \text{ kg/m}^3$) and $V_{\text{displaced}}$ is the submerged hull volume.
+
+```text
+┌─────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Hydrostatic Trim State  │ Net Force Equilibrium                    │ Subsea AUV Behavioral Response                         │
+├─────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Neutral Trim (B = W) │ Net vertical force = 0                   │ AUV hovers passively at constant depth without power   │
+│ 2. Positive Trim (B > W)│ Net upward buoyancy force                │ Fail-safe mode: AUV floats safely to surface on outage │
+│ 3. Negative Trim (B < W)│ Net downward sinking force               │ Rapid descent capability to deep seabed floor          │
+└─────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Fossen's 6-DOF Marine Equations of Motion
+
+AUV rigid-body motion across 6 degrees of freedom (*Surge, Sway, Heave, Roll, Pitch, Yaw*) is formulated by Professor Thor I. Fossen:
+
+$$
+\mathbf{M} \boldsymbol{\dot{\nu}} + \mathbf{C}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}(\boldsymbol{\eta}) = \boldsymbol{\tau}_{\text{thruster}}
+$$
+
+1. **$\mathbf{M} = \mathbf{M}_{RB} + \mathbf{M}_A$**: Total inertia tensor summing rigid-body mass and **Hydrodynamic Added Mass ($\mathbf{M}_A$)** (the effective inertia of the surrounding fluid displaced during acceleration).
+2. **$\mathbf{D}(\boldsymbol{\nu})$**: Quadratic hydrodynamic viscous drag damping:
+   $$F_{\text{drag}} = \frac{1}{2} \rho C_D A v^2$$
+3. **$\mathbf{g}(\boldsymbol{\eta})$**: Restoring hydrostatic forces and moments ensuring the Center of Buoyancy ($CB$) remains positioned above the Center of Gravity ($CG$) for passive metacentric stability.
+
+---
+
+## 3. Interactive Simulator: 6-DOF Marine Hydrodynamics
+
+Trim ballast buoyancy, dive plane control angles, and forward thruster propulsion under dynamic currents:
+
+<MarineHydrodynamicsSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-marine-robotics-fundamentals"
+  question="What physical phenomenon is represented by 'Hydrodynamic Added Mass' in underwater robotics?"
+  options={[
+    {
+      id: "A",
+      text: "The inertial reaction force caused by accelerating a volume of the surrounding viscous fluid along with the vehicle hull, increasing apparent system inertia during acceleration.",
+      isCorrect: true,
+      explanation: "Correct! Added mass is not physical mass inside the robot; it is the hydrodynamic inertial resistance of water that must be pushed aside when the hull accelerates."
+    },
+    {
+      id: "B",
+      text: "Spare lead weights loaded inside the electronics dry canister.",
+      isCorrect: false,
+      explanation: "Incorrect. That is physical ballast mass."
+    },
+    {
+      id: "C",
+      text: "Biofouling barnacles and algae clinging to the propeller shafts.",
+      isCorrect: false,
+      explanation: "Incorrect. Added mass is a purely hydrodynamic consequence of fluid acceleration."
+    }
+  ]}
+  hint="Consider the effort required to suddenly push a broad paddle sideways through water versus through air."
+/>

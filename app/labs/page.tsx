@@ -46,6 +46,9 @@ import { FastSlamSimulator } from '@/components/simulation/FastSlamSimulator';
 import { LoopClosureOptimizationSimulator } from '@/components/simulation/LoopClosureOptimizationSimulator';
 import { AutonomousExplorationSimulator } from '@/components/simulation/AutonomousExplorationSimulator';
 import { SafeCorridorExplorationSimulator } from '@/components/simulation/SafeCorridorExplorationSimulator';
+import { QuadrotorDynamicsSimulator } from '@/components/simulation/QuadrotorDynamicsSimulator';
+import { MarineHydrodynamicsSimulator } from '@/components/simulation/MarineHydrodynamicsSimulator';
+import { LeggedZmpSimulator } from '@/components/simulation/LeggedZmpSimulator';
 import {
   Compass,
   Cpu,
@@ -626,6 +629,45 @@ export default function LabsPage() {
       icon: '🛡️',
       lessonHref: '/learn/planning/3d-frontier-exploration-mav',
       component: <SafeCorridorExplorationSimulator />,
+    },
+    {
+      id: 'quadrotor-dynamics',
+      category: 'control',
+      paths: ['control'],
+      titleEn: '6-DOF Multirotor Flight Dynamics Lab',
+      titleId: 'Laboratorium Dinamika Penerbangan Multirotor 6-DOF',
+      descEn: 'Control rotor thrust differentials to balance collective lift, roll, and pitch in real-time flight.',
+      descId: 'Kendalikan diferensial dorongan rotor untuk menyeimbangkan gaya angkat, gulingan, dan anggukan drone.',
+      levelBadge: 'Level 0',
+      icon: '🚁',
+      lessonHref: '/learn/fundamentals/aerial-drone-principles',
+      component: <QuadrotorDynamicsSimulator />,
+    },
+    {
+      id: 'marine-hydrodynamics',
+      category: 'control',
+      paths: ['control'],
+      titleEn: '6-DOF Marine Hydrodynamics & Buoyancy Lab',
+      titleId: 'Laboratorium Hidrodinamika Laut & Gaya Apung AUV',
+      descEn: 'Trim ballast buoyancy and forward propulsion under hydrostatic equilibrium and ocean currents.',
+      descId: 'Atur keseimbangan gaya apung ballast dan daya dorong maju AUV dalam fluida laut dinamis.',
+      levelBadge: 'Level 0',
+      icon: '🌊',
+      lessonHref: '/learn/fundamentals/marine-robotics-fundamentals',
+      component: <MarineHydrodynamicsSimulator />,
+    },
+    {
+      id: 'legged-zmp',
+      category: 'control',
+      paths: ['control'],
+      titleEn: 'Zero Moment Point (ZMP) Legged Locomotion Lab',
+      titleId: 'Laboratorium Zero Moment Point (ZMP) Robot Berkaki',
+      descEn: 'Maintain bipedal/quadruped inverted pendulum dynamic stability within the foot support polygon.',
+      descId: 'Pertahankan stabilitas dinamis pendulum terbalik robot berkaki di dalam poligon tumpuan kaki.',
+      levelBadge: 'Level 0',
+      icon: '🦿',
+      lessonHref: '/learn/fundamentals/legged-robotics-fundamentals',
+      component: <LeggedZmpSimulator />,
     },
   ];
 

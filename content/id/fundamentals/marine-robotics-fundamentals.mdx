@@ -1,0 +1,102 @@
+---
+id: marine-robotics-fundamentals
+title: "Robotika Laut: Hidrodinamika, Gaya Apung & Persamaan AUV 6-DOF"
+slug: marine-robotics-fundamentals
+domain: fundamentals
+level: 0
+tier: Foundations
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - intro-to-robotics
+references:
+  - "Thor I. Fossen (2011). Handbook of Marine Craft Hydrodynamics and Motion Control. John Wiley & Sons."
+  - "Gianluca Antonelli (2014). Underwater Robots. Springer."
+components:
+  - MarineHydrodynamicsSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Robotika Laut: Hidrodinamika, Gaya Apung & Persamaan AUV 6-DOF
+
+> "Mengapa navigasi robot di bawah air tidak dapat menggunakan GPS atau LiDAR, dan bagaimana robot selam AUV/ROV mengendalikan kedalamannya secara stabil dalam fluida laut bertekanan tinggi?"
+
+**Robotika Kelautan (*Marine Robotics*)** mencakup Kendaraan Permukaan Otonom (*Autonomous Surface Vehicles / USVs*) dan Wahana Bawah Air Otonom (*Autonomous Underwater Vehicles / AUVs*). Dinamika gerak bawah air diatur oleh hukum hidrodinamika fluida kental dan kesetimbangan hidrostatik.
+
+---
+
+## 1. Kesetimbangan Hidrostatik: Gaya Gravitasi vs Gaya Apung
+
+Berdasarkan hukum Archimedes, gaya apung hidrostatik ke atas $B$ dan gaya berat gravitasi ke bawah $W$ bernilai:
+
+$$
+W = m g, \quad B = \rho_{\text{fluid}} g V_{\text{displaced}}
+$$
+
+Di mana $\rho_{\text{fluid}}$ adalah densitas air laut ($\approx 1025 \text{ kg/m}^3$) dan $V_{\text{displaced}}$ adalah volume lambung wahana yang tercelup.
+
+```text
+┌─────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Kondisi Apung (*Trim*)  │ Keseimbangan Gaya Archimedes             │ Perilaku Wahana AUV / Kapal Selam                      │
+├─────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Apung Netral (B = W) │ Gaya neto vertikal = 0                   │ AUV melayang stabil di kedalaman tanpa tenaga dorong   │
+│ 2. Apung Positif (B > W)│ Gaya neto mengarah ke atas (mengapung)   │ Mode keselamatan darurat: AUV naik ke permukaan        │
+│ 3. Apung Negatif (B < W)│ Gaya neto mengarah ke bawah (tenggelam)  │ Memudahkan penyelaman cepat ke dasar laut              │
+└─────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Persamaan Gerak Laut 6-DOF Fossen
+
+Gerakan rigid-body AUV dalam 6 derajat kebebasan (*Surge, Sway, Heave, Roll, Pitch, Yaw*) diformulasikan oleh Profesor Thor Fossen:
+
+$$
+\mathbf{M} \boldsymbol{\dot{\nu}} + \mathbf{C}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}(\boldsymbol{\eta}) = \boldsymbol{\tau}_{\text{thruster}}
+$$
+
+1. **$\mathbf{M} = \mathbf{M}_{RB} + \mathbf{M}_A$**: Matriks inersia total gabungan massa kaku (*rigid-body*) dan **Massa Tambahan Hidrodinamika (*Hydrodynamic Added Mass $\mathbf{M}_A$*)** (kelembaman massa fluida yang ikut terdorong bersama wahana).
+2. **$\mathbf{D}(\boldsymbol{\nu})$**: Matriks redaman seret hidrodinamis kuadratik:
+   $$F_{\text{drag}} = \frac{1}{2} \rho C_D A v^2$$
+3. **$\mathbf{g}(\boldsymbol{\eta})$**: Vektor gaya pemulih hidrostatik (*restoring forces*) yang menjaga pusat gaya apung ($CB$) selalu berada di atas pusat gravitasi ($CG$) demi stabilitas pasif.
+
+---
+
+## 3. Simulator Interaktif: Hidrodinamika Laut & Persamaan Fossen
+
+Atur trim gaya apung ballast, sudut sirip anggukan (*dive planes*), dan daya dorong baling-baling AUV di kedalaman laut:
+
+<MarineHydrodynamicsSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-marine-robotics-fundamentals"
+  question="Apa yang dimaksud dengan 'Added Mass' (Massa Tambahan) dalam hidrodinamika robot bawah air?"
+  options={[
+    {
+      id: "A",
+      text: "Fenomena inersia di mana fluida di sekitar wahana ikut berakselerasi bersama pergerakan badan robot, sehingga robot terasa lebih berat saat mengalami percepatan dibandingkan saat diam di udara.",
+      isCorrect: true,
+      explanation: "Tepat! Massa tambahan bukan berat fisik yang bertambah, melainkan gaya reaksi hidrodinamis dari volume fluida yang terakselerasi di sekitar lambung kapal selam."
+    },
+    {
+      id: "B",
+      text: "Muatan kargo baterai cadangan yang dipasang di dalam kapal.",
+      isCorrect: false,
+      explanation: "Salah. Itu adalah massa fisik rigid body."
+    },
+    {
+      id: "C",
+      text: "Karat atau teritip laut yang menempel pada baling-baling.",
+      isCorrect: false,
+      explanation: "Salah. Added mass adalah konsep murni hidrodinamika fluida tak termampatkan."
+    }
+  ]}
+  hint="Pikirkan berapa banyak volume air yang harus didorong menyingkir ketika sebuah kapal selam berakselerasi mendadak ke depan."
+/>

@@ -27,6 +27,9 @@ const CONTENT_ROOT = path.resolve(process.cwd(), 'content');
 const LESSON_INDEX: Record<string, string> = {
   // English Lessons
   'en/fundamentals/intro-to-robotics': 'en/fundamentals/intro-to-robotics.mdx',
+  'en/fundamentals/aerial-drone-principles': 'en/fundamentals/aerial-drone-principles.mdx',
+  'en/fundamentals/marine-robotics-fundamentals': 'en/fundamentals/marine-robotics-fundamentals.mdx',
+  'en/fundamentals/legged-robotics-fundamentals': 'en/fundamentals/legged-robotics-fundamentals.mdx',
   'en/mathematics/mathematical-foundations': 'en/mathematics/mathematical-foundations.mdx',
   'en/mathematics/vectors-and-coordinate-geometry': 'en/mathematics/vectors-and-coordinate-geometry.mdx',
   'en/mathematics/dot-product-and-projection': 'en/mathematics/dot-product-and-projection.mdx',
@@ -80,6 +83,9 @@ const LESSON_INDEX: Record<string, string> = {
 
   // Indonesian Lessons
   'id/fundamentals/intro-to-robotics': 'id/fundamentals/intro-to-robotics.mdx',
+  'id/fundamentals/aerial-drone-principles': 'id/fundamentals/aerial-drone-principles.mdx',
+  'id/fundamentals/marine-robotics-fundamentals': 'id/fundamentals/marine-robotics-fundamentals.mdx',
+  'id/fundamentals/legged-robotics-fundamentals': 'id/fundamentals/legged-robotics-fundamentals.mdx',
   'id/mathematics/mathematical-foundations': 'id/mathematics/mathematical-foundations.mdx',
   'id/mathematics/vectors-and-coordinate-geometry': 'id/mathematics/vectors-and-coordinate-geometry.mdx',
   'id/mathematics/dot-product-and-projection': 'id/mathematics/dot-product-and-projection.mdx',

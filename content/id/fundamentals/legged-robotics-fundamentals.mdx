@@ -1,0 +1,106 @@
+---
+id: legged-robotics-fundamentals
+title: "Robotika Berkaki: Zero Moment Point (ZMP) & Lokomosi Pendulum Terbalik"
+slug: legged-robotics-fundamentals
+domain: fundamentals
+level: 0
+tier: Foundations
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - intro-to-robotics
+references:
+  - "Shuuji Kajita et al. (2014). Introduction to Humanoid Robotics. Springer."
+  - "Miomir Vukobratovic & Branislav Borovac (2004). Zero-Moment Point: Thirty Five Years of its Life. IJHR."
+components:
+  - LeggedZmpSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Robotika Berkaki: Zero Moment Point (ZMP) & Lokomosi Pendulum Terbalik
+
+> "Mengapa manusia dan robot humanoid berkaki dua dapat berjalan stabil tanpa terjatuh meskipun titik pusat massanya (Center of Mass) berada tinggi di atas tanah dengan bidang tumpuan kaki yang sangat sempit?"
+
+**Robotika Berkaki (*Legged Robotics*)** (Bipedal Humanoid dan Quadruped) bergerak melalui kontak tanah diskrit intermiten. Stabilitas dinamisnya diatur oleh model **Linear Inverted Pendulum Model (LIPM)** dan kriteria stabilitas **Zero Moment Point (ZMP)** yang diperkenalkan oleh Profesor Miomir Vukobratović.
+
+---
+
+## 1. Konsep Keseimbangan: Center of Mass (CoM) vs Zero Moment Point (ZMP)
+
+1. **Center of Mass (CoM $\mathbf{x}_{\text{CoM}}$)**: Titik pusat massa total seluruh sendi dan struktur robot.
+2. **Zero Moment Point (ZMP $\mathbf{x}_{\text{ZMP}}$)**: Titik di permukaan tanah di mana momen gaya reaksi horizontal total (akibat gravitasi dan akselerasi inersia) bernilai tepat nol:
+
+$$
+x_{\text{ZMP}} = x_{\text{CoM}} - \frac{z_{\text{CoM}}}{g} \ddot{x}_{\text{CoM}}
+$$
+
+$$
+y_{\text{ZMP}} = y_{\text{CoM}} - \frac{z_{\text{CoM}}}{g} \ddot{y}_{\text{CoM}}
+$$
+
+### Kriteria Stabilitas Dinamis ZMP:
+- **STABIL SEIMBANG**: $x_{\text{ZMP}}$ berada **di dalam poligon tumpuan kaki (*Support Polygon*)**. Telapak kaki menapak rata tanpa ada momen gulingan.
+- **TIDAK STABIL / TERBALIK**: $x_{\text{ZMP}}$ mencapai tepi batas poligon tumpuan. Robot mulai terjungkal ke depan/samping.
+
+---
+
+## 2. Model Pendulum Terbalik Linier (*Linear Inverted Pendulum Model - LIPM*)
+
+Dengan membatasi pergerakan pusat massa robot pada ketinggian bidang konstan ($z_{\text{CoM}} = z_c$), persamaan diferensial non-linear disederhanakan menjadi sistem linier:
+
+$$
+\ddot{x}_{\text{CoM}} = \frac{g}{z_c} (x_{\text{CoM}} - x_{\text{ZMP}}) = \omega_0^2 (x_{\text{CoM}} - x_{\text{ZMP}})
+$$
+
+Di mana frekuensi alami osilasi pendulum adalah $\omega_0 = \sqrt{\frac{g}{z_c}}$.
+
+```text
+┌─────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Pola Gaya Berjalan      │ Fase Siklus Kontak Kaki                  │ Contoh Platform Robot                                  │
+├─────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Bipedal Walk (Manusia│ Double Support -> Single Swing Phase     │ Honda ASIMO, Boston Dynamics Atlas, Tesla Optimus      │
+│ 2. Trot (Quadruped)     │ Pasangan kaki diagonal menyentuh tanah   │ Boston Dynamics Spot, Unitree Go2, ANYbotics ANYmal    │
+│ 3. Pace / Gallop        │ Pasangan lateral / sekuensial cepat      │ Gerakan lari cepat hewan berkaki empat                 │
+└─────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Simulator Interaktif: Stabilitas ZMP & Pendulum Terbalik
+
+Amati lintasan osilasi pusat massa (CoM) dan titik ZMP di dalam poligon tumpuan kaki. Uji ketahanan keseimbangan dengan memberikan gaya dorong gangguan (*Push Perturbation*):
+
+<LeggedZmpSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-legged-robotics-fundamentals"
+  question="Apa kondisi mutlak agar robot humanoid bipedal dapat berjalan tanpa terjungkal menurut kriteria Vukobratović ZMP?"
+  options={[
+    {
+      id: "A",
+      text: "Titik Zero Moment Point (ZMP) yang dihitung dari percepatan pusat massa harus selalu berada tepat di dalam batas poligon tumpuan telapak kaki yang menyentuh tanah.",
+      isCorrect: true,
+      explanation: "Tepat! Selama ZMP berada di dalam poligon tumpuan, gaya reaksi tanah dapat mengimbangi seluruh momen inersia tanpa terjadi rotasi guling pada telapak kaki."
+    },
+    {
+      id: "B",
+      text: "Pusat massa robot harus selalu diam membeku dan tidak boleh bergerak.",
+      isCorrect: false,
+      explanation: "Salah. Dalam lokomosi dinamis, CoM terus berakselerasi dan berosilasi maju."
+    },
+    {
+      id: "C",
+      text: "Kedua kaki harus selalu menempel di tanah 100% sepanjang waktu.",
+      isCorrect: false,
+      explanation: "Salah. Berjalan membutuhkan fase ayunan satu kaki (single support swing phase)."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi jika titik gaya dorong melompat keluar dari batas fisik telapak sepatu."
+/>

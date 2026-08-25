@@ -1,0 +1,108 @@
+---
+id: aerial-drone-principles
+title: "Robotika Udara: Dinamika Penerbangan Multirotor & Kendali Dorong 6-DOF"
+slug: aerial-drone-principles
+domain: fundamentals
+level: 0
+tier: Foundations
+difficulty: beginner
+language: id
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - intro-to-robotics
+references:
+  - "Randal W. Beard & Timothy W. McLain (2012). Small Unmanned Aircraft: Theory and Practice. Princeton University Press."
+  - "Quan Quan (2017). Introduction to Multicopter Design and Control. Springer."
+components:
+  - QuadrotorDynamicsSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Robotika Udara: Dinamika Penerbangan Multirotor & Kendali Dorong 6-DOF
+
+> "Bagaimana sebuah quadrotor dengan hanya 4 motor penggerak dapat bermanuver bebas di ruang 3D 6-DOF tanpa sayap atau kemudi mekanis aerodinamis konvensional?"
+
+**Wahana Udara Nirawak (Unmanned Aerial Vehicle / UAV)** berjenis multirotor merupakan robot yang *underactuated* (memiliki 6 derajat kebebasan spasial namun hanya dikendalikan oleh 4 input gaya dorong motor independen).
+
+---
+
+## 1. Pemetaan Gaya Dorong & Torsi Aerodinamis
+
+Setiap baling-baling yang berputar dengan kecepatan sudut $\omega_i$ (rad/s) menghasilkan gaya dorong $f_i$ dan momen torsi reaksi aerodinamis $\tau_{m,i}$:
+
+$$
+f_i = k_f \omega_i^2, \quad \tau_{m,i} = k_m \omega_i^2
+$$
+
+Di mana $k_f$ adalah koefisien gaya dorong aerodinamis dan $k_m$ adalah koefisien momen seret baling-baling.
+
+### Matriks Alokasi Penggerak Quadrotor Konfigurasi Plus (+):
+
+$$
+\begin{bmatrix} F_{\text{total}} \\ \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix} = \begin{bmatrix} k_f & k_f & k_f & k_f \\ 0 & -L k_f & 0 & L k_f \\ -L k_f & 0 & L k_f & 0 \\ k_m & -k_m & k_m & -k_m \end{bmatrix} \begin{bmatrix} \omega_1^2 \\ \omega_2^2 \\ \omega_3^2 \\ \omega_4^2 \end{bmatrix}
+$$
+
+```text
+┌─────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Manuver Sikap Terbang   │ Kombinasi Kecepatan Putar Motor          │ Respon Dinamis Wahana                                  │
+├─────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Ketinggian (Throttle)│ Semua motor berputar lebih cepat bersama │ Gaya angkat total F > m*g -> Drone naik vertikal       │
+│ 2. Gulingan (Roll phi)  │ Motor kanan dipercepat, kiri diperlambat │ Torsi guling positif -> Drone miring dan akselerasi Y │
+│ 3. Anggukan (Pitch theta│ Motor belakang dipercepat, depan pelan   │ Torsi angguk positif -> Drone miring dan akselerasi X  │
+│ 4. Gelengan (Yaw psi)   │ CW motor dipercepat, CCW diperlambat     │ Torsi reaksi tidak seimbang -> Drone berputar yaw      │
+└─────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Persamaan Translasi & Rotasi Newton-Euler
+
+Dinamika translasi posisi $\mathbf{p} = [x, y, z]^T$ dan orientasi rotasi badan dinyatakan dalam kerangka acuan inersia:
+
+$$
+m \mathbf{\ddot{p}} = \mathbf{R}_{B}^{I} \begin{bmatrix} 0 \\ 0 \\ F_{\text{total}} \end{bmatrix} - \begin{bmatrix} 0 \\ 0 \\ m g \end{bmatrix} - \mathbf{F}_{\text{drag}}
+$$
+
+$$
+\mathbf{I} \boldsymbol{\dot{\omega}}_B + \boldsymbol{\omega}_B \times (\mathbf{I} \boldsymbol{\omega}_B) = \begin{bmatrix} \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix}
+$$
+
+---
+
+## 3. Simulator Interaktif: Dinamika Multirotor 6-DOF
+
+Eksplorasi kendali diferensial dorongan motor, sudut kemiringan gulingan (*roll tilt*), dan kestabilan terbang terhadap gangguan angin secara langsung:
+
+<QuadrotorDynamicsSimulator />
+
+---
+
+## 4. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-aerial-drone-principles"
+  question="Mengapa sepasang baling-baling quadrotor berputar searah jarum jam (CW) dan sepasang lainnya berlawanan arah jarum jam (CCW)?"
+  options={[
+    {
+      id: "A",
+      text: "Untuk menyeimbangkan torsi reaksi aerodinamis (anti-torque) saat kondisi hover, dan memungkinkan kendali putaran yaw cukup dengan mengubah selisih kecepatan antara pasangan CW dan CCW.",
+      isCorrect: true,
+      explanation: "Tepat! Jika semua baling-baling berputar ke arah yang sama, badan drone akan terus berputar liar tanpa terkendali akibat hukum aksi-reaksi Newton."
+    },
+    {
+      id: "B",
+      text: "Agar baling-baling tidak saling bertabrakan secara fisik.",
+      isCorrect: false,
+      explanation: "Salah. Jarak antar motor sudah diatur agar baling-baling tidak beririsan."
+    },
+    {
+      id: "C",
+      text: "Untuk menghemat baterai hingga 50%.",
+      isCorrect: false,
+      explanation: "Salah. Putaran berlawanan adalah prinsip fisika penyeimbangan momen momentum sudut."
+    }
+  ]}
+  hint="Pikirkan hukum kekekalan momentum sudut dan torsi reaksi motor."
+/>

@@ -63,8 +63,8 @@ describe('RoboAtlas Curriculum Registry Integrity', () => {
     expect(fundamentalsLessons.length).toBeGreaterThan(0);
 
     const level0Lessons = getLessonsByLevel(0);
-    expect(level0Lessons.length).toBe(1);
-    expect(level0Lessons[0].id).toBe('intro-to-robotics');
+    expect(level0Lessons.length).toBe(4);
+    expect(level0Lessons.some((l) => l.id === 'intro-to-robotics')).toBe(true);
 
     const mobileLessons = getLessonsByPlatform('mobile');
     expect(mobileLessons.length).toBeGreaterThan(0);

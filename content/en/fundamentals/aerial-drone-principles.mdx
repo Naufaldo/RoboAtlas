@@ -1,0 +1,108 @@
+---
+id: aerial-drone-principles
+title: "Aerial Robotics: Multirotor Flight Dynamics & 6-DOF Thrust Control"
+slug: aerial-drone-principles
+domain: fundamentals
+level: 0
+tier: Foundations
+difficulty: beginner
+language: en
+interactive: true
+estimatedMinutes: 40
+prerequisites:
+  - intro-to-robotics
+references:
+  - "Randal W. Beard & Timothy W. McLain (2012). Small Unmanned Aircraft: Theory and Practice. Princeton University Press."
+  - "Quan Quan (2017). Introduction to Multicopter Design and Control. Springer."
+components:
+  - QuadrotorDynamicsSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Aerial Robotics: Multirotor Flight Dynamics & 6-DOF Thrust Control
+
+> "How does a quadrotor with only 4 spinning brushless motors maneuver freely across all 6 degrees of freedom without aerodynamic control surfaces like rudders or ailerons?"
+
+**Unmanned Aerial Vehicles (UAVs / Quadrotors)** are classic **underactuated dynamic systems**—possessing 6 spatial degrees of freedom (surge, sway, heave, roll, pitch, yaw) governed by only 4 independent motor thrust inputs.
+
+---
+
+## 1. Aerodynamic Thrust & Reaction Torque Mapping
+
+Each propeller spinning at angular rate $\omega_i$ (rad/s) generates aerodynamic lift $f_i$ and drag reaction torque $\tau_{m,i}$:
+
+$$
+f_i = k_f \omega_i^2, \quad \tau_{m,i} = k_m \omega_i^2
+$$
+
+Where $k_f$ is the aerodynamic thrust coefficient and $k_m$ is the rotor drag torque coefficient.
+
+### Quadrotor Plus-Configuration Actuator Allocation Matrix:
+
+$$
+\begin{bmatrix} F_{\text{total}} \\ \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix} = \begin{bmatrix} k_f & k_f & k_f & k_f \\ 0 & -L k_f & 0 & L k_f \\ -L k_f & 0 & L k_f & 0 \\ k_m & -k_m & k_m & -k_m \end{bmatrix} \begin{bmatrix} \omega_1^2 \\ \omega_2^2 \\ \omega_3^2 \\ \omega_4^2 \end{bmatrix}
+$$
+
+```text
+┌─────────────────────────┬──────────────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ Flight Maneuver         │ Motor Speed Actuation Scheme             │ Resulting Vehicle Dynamic Response                     │
+├─────────────────────────┼──────────────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Altitude (Throttle)  │ Accelerate all 4 motors identically      │ Total collective thrust F > m*g -> Vertical ascent     │
+│ 2. Roll (phi)           │ Accelerate right rotor, decelerate left  │ Differential lateral thrust -> Body tilts along Y-axis │
+│ 3. Pitch (theta)        │ Accelerate rear rotor, decelerate front  │ Differential pitch torque -> Body tilts along X-axis   │
+│ 4. Yaw (psi)            │ Accelerate CW pair, decelerate CCW pair  │ Net reaction torque imbalance -> Pure heading rotation │
+└─────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. 6-DOF Newton-Euler Translational & Rotational Dynamics
+
+Position kinematics and body attitude dynamics are expressed relative to the world inertial frame:
+
+$$
+m \mathbf{\ddot{p}} = \mathbf{R}_{B}^{I} \begin{bmatrix} 0 \\ 0 \\ F_{\text{total}} \end{bmatrix} - \begin{bmatrix} 0 \\ 0 \\ m g \end{bmatrix} - \mathbf{F}_{\text{drag}}
+$$
+
+$$
+\mathbf{I} \boldsymbol{\dot{\omega}}_B + \boldsymbol{\omega}_B \times (\mathbf{I} \boldsymbol{\omega}_B) = \begin{bmatrix} \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix}
+$$
+
+---
+
+## 3. Interactive Simulator: 6-DOF Multirotor Flight Dynamics
+
+Experiment with motor thrust differentials, roll tilt angles, and wind disturbances in real-time:
+
+<QuadrotorDynamicsSimulator />
+
+---
+
+## 4. Concept Verification
+
+<ConceptCheck
+  id="quiz-aerial-drone-principles"
+  question="Why does a quadrotor spin two propellers clockwise (CW) and the other two counter-clockwise (CCW)?"
+  options={[
+    {
+      id: "A",
+      text: "To cancel out aerodynamic reaction torque (anti-torque) during steady hover, and to enable pure yaw rotation by creating a torque imbalance between the CW and CCW rotor pairs.",
+      isCorrect: true,
+      explanation: "Correct! If all propellers spun in the same direction, Newton's third law would cause the airframe to spin uncontrollably in the opposite direction."
+    },
+    {
+      id: "B",
+      text: "To prevent the propeller tips from physically colliding in mid-air.",
+      isCorrect: false,
+      explanation: "Incorrect. Arm separation distance prevents blade intersection regardless of spin direction."
+    },
+    {
+      id: "C",
+      text: "To reduce electrical battery consumption by exactly half.",
+      isCorrect: false,
+      explanation: "Incorrect. Counter-rotation is an angular momentum conservation principle."
+    }
+  ]}
+  hint="Recall Newton's third law of motion: every action torque has an equal and opposite reaction torque on the vehicle body."
+/>
