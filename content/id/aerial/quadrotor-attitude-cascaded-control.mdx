@@ -1,0 +1,169 @@
+---
+id: quadrotor-attitude-cascaded-control
+title: "Dinamika Sikap Quadrotor, Kendali PID Bertingkat & Pelacakan Trajektori"
+slug: quadrotor-attitude-cascaded-control
+domain: aerial
+category: aerial
+level: 16
+tier: Advanced Embodiments
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - mathematical-foundations
+  - 3d-geometry
+  - pid-and-lqr-control
+references:
+  - "Daniel Mellinger & Vijay Kumar (2011). Minimum Snap Trajectory Generation and Control for Quadrotors. IEEE ICRA."
+  - "Randal W. Beard & Timothy W. McLain (2012). Small Unmanned Aircraft: Theory and Practice. Princeton University Press."
+  - "Taeyoung Lee, Melvin Leok, & N. Harris McClamroch (2010). Geometric Tracking Control of a Quadrotor UAV on SE(3). IEEE CDC."
+components:
+  - QuadrotorDynamicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Dinamika Sikap Quadrotor, Kendali PID Bertingkat & Pelacakan Trajektori
+
+> "Bagaimana drone multirotor menghitung kecepatan motor secara waktu nyata untuk melakukan manuver akrobatik, melacak lintasan 3D berkecepatan 20 m/s, dan pulih seketika dari hembusan angin kencang?"
+
+Drone otonom tipe multirotor adalah **sistem mekanis underactuated**: wahana ini memiliki 6 derajat kebebasan spasial $(x, y, z, \phi, \theta, \psi)$ pada ruang 3D, namun hanya digerakkan oleh 4 perintah gaya dorong motor independen $(u_1, u_2, u_3, u_4)$. Untuk bergerak horizontal pada sumbu $X$ atau $Y$, drone harus memiringkan badannya (*roll* atau *pitch*), sehingga dinamika orientasi sikap (*attitude*) terhubung langsung dengan percepatan translasi.
+
+---
+
+<VideoEmbed
+  title="Quadrotor Dynamics and Cascaded PID Flight Control Architecture"
+  videoId="s_k2SRrS4os"
+  provider="youtube"
+  duration="17:40"
+  author="ETH Zurich / Robotics & Control Systems"
+/>
+
+---
+
+## 1. Persamaan Gerak 6-DOF Quadrotor
+
+Misalkan $\{W\}$ menyatakan kerangka inersial dunia dan $\{B\}$ menyatakan kerangka badan wahana pada pusat massa. Persamaan gerak benda kaku pada manifold $SE(3)$ dirumuskan sebagai:
+
+$$
+\begin{aligned}
+\dot{\mathbf{p}} &= \mathbf{v} \\
+m \dot{\mathbf{v}} &= m \mathbf{g} + R \, \mathbf{f}_B - D \mathbf{v} \\
+\dot{R} &= R \, [\boldsymbol{\omega}]_\times \\
+J \dot{\boldsymbol{\omega}} &= \boldsymbol{\tau}_B - \boldsymbol{\omega} \times (J \boldsymbol{\omega}) - \boldsymbol{\tau}_{\text{gyro}}
+\end{aligned}
+$$
+
+Dimana:
+- $m$ adalah massa total drone (kg) dan $J \in \mathbb{R}^{3 \times 3}$ adalah tensor inersia rotasi badan.
+- $\mathbf{f}_B = [0, 0, f_{\text{total}}]^T$ adalah total gaya dorong aerodinamika propeler ke arah sumbu $+Z_B$.
+- $\boldsymbol{\tau}_B = [\tau_\phi, \tau_\theta, \tau_\psi]^T$ adalah vektor torsi aerodinamis roll, pitch, dan yaw.
+- $\boldsymbol{\tau}_{\text{gyro}}$ adalah torsi giroskopik dari putaran rotor berkecepatan tinggi.
+
+---
+
+## 2. Matriks Alokasi Motor & Pencampuran Dorongan (*Motor Mixing*)
+
+Pada konfigurasi quadrotor 'X' dengan jarak lengan dari pusat massa $d$, kecepatan sudut motor $\Omega_i$ (rad/s) menghasilkan total gaya dan torsi:
+
+$$
+\begin{bmatrix} f_{\text{total}} \\ \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix} = \begin{bmatrix}
+k_f & k_f & k_f & k_f \\
+-\frac{\sqrt{2}}{2} d k_f & \frac{\sqrt{2}}{2} d k_f & \frac{\sqrt{2}}{2} d k_f & -\frac{\sqrt{2}}{2} d k_f \\
+\frac{\sqrt{2}}{2} d k_f & \frac{\sqrt{2}}{2} d k_f & -\frac{\sqrt{2}}{2} d k_f & -\frac{\sqrt{2}}{2} d k_f \\
+-k_m & k_m & -k_m & k_m
+\end{bmatrix} \begin{bmatrix} \Omega_1^2 \\ \Omega_2^2 \\ \Omega_3^2 \\ \Omega_4^2 \end{bmatrix}
+$$
+
+*(dimana $k_f$ adalah koefisien gaya dorong aerodinamik dan $k_m$ adalah koefisien torsi hambat udara).*
+
+---
+
+## 3. Arsitektur Kendali Bertingkat (*Cascaded PID*)
+
+Perangkat lunak autopilot modern (PX4, ArduPilot, Betaflight) mengorganisir komputasi kendali dalam **hierarki loop bersarang**:
+
+```text
+┌─────────────────────────┐
+│ TARGET POSISI p_des     │
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐  (50 Hz Loop Posisi Luar)
+│   KONTROLER PID POSISI  │ ──► Menghasilkan target kecepatan v_des
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐  (100 Hz Loop Kecepatan)
+│ KONTROLER PID KECEPATAN │ ──► Menghasilkan target percepatan a_des
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐  (250 Hz Loop Orientasi/Sikap)
+│  KONTROLER PID SIKAP    │ ──► Menghasilkan target laju sudut omega_des
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐  (1000 Hz Loop Laju Gyro Tercepat)
+│  LOOP PID LAJU SUDUT    │ ──► Menghitung torsi badan motor tau
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ MOTOR MIXING & DSHOT ESC│ ──► Mengirimkan sinyal kecepatan motor
+└─────────────────────────┘
+```
+
+Loop laju sudut terdalam beroperasi pada frekuensi **1000 Hz (1 kHz)** langsung memproses data gyroskop IMU, meredam gangguan sebelum galat posisi terakumulasi.
+
+---
+
+## 4. Pembangkitan Trajektori Minimum Snap
+
+Karena sistem quadrotor bersifat **differentially flat** terhadap output datar $\boldsymbol{\sigma}(t) = [x, y, z, \psi]^T$, perencanaan lintasan mulus dilakukan dengan meminimalkan turunan keempat posisi (**Snap**):
+
+$$
+\min_{\mathbf{p}(t)} \int_0^T \left\| \frac{d^4 \mathbf{p}(t)}{dt^4} \right\|^2 dt = \min_{\mathbf{p}(t)} \int_0^T \| \mathbf{p}^{(4)}(t) \|^2 dt
+$$
+
+Meminimalkan snap mencegah lonjakan percepatan motor secara tiba-tiba, menjamin aktuator tidak mengalami saturasi saat manuver berkecepatan tinggi.
+
+---
+
+## 5. Simulator Dinamika Quadrotor 6-DOF Interaktif
+
+Uji target orientasi roll/pitch/yaw dan respon dorongan vertikal pada simulator di bawah ini:
+
+<QuadrotorDynamicsSimulator />
+
+---
+
+## 6. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-aerial-quadrotor"
+  question="Mengapa drone multirotor diklasifikasikan sebagai sistem robotik underactuated?"
+  options={[
+    {
+      id: "A",
+      text: "Karena memiliki 6 derajat kebebasan spasial (x, y, z, roll, pitch, yaw) pada ruang 3D, namun hanya memiliki 4 input kendali gaya dorong motor independen.",
+      isCorrect: true,
+      explanation: "Tepat! Karena hanya ada 4 aktuator untuk 6 status gerak, percepatan horizontal (X, Y) tidak dapat diperintahkan secara independen tanpa memiringkan orientasi roll/pitch badan drone terlebih dahulu."
+    },
+    {
+      id: "B",
+      text: "Karena drone tidak memiliki roda di darat.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena baterai drone cepat habis.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Bandingkan jumlah derajat kebebasan spasial 3D (6-DOF) dengan jumlah input gaya dorong motor (4 motor)."
+/>

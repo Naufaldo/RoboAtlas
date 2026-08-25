@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { DOMAINS, ALGORITHMS } from '@/lib/navigation/curriculum';
 
 describe('Curriculum Structure & Integrity', () => {
-  it('should contain all 11 canonical robotics domains', () => {
-    expect(DOMAINS.length).toBe(11);
+  it('should contain all canonical robotics domains', () => {
+    expect(DOMAINS.length).toBeGreaterThanOrEqual(15);
     const slugs = DOMAINS.map((d) => d.slug);
     expect(slugs).toContain('fundamentals');
     expect(slugs).toContain('mathematics');
@@ -16,6 +16,10 @@ describe('Curriculum Structure & Integrity', () => {
     expect(slugs).toContain('perception');
     expect(slugs).toContain('manipulation');
     expect(slugs).toContain('advanced');
+    expect(slugs).toContain('dynamics');
+    expect(slugs).toContain('legged');
+    expect(slugs).toContain('aerial');
+    expect(slugs).toContain('marine');
   });
 
   it('each domain should have topics and valid mathematical equations', () => {

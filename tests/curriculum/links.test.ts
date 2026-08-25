@@ -73,8 +73,8 @@ describe('Full Navigation & Learn Link Audit (Zero 404s)', () => {
     }
   });
 
-  it('should verify all 11 Canonical Domains in DOMAINS exist in DOMAIN_REGISTRY', () => {
-    expect(DOMAINS.length).toBe(11);
+  it('should verify all Canonical Domains in DOMAINS exist in DOMAIN_REGISTRY', () => {
+    expect(DOMAINS.length).toBeGreaterThanOrEqual(15);
     for (const domain of DOMAINS) {
       const exists = DOMAIN_REGISTRY.some((d) => d.slug === domain.slug);
       expect(exists, `Domain slug "${domain.slug}" must exist in DOMAIN_REGISTRY`).toBe(true);

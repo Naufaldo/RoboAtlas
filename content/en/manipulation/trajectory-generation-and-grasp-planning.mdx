@@ -1,0 +1,159 @@
+---
+id: trajectory-generation-and-grasp-planning
+title: "Trajectory Generation, Polynomial Splines & Robotic Grasp Planning"
+slug: trajectory-generation-and-grasp-planning
+domain: manipulation
+category: manipulation
+level: 14
+tier: Advanced Embodiments
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - 2dof-forward-kinematics
+  - 2dof-inverse-kinematics
+  - jacobian-and-singularity
+references:
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Chapters 9 & 12). Cambridge University Press."
+  - "Antonio Bicchi & Vijay Kumar (2000). Robotic Grasping and Contact: A Review. IEEE ICRA."
+  - "Bruno Siciliano et al. (2009). Robotics: Modelling, Planning and Control (Chapter 5). Springer."
+components:
+  - ArmForwardKinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Trajectory Generation, Polynomial Splines & Robotic Grasp Planning
+
+> "How does an industrial robot manipulator move smoothly between pick-and-place waypoints without jerking the motors, and what mathematical conditions guarantee that a two-fingered gripper firmly grasps an unknown object without dropping or crushing it?"
+
+Executing physical manipulation tasks requires two coordinated capabilities: **Trajectory Generation** (computing continuous, smooth time-parameterized paths $\mathbf{q}(t)$ that respect motor velocity, acceleration, and jerk limits) and **Grasp Planning** (synthesizing contact forces that resist arbitrary external disturbance wrenches).
+
+---
+
+<VideoEmbed
+  title="Trajectory Planning, Polynomial Splines and Robotic Grasp Mechanics"
+  videoId="Z8bW9Y2sY14"
+  provider="youtube"
+  duration="17:50"
+  author="Modern Robotics / Northwestern University"
+/>
+
+---
+
+## 1. Joint Space Polynomial Trajectories
+
+A path describes the purely geometric curve $\mathbf{q}(s)$, whereas a **trajectory** specifies the time-dependent motion $\mathbf{q}(t)$ specifying position, velocity $\dot{\mathbf{q}}(t)$, and acceleration $\ddot{\mathbf{q}}(t)$ for $t \in [0, T]$.
+
+### 1. Cubic Polynomial Splines (Degree 3):
+Given boundary conditions: start position $q_0$, final position $q_f$, start velocity $\dot{q}_0 = 0$, and final velocity $\dot{q}_f = 0$ over duration $T$:
+
+$$
+q(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3
+$$
+
+Solving for coefficients yields:
+$$
+a_0 = q_0, \quad a_1 = 0, \quad a_2 = \frac{3(q_f - q_0)}{T^2}, \quad a_3 = -\frac{2(q_f - q_0)}{T^3}
+$$
+
+### 2. Quintic Polynomial Splines (Degree 5) for Zero Jerk:
+When starting and ending accelerations must also be strictly zero ($\ddot{q}_0 = 0, \ddot{q}_f = 0$):
+
+$$
+q(t) = q_0 + (q_f - q_0) \left[ 10\left(\frac{t}{T}\right)^3 - 15\left(\frac{t}{T}\right)^4 + 6\left(\frac{t}{T}\right)^5 \right]
+$$
+
+```text
+       Position q(t)               Velocity q_dot(t)            Acceleration q_ddot(t)
+    q_f ┌───────────────┐        v_max ┌───────┐             a_max ┌──┐
+        │       ╭───────┤              │  ╭───╮  │                 │╭─╯│
+        │   ╭───╯       │              │ ╭╯   ╰╮ │                 ╰╯  │  ╭─╮
+    q_0 └───╯───────────┘            0 └─╯─────╰─┘                 ────┴──╯─╰─── -a_max
+        0               T              0         T                 0           T
+```
+
+---
+
+## 2. Trapezoidal & S-Curve Velocity Profiles
+
+In high-speed manufacturing, motors operate best at constant maximum velocity $v_{\text{max}}$ with bounded acceleration $a_{\text{max}}$. A **Trapezoidal Profile** divides the trajectory into 3 phases:
+1. **Acceleration phase**: $\dot{q}(t) = a_{\text{max}} t$
+2. **Cruising phase**: $\dot{q}(t) = v_{\text{max}} = \text{const}$
+3. **Deceleration phase**: $\dot{q}(t) = v_{\text{max}} - a_{\text{max}} (t - T + t_a)$
+
+---
+
+## 3. Robotic Grasp Mechanics: The Grasp Matrix $G$
+
+When a multi-fingered hand or parallel-jaw gripper contacts an object at $n$ contact points $\{\mathbf{p}_1, \dots, \mathbf{p}_n\}$ with contact force vectors $\mathbf{f}_i \in \mathbb{R}^3$:
+
+The total wrench $\mathbf{w}_{\text{ext}} = [\mathbf{F}_{\text{net}}, \boldsymbol{\tau}_{\text{net}}]^T \in \mathbb{R}^6$ transmitted to the object center of mass is governed by the **Grasp Matrix $G \in \mathbb{R}^{6 \times 3n}$**:
+
+$$
+\mathbf{w}_{\text{ext}} = G \, \mathbf{f} = \begin{bmatrix}
+I_{3\times 3} & \cdots & I_{3\times 3} \\
+[\mathbf{p}_1]_\times & \cdots & [\mathbf{p}_n]_\times
+\end{bmatrix} \begin{bmatrix} \mathbf{f}_1 \\ \vdots \\ \mathbf{f}_n \end{bmatrix}
+$$
+
+### Contact Friction Cones (Coulomb Friction):
+At each contact point with surface normal $\hat{\mathbf{n}}_i$ and friction coefficient $\mu$:
+$$
+\|\mathbf{f}_{i,\text{tangential}}\| \le \mu f_{i,\text{normal}}
+$$
+
+### Force Closure vs. Form Closure:
+- **Form Closure**: The object is completely immobilized geometrically by contact points alone without needing friction.
+- **Force Closure**: The gripper contact forces can resist **any arbitrary external disturbance wrench $\mathbf{w} \in \mathbb{R}^6$** while all contact forces remain inside their respective friction cones:
+  $$\text{cone}(G(\mathcal{F})) = \mathbb{R}^6$$
+
+---
+
+## 4. Antipodal Grasps for Parallel-Jaw Grippers
+
+For a standard parallel-jaw gripper contacting an object at two points $\mathbf{p}_1$ and $\mathbf{p}_2$, an **antipodal grasp** is achieved if and only if the line connecting $\mathbf{p}_1$ and $\mathbf{p}_2$ lies strictly inside **both** friction cones:
+
+$$
+\theta_1 \le \arctan(\mu), \quad \theta_2 \le \arctan(\mu)
+$$
+
+---
+
+## 5. Interactive Manipulator Trajectory Simulation
+
+Test forward kinematics and motion transitions below:
+
+<ArmForwardKinematicsSimulator />
+
+---
+
+## 6. Concept Check
+
+<ConceptCheck
+  id="quiz-manipulation-grasp"
+  question="What is the fundamental difference between Form Closure and Force Closure in robotic grasping?"
+  options={[
+    {
+      id: "A",
+      text: "Form closure immobilizes the object purely through geometric boundary constraints without relying on friction, while force closure relies on active contact forces within friction cones to resist arbitrary external wrenches.",
+      isCorrect: true,
+      explanation: "Exact! Form closure is a purely geometric property (requiring at least 7 contact points for 3D rigid bodies), whereas force closure utilizes internal squeezing forces within Coulomb friction cones."
+    },
+    {
+      id: "B",
+      text: "Form closure is for metal grippers, force closure is for rubber suction cups.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Force closure only works in microgravity.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about whether friction is required to prevent the object from moving."
+/>

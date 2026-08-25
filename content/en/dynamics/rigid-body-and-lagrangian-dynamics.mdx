@@ -1,0 +1,152 @@
+---
+id: rigid-body-and-lagrangian-dynamics
+title: "Rigid Body Dynamics & Lagrangian Mechanics for Robotics"
+slug: rigid-body-and-lagrangian-dynamics
+domain: dynamics
+category: dynamics
+level: 4
+tier: Foundations
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+  - 3d-geometry
+references:
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control. Cambridge University Press."
+  - "Mark W. Spong, Seth Hutchinson, & M. Vidyasagar (2005). Robot Modeling and Control. Wiley."
+  - "John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 6). Pearson."
+components:
+  - NumericalIntegrationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Rigid Body Dynamics & Lagrangian Mechanics for Robotics
+
+> "While kinematics describes where a robot moves geometrically without considering forces, dynamics reveals the fundamental equation of motion: how motor torques generate joint accelerations against gravity, inertia, and Coriolis forces."
+
+Robot dynamics forms the critical bridge between motion planning and physical actuator control. Whether computing feedforward torques for industrial robot arms, balancing quadrupedal robots, or executing agile drone maneuvers, the **Euler-Lagrange** and **Newton-Euler** formulations provide the mathematical engine governing physical robot motion.
+
+---
+
+<VideoEmbed
+  title="Euler-Lagrange Equations of Motion for Robotics Explained"
+  videoId="iKpt_6g731M"
+  provider="youtube"
+  duration="19:20"
+  author="Steve Brunton / University of Washington"
+/>
+
+---
+
+## 1. Lagrangian Mechanics Formulation ($L = K - P$)
+
+Unlike Newtonian mechanics which requires resolving internal constraint forces at every joint pin, the **Lagrangian approach** uses energy scalar fields defined on generalized coordinates $\mathbf{q} = [q_1, q_2, \dots, q_n]^T \in \mathcal{Q}$:
+
+The **Lagrangian function $L$** is defined as the difference between total kinetic energy $K(\mathbf{q}, \dot{\mathbf{q}})$ and potential energy $P(\mathbf{q})$:
+
+$$
+L(\mathbf{q}, \dot{\mathbf{q}}) = K(\mathbf{q}, \dot{\mathbf{q}}) - P(\mathbf{q})
+$$
+
+### The Euler-Lagrange Equation of Motion:
+For each generalized coordinate $q_i$, the dynamic equilibrium equation with external generalized joint torque $\tau_i$ is:
+
+$$
+\frac{d}{dt}\left( \frac{\partial L}{\partial \dot{q}_i} \right) - \frac{\partial L}{\partial q_i} = \tau_i
+$$
+
+---
+
+## 2. The Standard Robot Manipulator Dynamic Equation
+
+Applying the Euler-Lagrange derivation to an $n$-DOF serial robot arm yields the canonical matrix equation of motion:
+
+$$
+M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q}) = \boldsymbol{\tau}
+$$
+
+Where:
+- $M(\mathbf{q}) \in \mathbb{R}^{n \times n}$ is the **Inertia Matrix** (symmetric, positive-definite).
+- $C(\mathbf{q}, \dot{\mathbf{q}}) \in \mathbb{R}^{n \times n}$ is the **Coriolis and Centrifugal Matrix** (derived using Christoffel symbols).
+- $\mathbf{g}(\mathbf{q}) \in \mathbb{R}^n$ is the **Gravitational Torque Vector** $\mathbf{g}(\mathbf{q}) = \frac{\partial P}{\partial \mathbf{q}}$.
+- $\boldsymbol{\tau} \in \mathbb{R}^n$ is the vector of generalized actuator torques/forces.
+
+```text
+┌─────────────────────────┬──────────────────────┬────────────────────────────────────────────────────────┐
+│ Dynamic Term            │ Mathematical Symbol  │ Physical Meaning & Key Properties                      │
+├─────────────────────────┼──────────────────────┼────────────────────────────────────────────────────────┤
+│ Mass / Inertia Matrix   │ M(q)                 │ Symmetric & positive-definite (q^T M q > 0 for q != 0) │
+│ Coriolis / Centrifugal  │ C(q, q_dot) q_dot    │ Velocity-coupled gyroscopic torques (M_dot - 2C skew)  │
+│ Gravity Vector          │ g(q)                 │ Conservative static torques required to hold posture   │
+│ Actuator Torque         │ tau                  │ Net motor output torque applied at each joint          │
+└─────────────────────────┴──────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+### The Skew-Symmetry Property of $\dot{M} - 2C$:
+A cornerstone of non-linear robot control (such as passivity-based control and Lyapunov stability proofs) is that the matrix:
+$$
+N(\mathbf{q}, \dot{\mathbf{q}}) = \dot{M}(\mathbf{q}) - 2C(\mathbf{q}, \dot{\mathbf{q}})
+$$
+is **skew-symmetric**, meaning $\mathbf{x}^T (\dot{M} - 2C) \mathbf{x} = 0$ for any arbitrary vector $\mathbf{x}$.
+
+---
+
+## 3. Forward vs. Inverse Dynamics
+
+Robotic autonomy relies on solving this dynamic equation in two opposite directions:
+
+### Inverse Dynamics (Control & Feedforward):
+Given desired trajectory $(\mathbf{q}(t), \dot{\mathbf{q}}(t), \ddot{\mathbf{q}}(t))$, compute required motor torques $\boldsymbol{\tau}$:
+$$
+\boldsymbol{\tau} = M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q})
+$$
+*(Computed in $O(n)$ time using the recursive Newton-Euler algorithm).*
+
+### Forward Dynamics (Simulation & Physics Engines):
+Given current state $(\mathbf{q}, \dot{\mathbf{q}})$ and applied torques $\boldsymbol{\tau}$, solve for joint accelerations $\ddot{\mathbf{q}}$ to integrate into the next timestep:
+$$
+\ddot{\mathbf{q}} = M(\mathbf{q})^{-1} \Big( \boldsymbol{\tau} - C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} - \mathbf{g}(\mathbf{q}) \Big)
+$$
+
+---
+
+## 4. Interactive Dynamic Simulation Lab
+
+Test numerical integration of dynamic differential equations below using Euler, Symplectic, and Runge-Kutta RK4 methods:
+
+<NumericalIntegrationSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-dynamics-lagrangian"
+  question="In the standard robot equation of motion M(q)q_ddot + C(q, q_dot)q_dot + g(q) = tau, why is the matrix (M_dot - 2C) skew-symmetric?"
+  options={[
+    {
+      id: "A",
+      text: "Because of the physical principle of conservation of energy: internal Coriolis and centrifugal forces do zero net mechanical work.",
+      isCorrect: true,
+      explanation: "Exact! The skew-symmetry of (M_dot - 2C) directly reflects physical power conservation d/dt(1/2 q_dot^T M q_dot) = q_dot^T (tau - g), which is essential for Lyapunov stability proofs."
+    },
+    {
+      id: "B",
+      text: "Because gravity pulls the robot downward.",
+      isCorrect: false,
+      explanation: "Incorrect. The skew-symmetry property holds independently of gravity."
+    },
+    {
+      id: "C",
+      text: "Because robot links are assumed to be flexible springs.",
+      isCorrect: false,
+      explanation: "Incorrect. The derivation is formulated for rigid bodies."
+    }
+  ]}
+  hint="Think about kinetic energy conservation and whether Coriolis forces can perform net work on the system."
+/>

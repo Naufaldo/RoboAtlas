@@ -1,0 +1,161 @@
+---
+id: fossen-marine-craft-dynamics
+title: "Fossen 6-DOF Marine Hydrodynamics, Added Mass & AUV Motion Control"
+slug: fossen-marine-craft-dynamics
+domain: marine
+category: marine
+level: 17
+tier: Advanced Embodiments
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - mathematical-foundations
+  - 3d-geometry
+  - pid-and-lqr-control
+references:
+  - "Thor I. Fossen (2021). Handbook of Marine Craft Hydrodynamics and Motion Control (2nd Edition). Wiley."
+  - "Gianluca Antonelli (2014). Underwater Robots (3rd Edition). Springer."
+  - "Society of Naval Architects and Marine Engineers (SNAME) (1950). Nomenclature for Treating the Motion of a Submerged Body."
+components:
+  - MarineHydrodynamicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Fossen 6-DOF Marine Hydrodynamics, Added Mass & AUV Motion Control
+
+> "Why is navigating an Autonomous Underwater Vehicle (AUV) in deep oceanic waters vastly different from flying a drone in air, and how does the Fossen Equations of Motion model hydrodynamic added mass, fluid drag, and restoring buoyancy?"
+
+Operating submerged underwater vehicles (AUVs/ROVs) presents unique robotic challenges: GPS signals cannot penetrate seawater, high water density creates massive **hydrodynamic added mass**, and vehicles must achieve **positive or neutral buoyancy** with stabilizing metacentric restoring moments.
+
+---
+
+<VideoEmbed
+  title="Marine Robotics & 6-DOF Hydrodynamic Equations of Motion"
+  videoId="S_k2SRrS4os"
+  provider="youtube"
+  duration="16:45"
+  author="Thor I. Fossen / Marine Cybernetics"
+/>
+
+---
+
+## 1. SNAME 6-DOF Subsea Velocity & Coordinate Vectors
+
+Under the standard **SNAME (Society of Naval Architects and Marine Engineers)** notation:
+- Position & Euler Angles in NED World Frame $\{n\}$: $\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^T$
+- Linear & Angular Velocities in Body Frame $\{b\}$: $\boldsymbol{\nu} = [u, v, w, p, q, r]^T$ (Surge, Sway, Heave, Roll, Pitch, Yaw)
+- Forces & Moments in Body Frame $\{b\}$: $\boldsymbol{\tau} = [X, Y, Z, K, M, N]^T$
+
+```text
+┌─────────────────┬──────────────────────┬──────────────────────┬────────────────────────────────────────────────────────┐
+│ Degree of Motion│ Body Velocity (nu)   │ Body Force (tau)     │ Physical Robotic Maneuver Description                  │
+├─────────────────┼──────────────────────┼──────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Surge        │ u (m/s)              │ X (N)                │ Forward / Backward longitudinal propulsion             │
+│ 2. Sway         │ v (m/s)              │ Y (N)                │ Lateral sideways translation (cross-current drift)     │
+│ 3. Heave        │ w (m/s)              │ Z (N)                │ Vertical descent / ascent depth regulation             │
+│ 4. Roll         │ p (rad/s)            │ K (N·m)              │ Transverse rotational heel (stabilized by buoyancy)    │
+│ 5. Pitch        │ q (rad/s)            │ M (N·m)              │ Longitudinal rotational trim (climb / dive angle)      │
+│ 6. Yaw          │ r (rad/s)            │ N (N·m)              │ Heading orientation steering                           │
+└─────────────────┴──────────────────────┴──────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. The Canonical Fossen 6-DOF Vector Equations of Motion
+
+In 1994, Thor I. Fossen formulated the comprehensive non-linear vector equation governing underwater vehicles:
+
+$$
+M \dot{\boldsymbol{\nu}} + C(\boldsymbol{\nu})\boldsymbol{\nu} + D(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}(\boldsymbol{\eta}) = \boldsymbol{\tau}_{\text{thruster}} + \boldsymbol{\tau}_{\text{env}}
+$$
+
+Where the system matrices represent:
+
+### 1. Total System Inertia ($M = M_{\text{RB}} + M_A$):
+$$
+M = \underbrace{M_{\text{RB}}}_{\text{Rigid-Body Mass (6x6)}} + \underbrace{M_A}_{\text{Hydrodynamic Added Mass (6x6)}}
+$$
+*Added Mass ($M_A$)* accounts for the mass of surrounding water that must be accelerated whenever the vehicle changes velocity. In water, $M_A$ is often **equal to or greater than the vehicle's dry mass**!
+
+### 2. Total Coriolis & Centripetal Matrix ($C(\boldsymbol{\nu}) = C_{\text{RB}}(\boldsymbol{\nu}) + C_A(\boldsymbol{\nu})$):
+Gyroscopic forces arising from vehicle rotation coupled with accelerated fluid.
+
+### 3. Non-Linear Hydrodynamic Damping ($D(\boldsymbol{\nu}) = D_{\text{linear}} + D_{\text{quad}}(\boldsymbol{\nu})$):
+$$
+D(\boldsymbol{\nu}) = \text{diag}(X_u, Y_v, Z_w, K_p, M_q, N_r) + \text{diag}(X_{u|u}|u|, Y_{v|v}|v|, Z_{w|w}|w|, K_{p|p}|p|, M_{q|q}|q|, N_{r|r}|r|)
+$$
+Quadratic drag dominates during high-speed swimming maneuvers.
+
+### 4. Restoring Gravitational & Buoyancy Forces ($\mathbf{g}(\boldsymbol{\eta})$):
+Let $W = m g$ (Weight) act at Center of Gravity $\mathbf{r}_G = [x_G, y_G, z_G]^T$ and $B = \rho g \nabla$ (Buoyancy) act at Center of Buoyancy $\mathbf{r}_B = [x_B, y_B, z_B]^T$:
+
+$$
+\mathbf{g}(\boldsymbol{\eta}) = \begin{bmatrix}
+(W - B)\sin\theta \\
+-(W - B)\cos\theta\sin\phi \\
+-(W - B)\cos\theta\cos\phi \\
+-(y_G W - y_B B)\cos\theta\cos\phi + (z_G W - z_B B)\cos\theta\sin\phi \\
+(z_G W - z_B B)\sin\theta + (x_G W - x_B B)\cos\theta\cos\phi \\
+-(x_G W - x_B B)\cos\theta\sin\phi - (y_G W - y_B B)\sin\theta
+\end{bmatrix}
+$$
+
+To ensure **passive static stability**, AUVs are engineered with Center of Buoyancy positioned strictly **above** Center of Gravity ($z_B < z_G$).
+
+---
+
+## 3. Thruster Allocation & Closed-Loop Depth Control
+
+For an AUV equipped with $m$ bidirectional thrusters, the net force vector $\boldsymbol{\tau}$ relates to individual thruster forces $\mathbf{u} = [u_1, \dots, u_m]^T$ via the **Thruster Configuration Matrix $T_{\text{alloc}}$**:
+
+$$
+\boldsymbol{\tau} = T_{\text{alloc}} \, \mathbf{u}
+$$
+
+Depth control $z(t)$ and pitch trim $\theta(t)$ are achieved via cascaded PID regulation:
+
+$$
+u_{\text{depth}} = K_p (z_{\text{target}} - z) + K_i \int (z_{\text{target}} - z) dt + K_d \dot{z}
+$$
+
+---
+
+## 4. Interactive Marine Hydrodynamics & Buoyancy Simulator
+
+Adjust ballast weight, hydrodynamic damping, and thruster surge/heave below:
+
+<MarineHydrodynamicsSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-marine-fossen"
+  question="Why is the Hydrodynamic Added Mass matrix (M_A) so significant in underwater robotics compared to aerial drones?"
+  options={[
+    {
+      id: "A",
+      text: "Water is ~800x denser than air. Accelerating an underwater hull forces an equivalent volume of surrounding water to accelerate, creating added inertia comparable to the vehicle's dry mass.",
+      isCorrect: true,
+      explanation: "Exact! Water density (1000 kg/m^3) is roughly 800 times greater than air (1.225 kg/m^3), meaning added mass M_A dominates vehicle acceleration dynamics."
+    },
+    {
+      id: "B",
+      text: "Because seawater contains salt crystals that stick to the propellers.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because underwater robots cannot use metal screws.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about fluid density: compare 1000 kg/m^3 (water) against 1.2 kg/m^3 (air)."
+/>

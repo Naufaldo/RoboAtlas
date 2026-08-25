@@ -1,0 +1,159 @@
+---
+id: trajectory-generation-and-grasp-planning
+title: "Pembangkitan Trajektori, Spline Polinomial & Perencanaan Cengkeraman Robot (Grasp Planning)"
+slug: trajectory-generation-and-grasp-planning
+domain: manipulation
+category: manipulation
+level: 14
+tier: Advanced Embodiments
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - 2dof-forward-kinematics
+  - 2dof-inverse-kinematics
+  - jacobian-and-singularity
+references:
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control (Chapters 9 & 12). Cambridge University Press."
+  - "Antonio Bicchi & Vijay Kumar (2000). Robotic Grasping and Contact: A Review. IEEE ICRA."
+  - "Bruno Siciliano et al. (2009). Robotics: Modelling, Planning and Control (Chapter 5). Springer."
+components:
+  - ArmForwardKinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Pembangkitan Trajektori, Spline Polinomial & Perencanaan Cengkeraman Robot
+
+> "Bagaimana lengan robot industri bergerak mulus dari satu titik angkat ke titik peletakan tanpa menyentak motor aktuator, dan apa syarat matematis yang menjamin gripper dua jari mencengkeram objek secara kokoh tanpa jatuh atau meremukkannya?"
+
+Mengeksekusi tugas manipulasi fisik menuntut dua kapabilitas utama: **Pembangkitan Trajektori (*Trajectory Generation*)** (menghitung kurva waktu $\mathbf{q}(t)$ yang kontinu dan mulus sesuai batas kecepatan, percepatan, dan sentakan *jerk* motor) dan **Perencanaan Cengkeraman (*Grasp Planning*)** (merancang gaya kontak yang mampu menahan gaya gangguan eksternal sembarang).
+
+---
+
+<VideoEmbed
+  title="Trajectory Planning, Polynomial Splines and Robotic Grasp Mechanics"
+  videoId="Z8bW9Y2sY14"
+  provider="youtube"
+  duration="17:50"
+  author="Modern Robotics / Northwestern University"
+/>
+
+---
+
+## 1. Trajektori Polinomial pada Ruang Sendi (*Joint Space*)
+
+Jalur (*path*) menyatakan kurva geometris murni $\mathbf{q}(s)$, sedangkan **trajektori** mengaitkan jalur tersebut dengan variabel waktu $\mathbf{q}(t)$, kecepatan $\dot{\mathbf{q}}(t)$, dan percepatan $\ddot{\mathbf{q}}(t)$ untuk interval $t \in [0, T]$.
+
+### 1. Spline Polinomial Kubik (Derajat 3):
+Diberikan syarat batas: posisi awal $q_0$, posisi akhir $q_f$, kecepatan awal $\dot{q}_0 = 0$, dan kecepatan akhir $\dot{q}_f = 0$ dalam durasi $T$:
+
+$$
+q(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3
+$$
+
+Diperoleh koefisien:
+$$
+a_0 = q_0, \quad a_1 = 0, \quad a_2 = \frac{3(q_f - q_0)}{T^2}, \quad a_3 = -\frac{2(q_f - q_0)}{T^3}
+$$
+
+### 2. Spline Polinomial Kuintik (Derajat 5) untuk Bebas Sentakan (Zero Jerk):
+Ketika percepatan awal dan akhir juga harus bernilai tepat nol ($\ddot{q}_0 = 0, \ddot{q}_f = 0$):
+
+$$
+q(t) = q_0 + (q_f - q_0) \left[ 10\left(\frac{t}{T}\right)^3 - 15\left(\frac{t}{T}\right)^4 + 6\left(\frac{t}{T}\right)^5 \right]
+$$
+
+```text
+        Posisi q(t)                 Kecepatan q_dot(t)           Percepatan q_ddot(t)
+    q_f ┌───────────────┐        v_max ┌───────┐             a_max ┌──┐
+        │       ╭───────┤              │  ╭───╮  │                 │╭─╯│
+        │   ╭───╯       │              │ ╭╯   ╰╮ │                 ╰╯  │  ╭─╮
+    q_0 └───╯───────────┘            0 └─╯─────╰─┘                 ────┴──╯─╰─── -a_max
+        0               T              0         T                 0           T
+```
+
+---
+
+## 2. Profil Kecepatan Trapesium (*Trapezoidal Profile*)
+
+Pada otomatisasi manufaktur, motor beroperasi paling efisien pada kecepatan konstan maksimum $v_{\text{max}}$ dengan percepatan terbatas $a_{\text{max}}$. **Profil Trapesium** membagi gerakan menjadi 3 fase:
+1. **Fase Percepatan**: $\dot{q}(t) = a_{\text{max}} t$
+2. **Fase Kecepatan Konstan (*Cruising*)**: $\dot{q}(t) = v_{\text{max}}$
+3. **Fase Perlambatan**: $\dot{q}(t) = v_{\text{max}} - a_{\text{max}} (t - T + t_a)$
+
+---
+
+## 3. Mekanika Cengkeraman Robot: Matriks Grasp ($G$)
+
+Ketika gripper atau tangan multi-jari menyentuh objek pada $n$ titik kontak $\{\mathbf{p}_1, \dots, \mathbf{p}_n\}$ dengan vektor gaya kontak $\mathbf{f}_i \in \mathbb{R}^3$:
+
+Total gaya dan torsi resultan $\mathbf{w}_{\text{ext}} = [\mathbf{F}_{\text{net}}, \boldsymbol{\tau}_{\text{net}}]^T \in \mathbb{R}^6$ yang diteruskan ke pusat massa objek diatur oleh **Matriks Cengkeraman $G \in \mathbb{R}^{6 \times 3n}$**:
+
+$$
+\mathbf{w}_{\text{ext}} = G \, \mathbf{f} = \begin{bmatrix}
+I_{3\times 3} & \cdots & I_{3\times 3} \\
+[\mathbf{p}_1]_\times & \cdots & [\mathbf{p}_n]_\times
+\end{bmatrix} \begin{bmatrix} \mathbf{f}_1 \\ \vdots \\ \mathbf{f}_n \end{bmatrix}
+$$
+
+### Kerucut Gesek Kontak (Hukum Gesekan Coulomb):
+Pada setiap titik kontak dengan vektor normal permukaan $\hat{\mathbf{n}}_i$ dan koefisien gesek $\mu$:
+$$
+\|\mathbf{f}_{i,\text{tangensial}}\| \le \mu f_{i,\text{normal}}
+$$
+
+### Force Closure vs. Form Closure:
+- **Form Closure**: Objek terkunci secara kaku murni oleh geometri titik kontak tanpa membutuhkan bantuan gaya gesek.
+- **Force Closure**: Gripper mampu menghasilkan gaya kontak di dalam kerucut gesek yang dapat mengimbangi **sembarang gaya/torsi gangguan eksternal $\mathbf{w} \in \mathbb{R}^6$**:
+  $$\text{cone}(G(\mathcal{F})) = \mathbb{R}^6$$
+
+---
+
+## 4. Titik Kontak Antipodal untuk Gripper Paralel
+
+Untuk gripper dua jari standar yang menyentuh objek pada dua titik $\mathbf{p}_1$ dan $\mathbf{p}_2$, kondisi **cengkeraman antipodal** terpenuhi jika dan hanya jika garis hubung antara $\mathbf{p}_1$ dan $\mathbf{p}_2$ berada di dalam **kedua** kerucut gesek:
+
+$$
+\theta_1 \le \arctan(\mu), \quad \theta_2 \le \arctan(\mu)
+$$
+
+---
+
+## 5. Laboratorium Simulasi Trajektori Manipulator
+
+Uji kinematika maju dan perpindahan gerak sendi pada simulator di bawah ini:
+
+<ArmForwardKinematicsSimulator />
+
+---
+
+## 6. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-manipulation-grasp"
+  question="Apa perbedaan fundamental antara Form Closure dan Force Closure dalam mekanika cengkeraman robot?"
+  options={[
+    {
+      id: "A",
+      text: "Form closure mengunci objek murni melalui kendala geometri batas tanpa bergantung pada gesekan, sedangkan force closure mengandalkan gaya jepit aktif di dalam kerucut gesek Coulomb untuk menahan sembarang gaya gangguan.",
+      isCorrect: true,
+      explanation: "Tepat! Form closure adalah sifat murni geometris (membutuhkan minimal 7 titik kontak untuk benda kaku 3D), sedangkan force closure memanfaatkan gaya tekan internal di dalam kerucut gesekan."
+    },
+    {
+      id: "B",
+      text: "Form closure untuk gripper logam, force closure untuk mangkok hisap vakum karet.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Force closure hanya berlaku pada lingkungan tanpa gravitasi.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan apakah gesekan diperlukan untuk mencegah benda bergerak atau tidak."
+/>

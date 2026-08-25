@@ -1,0 +1,154 @@
+---
+id: six-dof-arm-kinematics-and-spherical-wrist
+title: "Kinematika Lengan Robot 6-DOF & Solusi Analitik Pieper untuk Pergelangan Bola"
+slug: six-dof-arm-kinematics-and-spherical-wrist
+domain: kinematics
+category: kinematics
+level: 3
+tier: Foundations
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - denavit-hartenberg-parameters
+  - 3d-geometry
+  - transform-composition-and-chains
+references:
+  - "Donald L. Pieper (1968). The Kinematics of Manipulators Under Computer Control. Stanford Artificial Intelligence Laboratory."
+  - "John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 4). Pearson."
+  - "Mark W. Spong, Seth Hutchinson, & M. Vidyasagar (2005). Robot Modeling and Control. Wiley."
+components:
+  - ArmForwardKinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Kinematika Lengan Robot 6-DOF & Solusi Analitik Pieper untuk Pergelangan Bola
+
+> "Mengapa hampir seluruh lengan robot industri komersial (PUMA 560, UR5, ABB IRB 1200, KUKA KR6) dirancang dengan pergelangan bola (Spherical Wrist), dan bagaimana kriteria Pieper memungkinkan komputasi kinematika invers analitik eksak dalam waktu kurang dari 10 mikrodetik tanpa komputasi iteratif numerik?"
+
+Menyelesaikan masalah **Kinematika Invers (IK)** untuk lengan robot serial 6 derajat kebebasan secara umum melibatkan sistem 6 persamaan trigonometri non-linear yang sangat kompleks. Pada geometri robot acak, penyelesaiannya memerlukan metode iteratif numerik (Newton-Raphson / Levenberg-Marquardt) yang lambat, rentan terjebak pada minima lokal, dan tidak stabil di dekat singularitas.
+
+Pada tahun 1968, **Donald L. Pieper** membuktikan bahwa jika **tiga sumbu sendi berurutan berpotongan pada satu titik yang sama** (membentuk *Spherical Wrist* / Pergelangan Bola), masalah IK 6-DOF dapat didekopling secara bersih menjadi dua sub-masalah 3-DOF independen yang dapat diselesaikan **secara analitik eksak (*closed-form*)**.
+
+---
+
+<VideoEmbed
+  title="Analytical Inverse Kinematics for 6-DOF Robot Arms with Spherical Wrists"
+  videoId="VjsuBT4Npvk"
+  provider="youtube"
+  duration="18:15"
+  author="Angela Sodemann / RoboGrok"
+/>
+
+---
+
+## 1. Arsitektur Pergelangan Bola (*Spherical Wrist*)
+
+Sebuah lengan robot serial memiliki **Spherical Wrist** apabila sumbu rotasi sendi 4 (*wrist roll*), sendi 5 (*wrist pitch*), dan sendi 6 (*wrist yaw*) berpotongan pada satu titik geometris tunggal $\mathbf{p}_{\text{wrist}} \in \mathbb{R}^3$ (disebut **Pusat Pergelangan $W$**).
+
+```text
+       [Link 1] ─── [Link 2] ─── [Link 3] ───────● (Pusat Pergelangan W) ═══> [End-Effector]
+       (Sendi 1)    (Sendi 2)    (Sendi 3)     / | \
+       Base Yaw     Shoulder     Elbow      Sendi 4,5,6 (Roll-Pitch-Yaw)
+       └────────────────────────────────┘   └───────────────────────────┘
+          Subsistem Posisi 3-DOF                Subsistem Orientasi 3-DOF
+```
+
+### Prinsip Dekopling Kinematika:
+Karena sendi 4, 5, dan 6 hanya memutar pusat pergelangan tanpa menggeser posisinya, koordinat spasial titik $W$ **sepenuhnya independen dari sudut pergelangan $(\theta_4, \theta_5, \theta_6)$** dan hanya bergantung pada 3 sudut sendi dasar $(\theta_1, \theta_2, \theta_3)$!
+
+---
+
+## 2. Prosedur Solusi 2-Tahap Pieper
+
+Diberikan target pose matriks homogen efektor ujung $T_{0}^6 = \begin{bmatrix} R_{\text{target}} & \mathbf{p}_{\text{target}} \\ \mathbf{0}^T & 1 \end{bmatrix}$ dimana $R_{\text{target}} = [\mathbf{n}, \mathbf{o}, \mathbf{a}]$ dan $\mathbf{a}$ adalah vektor pendekatan (*approach vector*) sepanjang sumbu $+Z_6$:
+
+### Tahap 1: Menghitung Lokasi Pusat Pergelangan
+Koordinat 3D pusat pergelangan $\mathbf{p}_w = [x_w, y_w, z_w]^T$ dihitung dengan menggeser mundur dari target efektor ujung sejauh panjang pahat $d_6$:
+
+$$
+\mathbf{p}_w = \mathbf{p}_{\text{target}} - d_6 \mathbf{a}
+$$
+
+Kemudian, dengan menggunakan 3 sendi pertama $(\theta_1, \theta_2, \theta_3)$ dan trigonometri bidang ($r = \sqrt{x_w^2 + y_w^2}, s = z_w - d_1$), selesaikan persamaan lengan 3-DOF:
+
+$$
+\begin{aligned}
+\theta_1 &= \text{atan2}(y_w, x_w) \quad (\text{atau } \theta_1 + \pi \text{ untuk konfigurasi shoulder kiri/kanan}) \\
+\cos\theta_3 &= \frac{r^2 + s^2 - a_2^2 - a_3^2}{2 a_2 a_3} \implies \theta_3 = \text{atan2}(\pm\sqrt{1-\cos^2\theta_3}, \cos\theta_3) \\
+\theta_2 &= \text{atan2}(s, r) - \text{atan2}(a_3 \sin\theta_3, a_2 + a_3 \cos\theta_3)
+\end{aligned}
+$$
+
+### Tahap 2: Dekomposisi Orientasi Pergelangan Bola
+Setelah $(\theta_1, \theta_2, \theta_3)$ diperoleh, matriks rotasi lengan depan $R_0^3(\theta_1, \theta_2, \theta_3)$ dapat dihitung. Orientasi sisa yang harus dipenuhi oleh pergelangan bola adalah:
+
+$$
+R_3^6 = (R_0^3)^T R_{\text{target}} = \begin{bmatrix} r_{11} & r_{12} & r_{13} \\ r_{21} & r_{22} & r_{23} \\ r_{31} & r_{32} & r_{33} \end{bmatrix}
+$$
+
+Dengan parameterisasi sudut Euler $Z-Y-Z$ pada spherical wrist:
+
+$$
+\begin{aligned}
+\theta_5 &= \text{atan2}\left(\pm\sqrt{r_{13}^2 + r_{23}^2}, \, r_{33}\right) \\
+\theta_4 &= \text{atan2}(r_{23}, r_{13}) \\
+\theta_6 &= \text{atan2}(r_{32}, -r_{31})
+\end{aligned}
+$$
+
+---
+
+## 3. 8 Variasi Solusi Kinematika Invers Eksak
+
+Untuk lengan robot industri standar 6-DOF (seperti PUMA 560), terdapat hingga **8 kombinasi konfigurasi sendi fisik** yang mampu mencapai pose efektor ujung yang sama persis:
+
+```text
+Kombinasi Konfigurasi (8 Solusi):
+├── Bahu (Shoulder): { Kiri, Kanan }
+├── Siku (Elbow):    { Atas (Up), Bawah (Down) }
+└── Pergelangan:     { Normal, Flipped (theta_5 -> -theta_5) }
+```
+
+Framework perencanaan gerak seperti MoveIt 2 dan OMPL memilih solusi yang meminimalkan total perpindahan jarak putaran sendi dari pose robot saat ini.
+
+---
+
+## 4. Laboratorium Simulasi Kinematika Manipulator
+
+Eksperimen dengan sudut sendi lengan robot dan amati perhitungan kinematika maju pada simulasi interaktif di bawah ini:
+
+<ArmForwardKinematicsSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-kinematics-pieper"
+  question="Mengapa kriteria Pieper mensyaratkan sumbu sendi 4, 5, dan 6 harus berpotongan pada satu titik pusat W (Spherical Wrist)?"
+  options={[
+    {
+      id: "A",
+      text: "Kriteria ini memisahkan (decouple) kinematika invers 6-DOF menjadi dua sub-masalah 3-DOF independen: sendi 1-3 menentukan posisi spasial, dan sendi 4-6 menentukan orientasi secara analitik eksak.",
+      isCorrect: true,
+      explanation: "Tepat! Posisi pusat pergelangan p_w hanya bergantung pada sendi (theta_1, theta_2, theta_3). Setelah p_w terkunci, spherical wrist hanya bertugas memutar orientasi sesuai target, memungkinkan kalkulasi analitik tanpa iterasi numerik."
+    },
+    {
+      id: "B",
+      text: "Agar lengan robot menjadi lebih ringan saat diangkat.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Agar robot bisa mengelas di dalam air.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan bagaimana pemisahan posisi dan orientasi memungkinkan solusi diselesaikan dalam dua tahap terpisah."
+/>

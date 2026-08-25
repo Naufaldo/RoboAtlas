@@ -1,0 +1,161 @@
+---
+id: fossen-marine-craft-dynamics
+title: "Hidrodinamika Laut Fossen 6-DOF, Massa Tambahan & Kendali Gerak AUV"
+slug: fossen-marine-craft-dynamics
+domain: marine
+category: marine
+level: 17
+tier: Advanced Embodiments
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - mathematical-foundations
+  - 3d-geometry
+  - pid-and-lqr-control
+references:
+  - "Thor I. Fossen (2021). Handbook of Marine Craft Hydrodynamics and Motion Control (2nd Edition). Wiley."
+  - "Gianluca Antonelli (2014). Underwater Robots (3rd Edition). Springer."
+  - "Society of Naval Architects and Marine Engineers (SNAME) (1950). Nomenclature for Treating the Motion of a Submerged Body."
+components:
+  - MarineHydrodynamicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Hidrodinamika Laut Fossen 6-DOF, Massa Tambahan & Kendali Gerak AUV
+
+> "Mengapa mengemudikan robot bawah air Autonomous Underwater Vehicle (AUV) di kedalaman laut sangat berbeda dengan menerbangkan drone di udara, dan bagaimana persamaan Fossen memodelkan massa tambahan air, gesekan fluida, dan gaya apung hidrostatis?"
+
+Mengoperasikan wahana bawah air otonom (AUV/ROV) menghadirkan tantangan robotika unik: sinyal radio satelit GPS tidak dapat menembus air laut, densitas air yang tinggi memicu fenomena **massa tambahan hidrodinamika (*Added Mass*)**, dan robot harus mempertahankan **keseimbangan gaya apung (*buoyancy*)** dengan stabilitas momen metasentrik.
+
+---
+
+<VideoEmbed
+  title="Marine Robotics & 6-DOF Hydrodynamic Equations of Motion"
+  videoId="S_k2SRrS4os"
+  provider="youtube"
+  duration="16:45"
+  author="Thor I. Fossen / Marine Cybernetics"
+/>
+
+---
+
+## 1. Vektor Kecepatan & Koordinat Bawah Air Standar SNAME 6-DOF
+
+Berdasarkan konvensi standar **SNAME (Society of Naval Architects and Marine Engineers)**:
+- Posisi & Sudut Euler pada Kerangka Dunia NED $\{n\}$: $\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^T$
+- Kecepatan Linier & Sudut pada Kerangka Badan $\{b\}$: $\boldsymbol{\nu} = [u, v, w, p, q, r]^T$ (Surge, Sway, Heave, Roll, Pitch, Yaw)
+- Gaya & Torsi pada Kerangka Badan $\{b\}$: $\boldsymbol{\tau} = [X, Y, Z, K, M, N]^T$
+
+```text
+┌─────────────────┬──────────────────────┬──────────────────────┬────────────────────────────────────────────────────────┐
+│ Derajat Gerak   │ Kecepatan Badan (nu) │ Gaya Badan (tau)     │ Deskripsi Manuver Fisik Robotika Bawah Air             │
+├─────────────────┼──────────────────────┼──────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. Surge        │ u (m/s)              │ X (N)                │ Dorongan maju / mundur longitudinal                    │
+│ 2. Sway         │ v (m/s)              │ Y (N)                │ Pergeseran lateral ke samping (hanyutan arus)          │
+│ 3. Heave        │ w (m/s)              │ Z (N)                │ Gerak vertikal penyelaman / pengapungan kedalaman      │
+│ 4. Roll         │ p (rad/s)            │ K (N·m)              │ Kemiringan oleng melintang (distabilkan gaya apung)    │
+│ 5. Pitch        │ q (rad/s)            │ M (N·m)              │ Kemiringan angguk memanjang (sudut selam / naik)       │
+│ 6. Yaw          │ r (rad/s)            │ N (N·m)              │ Kemudi arah hadap navigasi                             │
+└─────────────────┴──────────────────────┴──────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Persamaan Vektor 6-DOF Kanonikal Model Fossen
+
+Pada tahun 1994, Prof. Thor I. Fossen merumuskan persamaan diferensial vektor non-linear yang memodelkan dinamika wahana laut secara komprehensif:
+
+$$
+M \dot{\boldsymbol{\nu}} + C(\boldsymbol{\nu})\boldsymbol{\nu} + D(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}(\boldsymbol{\eta}) = \boldsymbol{\tau}_{\text{thruster}} + \boldsymbol{\tau}_{\text{env}}
+$$
+
+Dimana komponen matriks pembentuknya adalah:
+
+### 1. Total Inersia Sistem ($M = M_{\text{RB}} + M_A$):
+$$
+M = \underbrace{M_{\text{RB}}}_{\text{Inersia Benda Kaku (6x6)}} + \underbrace{M_A}_{\text{Massa Tambahan Hidrodinamik (6x6)}}
+$$
+*Massa Tambahan ($M_A$)* memperhitungkan massa fluida air di sekitar badan robot yang ikut mengalami percepatan saat robot bergerak. Dalam air laut, nilai $M_A$ sering kali **setara atau bahkan lebih besar dari massa kering robot itu sendiri**!
+
+### 2. Matriks Coriolis & Sentripetal Total ($C(\boldsymbol{\nu}) = C_{\text{RB}}(\boldsymbol{\nu}) + C_A(\boldsymbol{\nu})$):
+Gaya giroskopik yang muncul akibat rotasi badan robot yang berinteraksi dengan massa fluida yang ikut berputar.
+
+### 3. Redaman Hidrodinamika Non-Linear ($D(\boldsymbol{\nu}) = D_{\text{linear}} + D_{\text{quad}}(\boldsymbol{\nu})$):
+$$
+D(\boldsymbol{\nu}) = \text{diag}(X_u, Y_v, Z_w, K_p, M_q, N_r) + \text{diag}(X_{u|u}|u|, Y_{v|v}|v|, Z_{w|w}|w|, K_{p|p}|p|, M_{q|q}|q|, N_{r|r}|r|)
+$$
+Gesekan kuadratik mendominasi saat AUV berenang dengan kecepatan tinggi.
+
+### 4. Gaya Pemulih Gravitasi & Gaya Apung Hidrostatis ($\mathbf{g}(\boldsymbol{\eta})$):
+Misalkan berat wahana $W = m g$ bekerja pada Pusat Gravitasi $\mathbf{r}_G = [x_G, y_G, z_G]^T$ dan gaya apung Archimedes $B = \rho g \nabla$ bekerja pada Pusat Apung $\mathbf{r}_B = [x_B, y_B, z_B]^T$:
+
+$$
+\mathbf{g}(\boldsymbol{\eta}) = \begin{bmatrix}
+(W - B)\sin\theta \\
+-(W - B)\cos\theta\sin\phi \\
+-(W - B)\cos\theta\cos\phi \\
+-(y_G W - y_B B)\cos\theta\cos\phi + (z_G W - z_B B)\cos\theta\sin\phi \\
+(z_G W - z_B B)\sin\theta + (x_G W - x_B B)\cos\theta\cos\phi \\
+-(x_G W - x_B B)\cos\theta\sin\phi - (y_G W - y_B B)\sin\theta
+\end{bmatrix}
+$$
+
+Untuk menjamin **stabilitas statis pasif**, AUV selalu dirancang dengan Pusat Apung berada tepat **di atas** Pusat Gravitasi ($z_B < z_G$).
+
+---
+
+## 3. Alokasi Pendorong (*Thruster Allocation*) & Kendali Kedalaman
+
+Untuk AUV dengan $m$ pendorong pendorong (*thruster*), gaya bersih $\boldsymbol{\tau}$ dihubungkan dengan gaya pendorong masing-masing $\mathbf{u} = [u_1, \dots, u_m]^T$ melalui **Matriks Alokasi Pendorong $T_{\text{alloc}}$**:
+
+$$
+\boldsymbol{\tau} = T_{\text{alloc}} \, \mathbf{u}
+$$
+
+Pengendalian kedalaman $z(t)$ dan sudut *pitch* $\theta(t)$ diatur melalui kontroler PID bertingkat:
+
+$$
+u_{\text{depth}} = K_p (z_{\text{target}} - z) + K_i \int (z_{\text{target}} - z) dt + K_d \dot{z}
+$$
+
+---
+
+## 4. Simulator Hidrodinamika Laut & Gaya Apung Interaktif
+
+Atur massa pemberat ballast, koefisien redaman hidrodinamis, dan dorongan thruster maju/vertikal di bawah ini:
+
+<MarineHydrodynamicsSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-marine-fossen"
+  question="Mengapa matriks Massa Tambahan Hidrodinamika (M_A) sangat dominan pada robotika bawah air dibandingkan pada drone udara?"
+  options={[
+    {
+      id: "A",
+      text: "Air laut memiliki massa jenis ~800x lebih rapat daripada udara. Mempercepat badan robot di dalam air memaksa volume fluida air di sekitarnya ikut berakselerasi, menciptakan inersia tambahan yang sebanding dengan massa robot.",
+      isCorrect: true,
+      explanation: "Tepat! Massa jenis air (1000 kg/m^3) sekitar 800 kali lipat lebih rapat daripada udara (1.225 kg/m^3), sehingga efek massa tambahan M_A mendominasi persamaan dinamika percepatan wahana."
+    },
+    {
+      id: "B",
+      text: "Karena air laut mengandung garam yang menempel pada baling-baling.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena robot bawah air tidak boleh menggunakan baut logam.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang kerapatan massa jenis fluida: bandingkan 1000 kg/m^3 (air) dengan 1.2 kg/m^3 (udara)."
+/>

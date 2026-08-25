@@ -1,0 +1,147 @@
+---
+id: quaternions-and-numerical-optimization
+title: "Kuaternion Satuan, Interpolasi SLERP & Optimasi Non-Linear dalam Robotika"
+slug: quaternions-and-numerical-optimization
+domain: mathematics
+category: mathematics
+level: 1
+tier: Foundations
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - mathematical-foundations
+  - 3d-geometry
+  - 2d-rotation-matrices
+references:
+  - "Joan Solà (2017). Quaternion kinematics for the error-state Kalman filter. arXiv:1711.02508."
+  - "Jorge Nocedal & Stephen J. Wright (2006). Numerical Optimization (2nd Edition). Springer."
+  - "Ken Shoemake (1985). Animating Rotation with Quaternion Curves. ACM SIGGRAPH."
+components:
+  - SpatialRotation3D
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Kuaternion Satuan, Interpolasi SLERP & Optimasi Non-Linear dalam Robotika
+
+> "Mengapa kuaternion satuan menjadi representasi standar yang dipilih untuk orientasi spasial 3D pada ROS, autopilot drone, dan simulator fisika, dan bagaimana algoritma Gauss-Newton serta Levenberg-Marquardt mengoptimasi estimasi pose robot non-linear?"
+
+Merepresentasikan rotasi spasial 3D dengan sudut Euler $(\phi, \theta, \psi)$ rentan terhadap fenomena **Gimbal Lock** (kehilangan satu derajat kebebasan rotasi pada sudut *pitch* $\theta = \pm 90^\circ$). **Kuaternion Satuan (*Unit Quaternions*)** menyediakan representasi kontinu 4-parameter yang bebas singularitas pada manifold bola 3D $\mathbb{S}^3$. Dipadukan dengan **Optimasi Kuadrat Terkecil Non-Linear (*Non-Linear Least Squares*)**, kuaternion menjadi mesin komputasi di balik Graph SLAM, bundle adjustment, dan penapis estimasi status robot.
+
+---
+
+<VideoEmbed
+  title="Quaternions and 3D Rotations: Mathematical Foundations & Geometric Intuition"
+  videoId="zjMuUxSodVg"
+  provider="youtube"
+  duration="21:10"
+  author="Steve Brunton / University of Washington"
+/>
+
+---
+
+## 1. Aljabar Kuaternion Satuan ($\mathbb{S}^3$)
+
+Sebuah **Kuaternion $\mathbf{q}$** terdiri dari komponen skalar real $w$ dan vektor imajiner 3D $\mathbf{v} = [x, y, z]^T$:
+
+$$
+\mathbf{q} = w + x \mathbf{i} + y \mathbf{j} + z \mathbf{k} = \begin{bmatrix} w \\ \mathbf{v} \end{bmatrix}
+$$
+
+Dengan aturan dasar Hamilton: $\mathbf{i}^2 = \mathbf{j}^2 = \mathbf{k}^2 = \mathbf{i}\mathbf{j}\mathbf{k} = -1$.
+
+### Parameterisasi Sudut-Sumbu (Axis-Angle):
+Rotasi spasial 3D sebesar sudut $\theta$ mengelilingi sumbu satuan $\hat{\mathbf{u}} = [u_x, u_y, u_z]^T$ ($|\hat{\mathbf{u}}| = 1$) dinyatakan dalam **Kuaternion Satuan**:
+
+$$
+\mathbf{q} = \begin{bmatrix} \cos(\theta / 2) \\ \hat{\mathbf{u}} \sin(\theta / 2) \end{bmatrix}, \quad \|\mathbf{q}\| = \sqrt{w^2 + x^2 + y^2 + z^2} = 1
+$$
+
+*(Perhatikan sifat **double cover** pada $SO(3)$: baik $\mathbf{q}$ maupun $-\mathbf{q}$ merepresentasikan rotasi fisik yang sama persis).*
+
+### Perkalian Hamilton ($\mathbf{q}_1 \otimes \mathbf{q}_2$):
+Komposisi dua rotasi berturutan dihitung melalui perkalian kuaternion:
+
+$$
+\mathbf{q}_1 \otimes \mathbf{q}_2 = \begin{bmatrix}
+w_1 w_2 - \mathbf{v}_1 \cdot \mathbf{v}_2 \\
+w_1 \mathbf{v}_2 + w_2 \mathbf{v}_1 + \mathbf{v}_1 \times \mathbf{v}_2
+\end{bmatrix}
+$$
+
+---
+
+## 2. Interpolasi Linier Bola (SLERP)
+
+Untuk menginterpolasi secara mulus antara dua orientasi $\mathbf{q}_0$ dan $\mathbf{q}_1$ dengan kecepatan sudut yang konstan untuk interval $t \in [0, 1]$:
+
+$$
+\text{SLERP}(\mathbf{q}_0, \mathbf{q}_1; t) = \frac{\sin((1-t)\Omega)}{\sin\Omega} \mathbf{q}_0 + \frac{\sin(t\Omega)}{\sin\Omega} \mathbf{q}_1
+$$
+
+Dimana $\cos\Omega = \mathbf{q}_0 \cdot \mathbf{q}_1$. Jika $\mathbf{q}_0 \cdot \mathbf{q}_1 < 0$, balikkan tanda $\mathbf{q}_1 \to -\mathbf{q}_1$ untuk menempuh busur geodesik terpendek pada $\mathbb{S}^3$.
+
+---
+
+## 3. Optimasi Kuadrat Terkecil Non-Linear dalam Robotika
+
+Dalam Visual SLAM, fusi multi-sensor, dan kalibrasi kinematik, kita meminimalkan fungsi galat residual non-linear $\mathbf{r}(\mathbf{x}) = \mathbf{z} - h(\mathbf{x})$:
+
+$$
+\min_{\mathbf{x}} F(\mathbf{x}) = \frac{1}{2} \sum_{i=1}^m \|\mathbf{r}_i(\mathbf{x})\|^2 = \frac{1}{2} \|\mathbf{r}(\mathbf{x})\|^2
+$$
+
+### 1. Metode Gauss-Newton:
+Melakukan linierisasi residual menggunakan matriks Jacobian $J = \frac{\partial \mathbf{r}}{\partial \mathbf{x}}$:
+$$
+(J^T J) \Delta \mathbf{x} = -J^T \mathbf{r}
+$$
+
+### 2. Metode Levenberg-Marquardt (Damped Gauss-Newton):
+Menambahkan parameter redaman adaptif $\lambda \ge 0$ untuk menjamin kekonvergenan global:
+$$
+(J^T J + \lambda I) \Delta \mathbf{x} = -J^T \mathbf{r}
+$$
+- Ketika $\lambda \to 0$, metode beroperasi seperti Gauss-Newton kuadratik cepat di dekat titik optimum.
+- Ketika $\lambda \to \infty$, metode beroperasi seperti Gradient Descent yang stabil saat jauh dari optimum.
+
+---
+
+## 4. Laboratorium Orientasi Spasial 3D Interaktif
+
+Rotasikan dan amati karakteristik sumbu spasial 3D pada simulasi di bawah ini:
+
+<SpatialRotation3D />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-math-quaternions"
+  question="Mengapa interpolasi SLERP lebih dipilih dibandingkan interpolasi linier biasa (LERP) pada orientasi robot 3D?"
+  options={[
+    {
+      id: "A",
+      text: "SLERP menjamin kecepatan rotasi sudut yang konstan dan mulus sepanjang busur lingkaran besar bola S^3, sedangkan LERP memotong bagian dalam bola yang menyebabkan fluktuasi kecepatan sudut.",
+      isCorrect: true,
+      explanation: "Tepat! LERP memotong garis lurus di dalam bola 4D (mengubah panjang vektor sehingga butuh normalisasi dan memicu variasi kecepatan), sedangkan SLERP bergerak tepat di sepanjang busur geodesik dengan laju sudut konstan."
+    },
+    {
+      id: "B",
+      text: "Karena LERP hanya bekerja pada bilangan bulat.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena LERP membuat baterai cepat habis.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan mengenai kestabilan kecepatan sudut saat robot memutar orientasinya dari waktu t=0 hingga t=1."
+/>

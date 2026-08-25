@@ -1,0 +1,159 @@
+---
+id: visual-odometry-and-rgbd-depth-processing
+title: "Odometri Visual, Geometri Epipolar & Pemrosesan Point Cloud RGB-D 3D"
+slug: visual-odometry-and-rgbd-depth-processing
+domain: perception
+category: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - pinhole-camera-and-calibration
+  - 3d-geometry
+  - coordinate-frames-and-transforms
+references:
+  - "David Scaramuzza & Friedrich Fraundorfer (2011). Visual Odometry: Part I - The First 30 Years and Fundamentals. IEEE Robotics & Automation Magazine."
+  - "Richard Hartley & Andrew Zisserman (2004). Multiple View Geometry in Computer Vision. Cambridge University Press."
+  - "Christian Kerl, Jurgen Sturm, & Daniel Cremers (2013). Dense Visual SLAM for RGB-D Cameras. IEEE/RSJ IROS."
+components:
+  - LidarToGridMapSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Odometri Visual, Geometri Epipolar & Pemrosesan Point Cloud RGB-D 3D
+
+> "Bagaimana robot otonom memperkirakan trajektori gerak 6-DOF kameranya secara inkremental hanya dengan membandingkan frame gambar visual berurutan, dan bagaimana sensor kedalaman RGB-D mengubah piksel 2D menjadi peta lingkungan point cloud 3D padat?"
+
+**Odometri Visual (Visual Odometry / VO)** adalah proses mengestimasi pergerakan ego robot $[R | \mathbf{t}] \in SE(3)$ secara bertahap menggunakan citra kamera sekuensial. Dengan melacak titik fitur visual kunci (*keypoints* seperti ORB, SIFT, FAST) dan memanfaatkan **Batasan Geometri Epipolar**, VO menyediakan data posisi berevolusi cepat yang sangat vital pada navigasi tanpa sinyal GPS (mobil otonom, drone UAV, hingga wahana penjelajah Mars Curiosity dan Perseverance).
+
+---
+
+<VideoEmbed
+  title="Visual Odometry: Feature Tracking, Epipolar Geometry and Essential Matrix"
+  videoId="0k_iE9_bQ5g"
+  provider="youtube"
+  duration="19:40"
+  author="Cyrill Stachniss / Photogrammetry & Robotics"
+/>
+
+---
+
+## 1. Geometri Epipolar Dua Sudut Pandang & Matriks Esensial ($E$)
+
+Tinjau sebuah titik fisik 3D $\mathbf{P}$ yang tertangkap oleh dua posisi kamera terkalibrasi $\{C_1\}$ dan $\{C_2\}$ dengan rotasi relatif $R$ dan translasi $\mathbf{t}$:
+
+```text
+        Kamera 1 (C_1)                      Kamera 2 (C_2)
+              ▲                                   ▲
+             / \                                 / \
+            /   \                               /   \
+           /  x1 \                             / x2  \
+          /   ●   \                           /   ●   \
+         O─────────O                         O─────────O
+          \                                             /
+           \                                           /
+            \                                         /
+             ───────────────► ● P ◄───────────────────
+                           (Titik 3D)
+```
+
+Pusat optik $C_1, C_2$ dan titik $\mathbf{P}$ membentuk **Bidang Epipolar**. Koordinat gambar ternormalisasi $\mathbf{x}_1 = K^{-1} \mathbf{p}_1$ dan $\mathbf{x}_2 = K^{-1} \mathbf{p}_2$ memenuhi **Batasan Epipolar**:
+
+$$
+\mathbf{x}_2^T E \, \mathbf{x}_1 = 0
+$$
+
+Dimana $E \in \mathbb{R}^{3 \times 3}$ adalah **Matriks Esensial**, yang dirumuskan sebagai:
+
+$$
+E = [\mathbf{t}]_\times R = \begin{bmatrix}
+0 & -t_z & t_y \\
+t_z & 0 & -t_x \\
+-t_y & t_x & 0
+\end{bmatrix} R
+$$
+
+### Matriks Fundamental ($F$ untuk Kamera Tanpa Kalibrasi):
+Jika beroperasi langsung pada koordinat piksel mentah $(u, v)$ tanpa mengetahui matriks intrinsik $K$:
+
+$$
+\mathbf{p}_2^T F \, \mathbf{p}_1 = 0, \quad \text{dimana } F = K_2^{-T} E \, K_1^{-1}
+$$
+
+---
+
+## 2. Merekonstruksi Gerak Kamera: Algoritma 8-Titik & SVD
+
+Dengan $N \ge 8$ pasangan titik fitur yang cocok $\{\mathbf{x}_{1,i} \leftrightarrow \mathbf{x}_{2,i}\}$ yang disaring dengan algoritma RANSAC:
+1. Susun matriks pengukuran linier $A \mathbf{e} = \mathbf{0}$ dan pecahkan via SVD ($A = U_A \Sigma_A V_A^T$).
+2. Terapkan batasan rank-2 pada $E$ dengan mengenolkan nilai singular terkecil: $E = U \, \text{diag}(\sigma, \sigma, 0) \, V^T$.
+3. Ekstrak rotasi dan translasi relatif $[R | \mathbf{t}]$ dari $E$ melalui faktorisasi SVD:
+   $$R = U W V^T \quad \text{atau} \quad U W^T V^T, \quad \text{dimana } W = \begin{bmatrix} 0 & -1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{bmatrix}$$
+   $$[\mathbf{t}]_\times = U Z U^T, \quad \text{dimana } Z = \begin{bmatrix} 0 & 1 & 0 \\ -1 & 0 & 0 \\ 0 & 0 & 0 \end{bmatrix}$$
+
+Dari 4 kemungkinan kombinasi dekomposisi matematis, solusi fisik unik dipilih melalui **Pemeriksaan Cheirality** (memastikan seluruh titik 3D hasil triangulasi berada di depan bidang kedua kamera, $Z_1 > 0, Z_2 > 0$).
+
+---
+
+## 3. Proyeksi Balik Sensor Kedalaman RGB-D 3D
+
+Kamera RGB-D (Intel RealSense, Azure Kinect) menyediakan gambar warna $I(u, v)$ dan peta kedalaman metrik $Z(u, v)$ yang terkoordinasi.
+
+Setiap piksel $(u, v)$ dengan jarak kedalaman terukur $Z$ diproyeksikan balik menjadi titik 3D metrik $\mathbf{P}_C = [X, Y, Z]^T$ pada kerangka kamera:
+
+$$
+\mathbf{P}_C = Z \cdot K^{-1} \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = \begin{bmatrix}
+\frac{(u - c_x) Z}{f_x} \\
+\frac{(v - c_y) Z}{f_y} \\
+Z
+\end{bmatrix}
+$$
+
+Transformasi titik ke kerangka robot global dilakukan menggunakan kalibrasi ekstrinsik $[R_{CB} | \mathbf{t}_{CB}]$:
+
+$$
+\mathbf{P}_{\text{robot}} = R_{CB} \, \mathbf{P}_C + \mathbf{t}_{CB}
+$$
+
+---
+
+## 4. Laboratorium Simulasi Proyeksi Spasial
+
+Amati transformasi sensor pemindai jarak ke sistem grid spasial Kartesius di bawah ini:
+
+<LidarToGridMapSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-perception-vo"
+  question="Mengapa odometri visual monokuler (kamera tunggal standar) mengalami ambiguitas skala (scale ambiguity), sedangkan kamera RGB-D atau Stereo tidak?"
+  options={[
+    {
+      id: "A",
+      text: "Karena batasan epipolar x_2^T [t]_x R x_1 = 0 bersifat invarian terhadap skala: mengalikan vektor translasi t dengan skalar positif sembarang menghasilkan proyeksi gambar yang identik.",
+      isCorrect: true,
+      explanation: "Tepat! Pada kamera monokuler, objek kecil berjarak dekat yang bergerak lambat memproyeksikan citra yang identik dengan objek raksasa berjarak jauh yang bergerak cepat. Kamera stereo atau RGB-D memiliki panjang baseline metrik yang mengunci skala fisik absolut."
+    },
+    {
+      id: "B",
+      text: "Karena kamera monokuler hanya merekam video hitam putih.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Karena kamera monokuler tidak memiliki prosesor.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan mengenai perkalian vektor translasi t dengan faktor skalar sembarang s > 0 pada persamaan epipolar."
+/>

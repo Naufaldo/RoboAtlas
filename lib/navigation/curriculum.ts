@@ -373,6 +373,110 @@ export const DOMAINS: DomainMeta[] = [
       },
     ],
   },
+  {
+    slug: 'dynamics',
+    title: 'Rigid Body & Multi-Body Dynamics',
+    subtitle: 'Newton-Euler, Lagrangian Dynamics & Joint Torques',
+    description:
+      'Master the fundamental physical equations of motion: Euler-Lagrange derivations, mass-inertia matrices, Coriolis coupling torques, and forward/inverse dynamics.',
+    level: 4,
+    levelBadge: 'Level 4',
+    iconName: 'Activity',
+    milestone: 'Milestone 2',
+    status: 'Foundation Ready',
+    topics: [
+      {
+        title: 'Lagrangian Mechanics Formulation',
+        description: 'Euler-Lagrange equations, generalized coordinates, kinetic/potential energy fields.',
+        algorithms: ['Euler-Lagrange Solver', 'Recursive Newton-Euler'],
+      },
+    ],
+    primaryEquations: [
+      {
+        title: 'Manipulator Dynamic Equation of Motion',
+        latex: 'M(\\mathbf{q})\\ddot{\\mathbf{q}} + C(\\mathbf{q}, \\dot{\\mathbf{q}})\\dot{\\mathbf{q}} + \\mathbf{g}(\\mathbf{q}) = \\boldsymbol{\\tau}',
+        explanation: 'Relates joint accelerations to motor actuator torques via mass-inertia, Coriolis, and gravity vectors.',
+      },
+    ],
+  },
+  {
+    slug: 'legged',
+    title: 'Legged Robotics & Locomotion',
+    subtitle: 'ZMP Dynamic Stability, LIPM & Quadruped Gaits',
+    description:
+      'Explore dynamic balance in legged robots: Zero Moment Point (ZMP) stability, Linear Inverted Pendulum Models (LIPM), support polygons, and multi-gait sequencing.',
+    level: 15,
+    levelBadge: 'Level 15',
+    iconName: 'Cpu',
+    milestone: 'Milestone 9',
+    status: 'Foundation Ready',
+    topics: [
+      {
+        title: 'Zero Moment Point (ZMP) & LIPM',
+        description: 'Dynamic stability criteria and constant-height inverted pendulum trajectories.',
+        algorithms: ['ZMP Balance Calculator', 'LIPM Trajectory Generator'],
+      },
+    ],
+    primaryEquations: [
+      {
+        title: 'Linear Inverted Pendulum Equation',
+        latex: '\\ddot{x} = \\frac{g}{z_c}(x - x_{\\text{ZMP}})',
+        explanation: 'Governs center-of-mass acceleration as an inverted pendulum driven by ZMP displacement.',
+      },
+    ],
+  },
+  {
+    slug: 'aerial',
+    title: 'Aerial Robotics & Multirotor Autonomy',
+    subtitle: 'Flight Dynamics, Cascaded PID & Trajectory Tracking',
+    description:
+      'Model multirotor flight mechanics: 6-DOF rigid body equations on SE(3), nested cascaded PID attitude control, motor mixing, and minimum-snap trajectory planning.',
+    level: 16,
+    levelBadge: 'Level 16',
+    iconName: 'Navigation',
+    milestone: 'Milestone 9',
+    status: 'Foundation Ready',
+    topics: [
+      {
+        title: 'Cascaded PID Flight Control',
+        description: 'High-rate hierarchical attitude, angular rate, and position trajectory regulation.',
+        algorithms: ['Cascaded Quadrotor Controller', 'Minimum Snap Generator'],
+      },
+    ],
+    primaryEquations: [
+      {
+        title: 'Quadrotor Rotational Dynamics',
+        latex: 'J \\dot{\\boldsymbol{\\omega}} = \\boldsymbol{\\tau}_B - \\boldsymbol{\\omega} \\times (J \\boldsymbol{\\omega})',
+        explanation: 'Euler rotational equation relating propeller differential torques to body angular accelerations.',
+      },
+    ],
+  },
+  {
+    slug: 'marine',
+    title: 'Marine Robotics & Hydrodynamics',
+    subtitle: 'Fossen 6-DOF Equations, Added Mass & AUV Motion',
+    description:
+      'Understand underwater vehicle dynamics: SNAME 6-DOF notation, hydrodynamic added mass, non-linear fluid damping, restoring buoyancy moments, and AUV depth control.',
+    level: 17,
+    levelBadge: 'Level 17',
+    iconName: 'Compass',
+    milestone: 'Milestone 9',
+    status: 'Foundation Ready',
+    topics: [
+      {
+        title: 'Fossen 6-DOF Equations of Motion',
+        description: 'Hydrodynamic added mass, quadratic drag, restoring buoyancy, and thruster allocation.',
+        algorithms: ['Fossen AUV Simulator', 'Thruster Allocation Matrix'],
+      },
+    ],
+    primaryEquations: [
+      {
+        title: 'Fossen Marine Craft Dynamic Equation',
+        latex: 'M \\dot{\\boldsymbol{\\nu}} + C(\\boldsymbol{\\nu})\\boldsymbol{\\nu} + D(\\boldsymbol{\\nu})\\boldsymbol{\\nu} + \\mathbf{g}(\\boldsymbol{\\eta}) = \\boldsymbol{\\tau}',
+        explanation: 'Comprehensive non-linear vector equation governing 6-DOF submerged marine vehicle dynamics.',
+      },
+    ],
+  },
 ];
 
 export const ALGORITHMS: AlgorithmMeta[] = [

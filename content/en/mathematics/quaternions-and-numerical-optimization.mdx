@@ -1,0 +1,147 @@
+---
+id: quaternions-and-numerical-optimization
+title: "Unit Quaternions, SLERP & Non-Linear Optimization for Robotics"
+slug: quaternions-and-numerical-optimization
+domain: mathematics
+category: mathematics
+level: 1
+tier: Foundations
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - mathematical-foundations
+  - 3d-geometry
+  - 2d-rotation-matrices
+references:
+  - "Joan Solà (2017). Quaternion kinematics for the error-state Kalman filter. arXiv:1711.02508."
+  - "Jorge Nocedal & Stephen J. Wright (2006). Numerical Optimization (2nd Edition). Springer."
+  - "Ken Shoemake (1985). Animating Rotation with Quaternion Curves. ACM SIGGRAPH."
+components:
+  - SpatialRotation3D
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Unit Quaternions, SLERP & Non-Linear Optimization for Robotics
+
+> "Why are unit quaternions the universal representation chosen for orientation in ROS, flight autopilots, and physics simulators, and how do Gauss-Newton and Levenberg-Marquardt algorithms optimize non-linear robot pose estimates?"
+
+Representing 3D spatial rotations with Euler angles $(\phi, \theta, \psi)$ suffers from **Gimbal Lock** (loss of one rotational degree of freedom at pitch $\theta = \pm 90^\circ$). **Unit Quaternions** provide a continuous, singularity-free 4-parameter representation on the 3-sphere $\mathbb{S}^3$. Coupled with **Non-Linear Least Squares Optimization**, they power Graph SLAM backends, bundle adjustment, and state estimation engines.
+
+---
+
+<VideoEmbed
+  title="Quaternions and 3D Rotations: Mathematical Foundations & Geometric Intuition"
+  videoId="zjMuUxSodVg"
+  provider="youtube"
+  duration="21:10"
+  author="Steve Brunton / University of Washington"
+/>
+
+---
+
+## 1. Unit Quaternion Algebra ($\mathbb{S}^3$)
+
+A **Quaternion $\mathbf{q}$** consists of a scalar real part $w$ and a 3D imaginary vector part $\mathbf{v} = [x, y, z]^T$:
+
+$$
+\mathbf{q} = w + x \mathbf{i} + y \mathbf{j} + z \mathbf{k} = \begin{bmatrix} w \\ \mathbf{v} \end{bmatrix}
+$$
+
+Where fundamental Hamilton relations satisfy: $\mathbf{i}^2 = \mathbf{j}^2 = \mathbf{k}^2 = \mathbf{i}\mathbf{j}\mathbf{k} = -1$.
+
+### Axis-Angle Parameterization:
+A 3D spatial rotation by angle $\theta$ around a unit axis $\hat{\mathbf{u}} = [u_x, u_y, u_z]^T$ ($|\hat{\mathbf{u}}| = 1$) is represented by the **Unit Quaternion**:
+
+$$
+\mathbf{q} = \begin{bmatrix} \cos(\theta / 2) \\ \hat{\mathbf{u}} \sin(\theta / 2) \end{bmatrix}, \quad \|\mathbf{q}\| = \sqrt{w^2 + x^2 + y^2 + z^2} = 1
+$$
+
+*(Note the **double cover** property of $SO(3)$: both $\mathbf{q}$ and $-\mathbf{q}$ represent the exact same physical rotation).*
+
+### The Hamilton Product ($\mathbf{q}_1 \otimes \mathbf{q}_2$):
+Successive rotation composition is computed by quaternion multiplication:
+
+$$
+\mathbf{q}_1 \otimes \mathbf{q}_2 = \begin{bmatrix}
+w_1 w_2 - \mathbf{v}_1 \cdot \mathbf{v}_2 \\
+w_1 \mathbf{v}_2 + w_2 \mathbf{v}_1 + \mathbf{v}_1 \times \mathbf{v}_2
+\end{bmatrix}
+$$
+
+---
+
+## 2. Spherical Linear Interpolation (SLERP)
+
+To smoothly interpolate between two orientations $\mathbf{q}_0$ and $\mathbf{q}_1$ at constant angular velocity for $t \in [0, 1]$:
+
+$$
+\text{SLERP}(\mathbf{q}_0, \mathbf{q}_1; t) = \frac{\sin((1-t)\Omega)}{\sin\Omega} \mathbf{q}_0 + \frac{\sin(t\Omega)}{\sin\Omega} \mathbf{q}_1
+$$
+
+Where $\cos\Omega = \mathbf{q}_0 \cdot \mathbf{q}_1$. If $\mathbf{q}_0 \cdot \mathbf{q}_1 < 0$, invert $\mathbf{q}_1 \to -\mathbf{q}_1$ to traverse the shortest geodesic arc on $\mathbb{S}^3$.
+
+---
+
+## 3. Non-Linear Least Squares Optimization in Robotics
+
+In Visual SLAM, sensor fusion, and kinematic calibration, we minimize non-linear residual errors $\mathbf{r}(\mathbf{x}) = \mathbf{z} - h(\mathbf{x})$:
+
+$$
+\min_{\mathbf{x}} F(\mathbf{x}) = \frac{1}{2} \sum_{i=1}^m \|\mathbf{r}_i(\mathbf{x})\|^2 = \frac{1}{2} \|\mathbf{r}(\mathbf{x})\|^2
+$$
+
+### 1. Gauss-Newton Method:
+Linearizing the residual using the Jacobian $J = \frac{\partial \mathbf{r}}{\partial \mathbf{x}}$:
+$$
+(J^T J) \Delta \mathbf{x} = -J^T \mathbf{r}
+$$
+
+### 2. Levenberg-Marquardt (Damped Gauss-Newton):
+Introduces an adaptive damping parameter $\lambda \ge 0$ to guarantee global convergence:
+$$
+(J^T J + \lambda I) \Delta \mathbf{x} = -J^T \mathbf{r}
+$$
+- When $\lambda \to 0$, it behaves as fast quadratic Gauss-Newton near the optimum.
+- When $\lambda \to \infty$, it behaves as robust Gradient Descent far from the optimum.
+
+---
+
+## 4. Interactive 3D Spatial Orientation Lab
+
+Rotate and inspect 3D gimbal axes and spatial transformation properties below:
+
+<SpatialRotation3D />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-math-quaternions"
+  question="Why does Spherical Linear Interpolation (SLERP) use geodesic arcs on the 3-sphere S^3 rather than simple component-wise linear interpolation (LERP)?"
+  options={[
+    {
+      id: "A",
+      text: "SLERP guarantees constant angular velocity rotation throughout the motion trajectory, whereas LERP causes non-uniform velocity fluctuations and requires post-normalization.",
+      isCorrect: true,
+      explanation: "Exact! LERP cuts straight through the interior of the 4D sphere (causing speed variations and requiring norm normalization), whereas SLERP follows the great circle arc at strictly constant angular speed."
+    },
+    {
+      id: "B",
+      text: "Because LERP crashes microcontrollers.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because quaternions cannot be added.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about the angular velocity speed of the rotation as time progresses from 0 to 1."
+/>

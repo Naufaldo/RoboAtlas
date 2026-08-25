@@ -1,0 +1,159 @@
+---
+id: visual-odometry-and-rgbd-depth-processing
+title: "Visual Odometry, Epipolar Geometry & 3D RGB-D Point Cloud Processing"
+slug: visual-odometry-and-rgbd-depth-processing
+domain: perception
+category: perception
+level: 9
+tier: Spatial Intelligence
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - pinhole-camera-and-calibration
+  - 3d-geometry
+  - coordinate-frames-and-transforms
+references:
+  - "David Scaramuzza & Friedrich Fraundorfer (2011). Visual Odometry: Part I - The First 30 Years and Fundamentals. IEEE Robotics & Automation Magazine."
+  - "Richard Hartley & Andrew Zisserman (2004). Multiple View Geometry in Computer Vision. Cambridge University Press."
+  - "Christian Kerl, Jurgen Sturm, & Daniel Cremers (2013). Dense Visual SLAM for RGB-D Cameras. IEEE/RSJ IROS."
+components:
+  - LidarToGridMapSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Visual Odometry, Epipolar Geometry & 3D RGB-D Point Cloud Processing
+
+> "How can an autonomous robot determine its exact 6-DOF camera trajectory incrementally solely by comparing consecutive image frames, and how do RGB-D depth sensors transform 2D pixel grids into dense 3D point cloud metric environments?"
+
+**Visual Odometry (VO)** is the process of estimating the 6-DOF ego-motion $[R | \mathbf{t}] \in SE(3)$ of a robot using sequential camera images. By tracking salient visual keypoints (ORB, SIFT, FAST) and enforcing geometric **Epipolar Constraints**, VO provides high-rate pose estimates critical for GPS-denied navigation in autonomous cars, drones, and planetary rovers (Mars Curiosity and Perseverance).
+
+---
+
+<VideoEmbed
+  title="Visual Odometry: Feature Tracking, Epipolar Geometry and Essential Matrix"
+  videoId="0k_iE9_bQ5g"
+  provider="youtube"
+  duration="19:40"
+  author="Cyrill Stachniss / Photogrammetry & Robotics"
+/>
+
+---
+
+## 1. Two-View Epipolar Geometry & The Essential Matrix ($E$)
+
+Consider a 3D physical point $\mathbf{P}$ viewed by two calibrated camera poses $\{C_1\}$ and $\{C_2\}$ separated by relative rotation $R$ and translation $\mathbf{t}$:
+
+```text
+         Camera 1 (C_1)                      Camera 2 (C_2)
+              ▲                                   ▲
+             / \                                 / \
+            /   \                               /   \
+           /  x1 \                             / x2  \
+          /   ●   \                           /   ●   \
+         O─────────O                         O─────────O
+          \                                             /
+           \                                           /
+            \                                         /
+             ───────────────► ● P ◄───────────────────
+                           (3D Point)
+```
+
+The camera centers $C_1, C_2$ and point $\mathbf{P}$ define the **Epipolar Plane**. Normalized image coordinates $\mathbf{x}_1 = K^{-1} \mathbf{p}_1$ and $\mathbf{x}_2 = K^{-1} \mathbf{p}_2$ satisfy the **Epipolar Constraint**:
+
+$$
+\mathbf{x}_2^T E \, \mathbf{x}_1 = 0
+$$
+
+Where $E \in \mathbb{R}^{3 \times 3}$ is the **Essential Matrix**, defined as:
+
+$$
+E = [\mathbf{t}]_\times R = \begin{bmatrix}
+0 & -t_z & t_y \\
+t_z & 0 & -t_x \\
+-t_y & t_x & 0
+\end{bmatrix} R
+$$
+
+### The Fundamental Matrix ($F$ for Uncalibrated Images):
+When operating directly on raw pixel coordinates $(u, v)$ without knowing intrinsics $K$:
+
+$$
+\mathbf{p}_2^T F \, \mathbf{p}_1 = 0, \quad \text{where } F = K_2^{-T} E \, K_1^{-1}
+$$
+
+---
+
+## 2. Recovering Camera Motion: The 8-Point Algorithm & SVD
+
+Given $N \ge 8$ matched keypoint correspondences $\{\mathbf{x}_{1,i} \leftrightarrow \mathbf{x}_{2,i}\}$ filtered with RANSAC:
+1. Construct the linear measurement matrix $A \mathbf{e} = \mathbf{0}$ and solve using SVD ($A = U_A \Sigma_A V_A^T$).
+2. Enforce the rank-2 constraint on $E$ by setting the smallest singular value to zero: $E = U \, \text{diag}(\sigma, \sigma, 0) \, V^T$.
+3. Extract relative motion $[R | \mathbf{t}]$ from $E$ via SVD factorization:
+   $$R = U W V^T \quad \text{or} \quad U W^T V^T, \quad \text{where } W = \begin{bmatrix} 0 & -1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{bmatrix}$$
+   $$[\mathbf{t}]_\times = U Z U^T, \quad \text{where } Z = \begin{bmatrix} 0 & 1 & 0 \\ -1 & 0 & 0 \\ 0 & 0 & 0 \end{bmatrix}$$
+
+Of the 4 possible mathematical decompositions, the unique physical solution is identified through **Cheirality Checking** (ensuring triangulated 3D points lie strictly in front of both cameras, $Z_1 > 0, Z_2 > 0$).
+
+---
+
+## 3. 3D RGB-D Depth Sensor Back-Projection
+
+Structured-light and Time-of-Flight (ToF) cameras (Intel RealSense, Azure Kinect) provide synchronized RGB image $I(u, v)$ and metric depth map $Z(u, v)$. 
+
+Every pixel $(u, v)$ with measured depth $Z$ back-projects into a metric 3D point $\mathbf{P}_C = [X, Y, Z]^T$ in camera coordinates:
+
+$$
+\mathbf{P}_C = Z \cdot K^{-1} \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = \begin{bmatrix}
+\frac{(u - c_x) Z}{f_x} \\
+\frac{(v - c_y) Z}{f_y} \\
+Z
+\end{bmatrix}
+$$
+
+Transforming the point cloud into the global robot map frame using extrinsic sensor calibration $[R_{CB} | \mathbf{t}_{CB}]$:
+
+$$
+\mathbf{P}_{\text{robot}} = R_{CB} \, \mathbf{P}_C + \mathbf{t}_{CB}
+$$
+
+---
+
+## 4. Interactive Spatial Point Cloud Projection Lab
+
+Observe the transformation from 2D range sensors to Cartesian spatial grids below:
+
+<LidarToGridMapSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-perception-vo"
+  question="Why does monocular visual odometry (using a single standard camera) suffer from scale ambiguity, whereas RGB-D or Stereo VO does not?"
+  options={[
+    {
+      id: "A",
+      text: "Because the epipolar constraint x_2^T [t]_x R x_1 = 0 is scale-invariant: multiplying translation vector t by any positive scalar factor s yields the exact same image projections.",
+      isCorrect: true,
+      explanation: "Exact! In monocular vision, a small nearby object moving slowly projects identically to a giant distant object moving fast. Stereo or RGB-D sensors provide metric baseline distance, locking the absolute physical metric scale."
+    },
+    {
+      id: "B",
+      text: "Because monocular cameras only capture black and white images.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because monocular cameras lack digital processors.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about multiplying translation t by an arbitrary scalar factor s > 0 in the equation."
+/>

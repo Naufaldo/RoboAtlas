@@ -1,0 +1,152 @@
+---
+id: rigid-body-and-lagrangian-dynamics
+title: "Dinamika Benda Kaku & Mekanika Lagrange untuk Robotika"
+slug: rigid-body-and-lagrangian-dynamics
+domain: dynamics
+category: dynamics
+level: 4
+tier: Foundations
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+  - 3d-geometry
+references:
+  - "Kevin M. Lynch & Frank C. Park (2017). Modern Robotics: Mechanics, Planning, and Control. Cambridge University Press."
+  - "Mark W. Spong, Seth Hutchinson, & M. Vidyasagar (2005). Robot Modeling and Control. Wiley."
+  - "John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 6). Pearson."
+components:
+  - NumericalIntegrationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Dinamika Benda Kaku & Mekanika Lagrange untuk Robotika
+
+> "Jika kinematika mempelajari posisi dan orientasi gerak secara geometris tanpa meninjau gaya, maka dinamika mengungkap hukum fisika fundamental: bagaimana torsi motor menghasilkan percepatan sendi melawan inersia, gravitasi, dan gaya Coriolis."
+
+Dinamika robotika adalah jembatan krusial antara perencanaan lintasan (*motion planning*) dan pengendalian aktuator fisik. Baik saat menghitung torsi *feedforward* untuk lengan robot industri, menjaga keseimbangan robot berkaki empat (*quadruped*), maupun bermanuver lincah dengan drone, formulasi **Euler-Lagrange** dan **Newton-Euler** menyediakan landasan matematis kendali fisik robot.
+
+---
+
+<VideoEmbed
+  title="Euler-Lagrange Equations of Motion for Robotics Explained"
+  videoId="iKpt_6g731M"
+  provider="youtube"
+  duration="19:20"
+  author="Steve Brunton / University of Washington"
+/>
+
+---
+
+## 1. Formulasi Mekanika Lagrange ($L = K - P$)
+
+Berbeda dengan mekanika Newton yang mengharuskan analisis gaya reaksi pada setiap sambungan sendi, **pendekatan Lagrange** memanfaatkan besaran skalar energi pada koordinat umum (*generalized coordinates*) $\mathbf{q} = [q_1, q_2, \dots, q_n]^T \in \mathcal{Q}$:
+
+**Fungsi Lagrangian $L$** didefinisikan sebagai selisih antara total energi kinetik $K(\mathbf{q}, \dot{\mathbf{q}})$ dan energi potensial $P(\mathbf{q})$:
+
+$$
+L(\mathbf{q}, \dot{\mathbf{q}}) = K(\mathbf{q}, \dot{\mathbf{q}}) - P(\mathbf{q})
+$$
+
+### Persamaan Gerak Euler-Lagrange:
+Untuk setiap koordinat umum $q_i$, persamaan kesetimbangan dinamis dengan torsi luar $\tau_i$ adalah:
+
+$$
+\frac{d}{dt}\left( \frac{\partial L}{\partial \dot{q}_i} \right) - \frac{\partial L}{\partial q_i} = \tau_i
+$$
+
+---
+
+## 2. Persamaan Matriks Standar Dinamika Robot Manipulator
+
+Menerapkan penurunan Euler-Lagrange pada lengan robot serial dengan $n$ derajat kebebasan menghasilkan persamaan gerak kanonikal:
+
+$$
+M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q}) = \boldsymbol{\tau}
+$$
+
+Dimana:
+- $M(\mathbf{q}) \in \mathbb{R}^{n \times n}$ adalah **Matriks Inersia Massa** (simetris dan definit-positif).
+- $C(\mathbf{q}, \dot{\mathbf{q}}) \in \mathbb{R}^{n \times n}$ adalah **Matriks Coriolis & Sentrifugal** (diturunkan melalui simbol Christoffel).
+- $\mathbf{g}(\mathbf{q}) \in \mathbb{R}^n$ adalah **Vektor Torsi Gravitasi** $\mathbf{g}(\mathbf{q}) = \frac{\partial P}{\partial \mathbf{q}}$.
+- $\boldsymbol{\tau} \in \mathbb{R}^n$ adalah vektor torsi/gaya aktuator motor pada setiap sendi.
+
+```text
+┌─────────────────────────┬──────────────────────┬────────────────────────────────────────────────────────┐
+│ Suku Dinamis            │ Simbol Matematika    │ Makna Fisik & Sifat Kunci                              │
+├─────────────────────────┼──────────────────────┼────────────────────────────────────────────────────────┤
+│ Matriks Inersia         │ M(q)                 │ Simetris & definit-positif (q^T M q > 0 untuk q != 0)  │
+│ Coriolis / Sentrifugal  │ C(q, q_dot) q_dot    │ Torsi giroskopik akibat interaksi kecepatan sendi      │
+│ Vektor Gravitasi        │ g(q)                 │ Torsi statis konservatif penahan beban gravitasi bumi  │
+│ Torsi Aktuator          │ tau                  │ Torsi bersih yang diberikan motor pada tiap sendi      │
+└─────────────────────────┴──────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+### Sifat Kemiringan-Simetris (*Skew-Symmetry*) $\dot{M} - 2C$:
+Salah satu sifat fundamental dalam teori kendali non-linear robotika (seperti pembuktian stabilitas Lyapunov dan kendali berbasis pasivitas) adalah bahwa matriks:
+$$
+N(\mathbf{q}, \dot{\mathbf{q}}) = \dot{M}(\mathbf{q}) - 2C(\mathbf{q}, \dot{\mathbf{q}})
+$$
+bersifat **skew-symmetric** (kemiringan-simetris), yang berarti $\mathbf{x}^T (\dot{M} - 2C) \mathbf{x} = 0$ untuk sembarang vektor $\mathbf{x}$.
+
+---
+
+## 3. Dinamika Maju vs. Dinamika Invers
+
+Perangkat lunak robotika menyelesaikan persamaan dinamis ini dalam dua arah berlawanan:
+
+### Dinamika Invers (Kendali & Kompensasi Torsi):
+Diberikan target trajektori $(\mathbf{q}(t), \dot{\mathbf{q}}(t), \ddot{\mathbf{q}}(t))$, hitung torsi motor yang dibutuhkan $\boldsymbol{\tau}$:
+$$
+\boldsymbol{\tau} = M(\mathbf{q})\ddot{\mathbf{q}} + C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} + \mathbf{g}(\mathbf{q})
+$$
+*(Dihitung dalam waktu linear $O(n)$ menggunakan algoritma rekursif Newton-Euler).*
+
+### Dinamika Maju (Simulasi Fisika & Integrasi Numerik):
+Diberikan status saat ini $(\mathbf{q}, \dot{\mathbf{q}})$ dan torsi motor yang diterapkan $\boldsymbol{\tau}$, selesaikan percepatan sendi $\ddot{\mathbf{q}}$ untuk diintegrasikan ke langkah waktu berikutnya:
+$$
+\ddot{\mathbf{q}} = M(\mathbf{q})^{-1} \Big( \boldsymbol{\tau} - C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} - \mathbf{g}(\mathbf{q}) \Big)
+$$
+
+---
+
+## 4. Laboratorium Simulasi Dinamika Interaktif
+
+Uji integrasi numerik persamaan diferensial dinamis di bawah ini menggunakan metode Euler, Simplektik, dan Runge-Kutta RK4:
+
+<NumericalIntegrationSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-dynamics-lagrangian"
+  question="Pada persamaan gerak standar robot M(q)q_ddot + C(q, q_dot)q_dot + g(q) = tau, mengapa matriks (M_dot - 2C) bersifat skew-symmetric?"
+  options={[
+    {
+      id: "A",
+      text: "Karena hukum kekekalan energi fisik: gaya internal Coriolis dan sentrifugal tidak melakukan kerja mekanis bersih terhadap sistem.",
+      isCorrect: true,
+      explanation: "Tepat! Sifat skew-symmetry (M_dot - 2C) merefleksikan hukum kekekalan daya mekanis sistem d/dt(1/2 q_dot^T M q_dot) = q_dot^T (tau - g), yang sangat krusial untuk membuktikan stabilitas kontroler Lyapunov."
+    },
+    {
+      id: "B",
+      text: "Karena gravitasi bumi menarik robot ke bawah.",
+      isCorrect: false,
+      explanation: "Salah. Sifat skew-symmetry ini berlaku terlepas dari ada atau tidaknya gravitasi."
+    },
+    {
+      id: "C",
+      text: "Karena link robot terbuat dari pegas lentur.",
+      isCorrect: false,
+      explanation: "Salah. Persamaan diturunkan untuk benda kaku (rigid body)."
+    }
+  ]}
+  hint="Pikirkan tentang kekekalan energi kinetik dan apakah gaya Coriolis melakukan kerja bersih pada sistem."
+/>

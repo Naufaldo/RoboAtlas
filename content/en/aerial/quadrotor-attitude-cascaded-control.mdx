@@ -1,0 +1,169 @@
+---
+id: quadrotor-attitude-cascaded-control
+title: "Quadrotor Attitude Dynamics, Cascaded PID Control & Trajectory Tracking"
+slug: quadrotor-attitude-cascaded-control
+domain: aerial
+category: aerial
+level: 16
+tier: Advanced Embodiments
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - mathematical-foundations
+  - 3d-geometry
+  - pid-and-lqr-control
+references:
+  - "Daniel Mellinger & Vijay Kumar (2011). Minimum Snap Trajectory Generation and Control for Quadrotors. IEEE ICRA."
+  - "Randal W. Beard & Timothy W. McLain (2012). Small Unmanned Aircraft: Theory and Practice. Princeton University Press."
+  - "Taeyoung Lee, Melvin Leok, & N. Harris McClamroch (2010). Geometric Tracking Control of a Quadrotor UAV on SE(3). IEEE CDC."
+components:
+  - QuadrotorDynamicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Quadrotor Attitude Dynamics, Cascaded PID Control & Trajectory Tracking
+
+> "How does a multirotor drone calculate real-time motor speeds to execute precise inverted flips, track 3D geometric trajectories at 20 m/s, and recover instantly from violent wind turbulence?"
+
+Autonomous multirotors are **underactuated mechanical systems**: they have 6 spatial degrees of freedom $(x, y, z, \phi, \theta, \psi)$ but only 4 independent scalar rotor thrust inputs $(u_1, u_2, u_3, u_4)$. Translating horizontally in $X$ or $Y$ requires first pitching or rolling the body frame, coupling rotational attitude dynamics directly with translational trajectory acceleration.
+
+---
+
+<VideoEmbed
+  title="Quadrotor Dynamics and Cascaded PID Flight Control Architecture"
+  videoId="s_k2SRrS4os"
+  provider="youtube"
+  duration="17:40"
+  author="ETH Zurich / Robotics & Control Systems"
+/>
+
+---
+
+## 1. The 6-DOF Quadrotor Equations of Motion
+
+Let $\{W\}$ denote the inertial world frame and $\{B\}$ denote the body frame attached to the drone's center of mass. The full rigid-body flight equations of motion on $SE(3)$ are:
+
+$$
+\begin{aligned}
+\dot{\mathbf{p}} &= \mathbf{v} \\
+m \dot{\mathbf{v}} &= m \mathbf{g} + R \, \mathbf{f}_B - D \mathbf{v} \\
+\dot{R} &= R \, [\boldsymbol{\omega}]_\times \\
+J \dot{\boldsymbol{\omega}} &= \boldsymbol{\tau}_B - \boldsymbol{\omega} \times (J \boldsymbol{\omega}) - \boldsymbol{\tau}_{\text{gyro}}
+\end{aligned}
+$$
+
+Where:
+- $m$ is the total vehicle mass (kg) and $J \in \mathbb{R}^{3 \times 3}$ is the body rotational inertia tensor.
+- $\mathbf{f}_B = [0, 0, f_{\text{total}}]^T$ is the collective upward aerodynamic thrust along the body $+Z_B$ axis.
+- $\boldsymbol{\tau}_B = [\tau_\phi, \tau_\theta, \tau_\psi]^T$ are the aerodynamic roll, pitch, and yaw control torques.
+- $\boldsymbol{\tau}_{\text{gyro}} = \sum_{i=1}^4 J_r (\boldsymbol{\omega} \times \mathbf{z}_B) (-1)^i \Omega_i$ is the gyroscopic propeller torque.
+
+---
+
+## 2. Motor Allocation & Thrust Mixing Matrix
+
+In an 'X' quadrotor configuration where the arm length from CoM to each motor is $d$, motor angular velocities $\Omega_i$ (rad/s) generate net control forces according to:
+
+$$
+\begin{bmatrix} f_{\text{total}} \\ \tau_\phi \\ \tau_\theta \\ \tau_\psi \end{bmatrix} = \begin{bmatrix}
+k_f & k_f & k_f & k_f \\
+-\frac{\sqrt{2}}{2} d k_f & \frac{\sqrt{2}}{2} d k_f & \frac{\sqrt{2}}{2} d k_f & -\frac{\sqrt{2}}{2} d k_f \\
+\frac{\sqrt{2}}{2} d k_f & \frac{\sqrt{2}}{2} d k_f & -\frac{\sqrt{2}}{2} d k_f & -\frac{\sqrt{2}}{2} d k_f \\
+-k_m & k_m & -k_m & k_m
+\end{bmatrix} \begin{bmatrix} \Omega_1^2 \\ \Omega_2^2 \\ \Omega_3^2 \\ \Omega_4^2 \end{bmatrix}
+$$
+
+*(where $k_f$ is the aerodynamic thrust coefficient and $k_m$ is the aerodynamic drag torque coefficient).*
+
+---
+
+## 3. High-Rate Cascaded PID Control Loop
+
+Modern flight stacks (PX4, ArduPilot, Betaflight) structure autopilot control into a **nested hierarchical loop**:
+
+```text
+┌─────────────────────────┐
+│ DESIRED POSITION p_des  │
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐  (50 Hz Outer Position Loop)
+│   POSITION PID CONTROL  │ ──► Generates desired velocity v_des
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐  (100 Hz Velocity Loop)
+│   VELOCITY PID CONTROL  │ ──► Generates desired acceleration a_des
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐  (250 Hz Attitude Loop)
+│ ATTITUDE QUATERNION PID │ ──► Computes desired angular rates omega_des
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐  (1000 Hz Gyro Rate Loop)
+│  ANGULAR RATE PID LOOP  │ ──► Computes body torque commands tau
+└─────────────────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ MOTOR MIXING & DSHOT ESC│ ──► Sends PWM / DShot motor signals
+└─────────────────────────┘
+```
+
+The inner angular rate loop operates at **1 kHz** directly over raw IMU gyroscope measurements, stabilizing rapid attitude disturbances before position tracking error accumulates.
+
+---
+
+## 4. Minimum Snap Trajectory Generation
+
+Because quadrotors are **differentially flat** with respect to flat outputs $\boldsymbol{\sigma}(t) = [x(t), y(t), z(t), \psi(t)]^T$, smooth trajectories are planned by minimizing the fourth derivative of position (**Snap**):
+
+$$
+\min_{\mathbf{p}(t)} \int_0^T \left\| \frac{d^4 \mathbf{p}(t)}{dt^4} \right\|^2 dt = \min_{\mathbf{p}(t)} \int_0^T \| \mathbf{p}^{(4)}(t) \|^2 dt
+$$
+
+Minimizing snap minimizes rapid motor acceleration spikes, ensuring actuators do not saturate during aggressive high-speed aerobatic flight.
+
+---
+
+## 5. Interactive 6-DOF Quadrotor Dynamics Simulator
+
+Test attitude setpoints, propeller RPMs, and vertical thrust response below:
+
+<QuadrotorDynamicsSimulator />
+
+---
+
+## 6. Concept Check
+
+<ConceptCheck
+  id="quiz-aerial-quadrotor"
+  question="Why is a multirotor drone classified as an underactuated robotic system?"
+  options={[
+    {
+      id: "A",
+      text: "It has 6 spatial degrees of freedom (x, y, z, roll, pitch, yaw) in 3D space, but only 4 independent scalar motor thrust control inputs.",
+      isCorrect: true,
+      explanation: "Exact! Because it only has 4 control inputs for 6 states, horizontal acceleration (X, Y) cannot be commanded directly without first rotating the vehicle roll/pitch orientation."
+    },
+    {
+      id: "B",
+      text: "Because it lacks an onboard GPS antenna.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "Because drone batteries discharge quickly.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Compare the number of spatial degrees of freedom (6-DOF) with the number of propeller actuators (4 motors)."
+/>

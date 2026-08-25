@@ -1,0 +1,152 @@
+---
+id: zero-moment-point-and-lipm
+title: "Zero Moment Point (ZMP), Pendulum Terbalik Linier & Lokomosi Robot Berkaki"
+slug: zero-moment-point-and-lipm
+domain: legged
+category: legged
+level: 15
+tier: Advanced Embodiments
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - mathematical-foundations
+  - velocity-kinematics-2d
+  - 2dof-inverse-kinematics
+references:
+  - "Miomir Vukobratovic & Branislav Borovac (2004). Zero-Moment Point: Thirty Five Years of its Life. International Journal of Humanoid Robotics."
+  - "Shuuji Kajita et al. (2001). The 3D Linear Inverted Pendulum Model: A simple DAO-inspired model for a biped robot walking. IEEE/RSJ IROS."
+  - "Russ Tedrake (2022). Underactuated Robotics: Algorithms for Walking, Running, Swimming, Flying, and Manipulation. MIT OpenCourseWare."
+components:
+  - LeggedZmpSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Zero Moment Point (ZMP), Pendulum Terbalik Linier & Lokomosi Robot Berkaki
+
+> "Mengapa robot humanoid berkaki dua dan robot quadruped berkaki empat tidak terjatuh saat berjalan dinamis di permukaan tidak rata, dan apa yang menjadikan Zero Moment Point (ZMP) sebagai kriteria matematis universal untuk keseimbangan dinamis?"
+
+Berbeda dengan robot beroda yang memiliki bidang tumpu statis permanen, robot berkaki adalah **sistem dinamik hibrida dan underactuated secara berkala**. Selama berjalan, kontak kaki dengan tanah terus berganti antara fase ayun (*swing*) dan fase tumpu (*stance*). Menjaga keseimbangan tegak tanpa terjatuh menuntut pengendalian posisi **Zero Moment Point (ZMP)** agar selalu berada di dalam **Poligon Penumpu (*Support Polygon*)**.
+
+---
+
+<VideoEmbed
+  title="Bipedal Walking, Zero Moment Point (ZMP) and Inverted Pendulum Models"
+  videoId="670l-8xHhLg"
+  provider="youtube"
+  duration="18:30"
+  author="Cyrill Stachniss / Humanoid Robotics"
+/>
+
+---
+
+## 1. Definisi Fisika Zero Moment Point (ZMP)
+
+**Zero Moment Point (ZMP)** $\mathbf{p}_{\text{ZMP}} = [x_{\text{ZMP}}, y_{\text{ZMP}}, 0]^T$ adalah titik spasial unik pada bidang tanah di mana total momen horizontal akibat gaya gravitasi, inersia, dan percepatan dinamis bernilai **tepat nol**:
+
+$$
+\tau_x(p_{\text{ZMP}}) = 0, \quad \tau_y(p_{\text{ZMP}}) = 0
+$$
+
+Untuk robot multi-bodi dengan $N$ link kaku di mana tiap link memiliki massa $m_i$, posisi $\mathbf{r}_i = [x_i, y_i, z_i]^T$, dan percepatan linear $\ddot{\mathbf{r}}_i = [\ddot{x}_i, \ddot{y}_i, \ddot{z}_i]^T$:
+
+$$
+x_{\text{ZMP}} = \frac{\sum_{i=1}^N m_i (\ddot{z}_i + g) x_i - \sum_{i=1}^N m_i \ddot{x}_i z_i - \sum_{i=1}^N I_{y,i} \dot{\omega}_{y,i}}{\sum_{i=1}^N m_i (\ddot{z}_i + g)}
+$$
+
+$$
+y_{\text{ZMP}} = \frac{\sum_{i=1}^N m_i (\ddot{z}_i + g) y_i - \sum_{i=1}^N m_i \ddot{y}_i z_i + \sum_{i=1}^N I_{x,i} \dot{\omega}_{x,i}}{\sum_{i=1}^N m_i (\ddot{z}_i + g)}
+$$
+
+### Kriteria Keseimbangan Emas (Golden Stability Criterion):
+Robot berkaki berada dalam kondisi stabil secara dinamis dan **tidak akan terjungkal** jika dan hanya jika titik ZMP hasil kalkulasi berada secara ketat di dalam poligon cembung penumpu telapak kaki (**Support Polygon $\mathcal{S}$**):
+
+$$
+\mathbf{p}_{\text{ZMP}} \in \text{interior}(\mathcal{S})
+$$
+
+Jika ZMP menyentuh batas tepi $\partial \mathcal{S}$, telapak kaki akan mulai berputar (*pivot*) pada tepi tersebut dan robot mengalami kondisi jatuh tak terkendali.
+
+---
+
+## 2. Model Pendulum Terbalik Linier (LIPM)
+
+Menghitung persamaan ZMP multi-bodi secara *real-time* pada 30+ sendi motor membutuhkan komputasi yang berat. Pada tahun 2001, Shuuji Kajita memperkenalkan **Linear Inverted Pendulum Model (LIPM)** dengan membatasi pergerakan Pusat Massa (*Center of Mass* / CoM) pada bidang horizontal berketinggian konstan $z_c$:
+
+```text
+       (Massa CoM m)
+          ● [x, z_c]
+         / \
+        /   \ 
+       /     \  Tinggi z_c = konstan
+      /       \
+     /         \
+    O───────────O (Bidang Permukaan Tanah)
+ [x_ZMP]
+```
+
+Dengan asumsi ketinggian konstan $\ddot{z} = 0$, dinamika pendulum 3D non-linear tereduksi menjadi **persamaan diferensial biasa linier**:
+
+$$
+\ddot{x} = \frac{g}{z_c} (x - x_{\text{ZMP}}) = \omega_0^2 (x - x_{\text{ZMP}})
+$$
+
+Dimana $\omega_0 = \sqrt{g / z_c}$ menyatakan frekuensi osilasi alami langkah kaki pendulum.
+
+---
+
+## 3. Taksonomi Gaya Berjalan (*Gait*) Quadruped
+
+Pada robot berkaki empat (seperti Boston Dynamics Spot, ANYmal, Unitree Go2), lokomosi diklasifikasikan berdasarkan fase langkah kaki $\phi_i \in [0, 1)$:
+
+```text
+┌─────────────────┬──────────────────────┬──────────────────────┬────────────────────────────────────────────────────────┐
+│ Jenis Gaya Gerak│ Duty Factor (beta)   │ Pola Fase Kaki       │ Karakteristik Dinamis & Stabilitas                     │
+├─────────────────┼──────────────────────┼──────────────────────┼────────────────────────────────────────────────────────┤
+│ Static Walk     │ beta > 0.75          │ 1 kaki mengayun      │ Stabil statis (3 kaki membentuk segitiga penumpu)      │
+│ Trot            │ beta = 0.50          │ Pasangan diagonal    │ Stabil dinamis (membutuhkan kontrol umpan balik ZMP)   │
+│ Pace            │ beta = 0.50          │ Pasangan lateral     │ Osilasi berguling ke samping (khas unta)               │
+│ Gallop / Bound  │ beta < 0.35          │ Kaki depan lalu blkg │ Fase terbang balistik kecepatan tinggi (melompat)      │
+└─────────────────┴──────────────────────┴──────────────────────┴────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Simulator Keseimbangan ZMP Interaktif
+
+Atur percepatan CoM, lebar telapak kaki, dan ketinggian pendulum di bawah ini untuk mengamati trajektori pergeseran titik ZMP secara waktu nyata:
+
+<LeggedZmpSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-legged-zmp"
+  question="Apa yang terjadi secara fisik pada robot humanoid ketika titik Zero Moment Point (ZMP) keluar dari poligon penumpu kaki?"
+  options={[
+    {
+      id: "A",
+      text: "Tepi telapak kaki mulai berputar (pivot) pada batas tumpuan, memicu ketidakseimbangan momen pemulih yang menyebabkan robot terjungkal.",
+      isCorrect: true,
+      explanation: "Tepat! Tanah hanya bisa memberikan gaya normal tekan ke atas (unilateral). Saat ZMP keluar dari area telapak kaki, gaya reaksi tanah tidak lagi mampu mengimbangi torsi guling, sehingga robot terjatuh."
+    },
+    {
+      id: "B",
+      text: "Robot langsung melompat ke udara secara otomatis.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Enkoder motor kembali ke titik nol.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan tentang sifat gaya kontak sepihak (unilateral): mampukah lantai menarik telapak sepatu ke bawah?"
+/>

@@ -1,0 +1,154 @@
+---
+id: six-dof-arm-kinematics-and-spherical-wrist
+title: "6-DOF Serial Arm Kinematics & Pieper's Spherical Wrist Analytical IK"
+slug: six-dof-arm-kinematics-and-spherical-wrist
+domain: kinematics
+category: kinematics
+level: 3
+tier: Foundations
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - denavit-hartenberg-parameters
+  - 3d-geometry
+  - transform-composition-and-chains
+references:
+  - "Donald L. Pieper (1968). The Kinematics of Manipulators Under Computer Control. Stanford Artificial Intelligence Laboratory."
+  - "John J. Craig (2005). Introduction to Robotics: Mechanics and Control (Chapter 4). Pearson."
+  - "Mark W. Spong, Seth Hutchinson, & M. Vidyasagar (2005). Robot Modeling and Control. Wiley."
+components:
+  - ArmForwardKinematicsSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# 6-DOF Serial Arm Kinematics & Pieper's Spherical Wrist Analytical IK
+
+> "Why are almost all commercial industrial robot arms (PUMA 560, UR5, ABB IRB 1200, KUKA KR6) designed with a spherical wrist, and how does Pieper's Criterion allow computing exact closed-form inverse kinematics in under 10 microseconds without numerical iterations?"
+
+Solving the **Inverse Kinematics (IK)** problem for a general 6-degree-of-freedom serial robot arm involves solving a system of 6 non-linear trigonometric equations. For an arbitrary kinematic architecture, this requires expensive numerical iterative solvers (Newton-Raphson / Levenberg-Marquardt) which suffer from local minima and singularity divergence. 
+
+In 1968, **Donald L. Pieper** discovered that if **three consecutive joint axes intersect at a single common point** (forming a *Spherical Wrist*), the 6-DOF IK problem cleanly decouples into two independent 3-DOF subproblems that can be solved **analytically in closed form**.
+
+---
+
+<VideoEmbed
+  title="Analytical Inverse Kinematics for 6-DOF Robot Arms with Spherical Wrists"
+  videoId="VjsuBT4Npvk"
+  provider="youtube"
+  duration="18:15"
+  author="Angela Sodemann / RoboGrok"
+/>
+
+---
+
+## 1. The Spherical Wrist Architecture
+
+A serial robot arm possesses a **Spherical Wrist** when the rotational axes of joints 4 (wrist roll), 5 (wrist pitch), and 6 (wrist yaw) intersect at a single geometric intersection point $\mathbf{p}_{\text{wrist}} \in \mathbb{R}^3$ (called the **Wrist Center Point $W$**).
+
+```text
+       [Link 1] ─── [Link 2] ─── [Link 3] ───────● (Wrist Center W) ═══> [End-Effector]
+       (Joint 1)    (Joint 2)    (Joint 3)     / | \
+       Base Yaw     Shoulder     Elbow      Joints 4,5,6 (Roll-Pitch-Yaw)
+       └────────────────────────────────┘   └───────────────────────────┘
+         3-DOF Positional Arm Subsystem       3-DOF Orientation Subsystem
+```
+
+### The Kinematic Decoupling Principle:
+Because joints 4, 5, and 6 only rotate about the wrist center without displacing it, the Cartesian position of point $W$ is **completely independent of wrist angles $(\theta_4, \theta_5, \theta_6)$** and depends strictly on the first three joint angles $(\theta_1, \theta_2, \theta_3)$!
+
+---
+
+## 2. Pieper's Analytical 2-Stage Solution Procedure
+
+Given a target end-effector homogeneous transformation pose $T_{0}^6 = \begin{bmatrix} R_{\text{target}} & \mathbf{p}_{\text{target}} \\ \mathbf{0}^T & 1 \end{bmatrix}$ where $R_{\text{target}} = [\mathbf{n}, \mathbf{o}, \mathbf{a}]$ and $\mathbf{a}$ is the approach unit vector along $+Z_6$:
+
+### Stage 1: Geometric Wrist Center Localization
+The 3D coordinates of the wrist center point $\mathbf{p}_w = [x_w, y_w, z_w]^T$ are computed directly by offsetting backward along the approach vector $\mathbf{a}$ by tool distance $d_6$:
+
+$$
+\mathbf{p}_w = \mathbf{p}_{\text{target}} - d_6 \mathbf{a}
+$$
+
+Now, using only the first three joints $(\theta_1, \theta_2, \theta_3)$ and trigonometry ($r = \sqrt{x_w^2 + y_w^2}, s = z_w - d_1$), solve the 3-DOF planar arm equations:
+
+$$
+\begin{aligned}
+\theta_1 &= \text{atan2}(y_w, x_w) \quad (\text{or } \theta_1 + \pi \text{ for shoulder-left/right}) \\
+\cos\theta_3 &= \frac{r^2 + s^2 - a_2^2 - a_3^2}{2 a_2 a_3} \implies \theta_3 = \text{atan2}(\pm\sqrt{1-\cos^2\theta_3}, \cos\theta_3) \\
+\theta_2 &= \text{atan2}(s, r) - \text{atan2}(a_3 \sin\theta_3, a_2 + a_3 \cos\theta_3)
+\end{aligned}
+$$
+
+### Stage 2: Spherical Wrist Orientation Decomposition
+Once $(\theta_1, \theta_2, \theta_3)$ are known, the rotation matrix of the forearm $R_0^3(\theta_1, \theta_2, \theta_3)$ is evaluated. The remaining orientation required from the wrist is:
+
+$$
+R_3^6 = (R_0^3)^T R_{\text{target}} = \begin{bmatrix} r_{11} & r_{12} & r_{13} \\ r_{21} & r_{22} & r_{23} \\ r_{31} & r_{32} & r_{33} \end{bmatrix}
+$$
+
+Under the standard $Z-Y-Z$ Euler angle parameterization of a spherical wrist:
+
+$$
+\begin{aligned}
+\theta_5 &= \text{atan2}\left(\pm\sqrt{r_{13}^2 + r_{23}^2}, \, r_{33}\right) \\
+\theta_4 &= \text{atan2}(r_{23}, r_{13}) \\
+\theta_6 &= \text{atan2}(r_{32}, -r_{31})
+\end{aligned}
+$$
+
+---
+
+## 3. The 8 Distinct Inverse Kinematic Solutions
+
+For a standard 6-DOF industrial arm (e.g., PUMA 560), there are up to **8 physically valid joint configuration sets** that reach the exact same end-effector pose $(x, y, z, \text{roll}, \text{pitch}, \text{yaw})$:
+
+```text
+Configuration Flags (8 Combinations):
+├── Shoulder: { Left, Right }
+├── Elbow:    { Up, Down }
+└── Wrist:    { Non-Flipped, Flipped (theta_5 -> -theta_5) }
+```
+
+Motion planning frameworks like MoveIt 2 and OMPL select the solution that minimizes joint travel distance from the robot's current configuration.
+
+---
+
+## 4. Interactive Manipulator Forward/Inverse Kinematics Lab
+
+Experiment with arm joint angles and observe the geometric forward kinematics sweep below:
+
+<ArmForwardKinematicsSimulator />
+
+---
+
+## 5. Concept Check
+
+<ConceptCheck
+  id="quiz-kinematics-pieper"
+  question="Why does Pieper's Criterion require that the axes of joints 4, 5, and 6 intersect at a single point W (Spherical Wrist)?"
+  options={[
+    {
+      id: "A",
+      text: "It decouples the 6-DOF inverse kinematics into two independent 3-DOF subproblems: joints 1-3 determine position, and joints 4-6 determine orientation analytically.",
+      isCorrect: true,
+      explanation: "Exact! The wrist center position p_w depends exclusively on (theta_1, theta_2, theta_3). Once p_w is fixed, the spherical wrist only rotates to match the target orientation, enabling deterministic analytical solution."
+    },
+    {
+      id: "B",
+      text: "To make the robot arm lighter.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "To allow the robot to weld underwater.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about how position and orientation can be solved in two separate stages."
+/>
