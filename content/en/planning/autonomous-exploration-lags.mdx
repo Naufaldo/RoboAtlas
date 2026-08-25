@@ -1,0 +1,115 @@
+---
+id: autonomous-exploration-lags
+title: "Information-Theoretic Autonomous Exploration & Local-Global Strategy (LAGS)"
+slug: autonomous-exploration-lags
+domain: planning
+level: 6
+tier: Core Autonomy
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - a-star
+  - occupancy-grid-mapping
+  - probability-for-robotics
+references:
+  - "Ao Feng, Yuyang Xie, Yankang Sun, Xuanzhi Wang, Bin Jiang, Jian Xiao (2023). Efficient Autonomous Exploration and Mapping in Unknown Environments. Sensors (MDPI), 23(10), 4766."
+  - "Brian J. Julian, Sertac Karaman, Daniela Rus (2014). On Mutual Information-Based Control of Range Sensing Robots for Mapping Applications. IJRR."
+components:
+  - AutonomousExplorationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Information-Theoretic Autonomous Exploration & Local-Global Strategy (LAGS)
+
+> "Why do purely greedy information-theoretic exploration algorithms frequently abandon small unexplored pockets in room corners, causing late-stage exploration efficiency to plummet catastrophically?"
+
+In search-and-rescue, robotic vacuum cleaning, and planetary reconnaissance, autonomous vehicles must construct a complete environment map in minimal time without any prior blueprints. Grounded in research from *MDPI Sensors 2023 (Feng et al.)*, conventional exploration algorithms suffer from severe **Regional Legacy Issues** (small dead-end areas left behind by myopic local greed).
+
+The **Local-and-Global Strategy (LAGS)** algorithm unites Shannon information entropy, Gaussian Process Regression (GPR), Bayesian Optimization (BO), and Deep Reinforcement Learning (DRL) to achieve high-efficiency exploration while systematically eliminating legacy voids.
+
+---
+
+## 1. Occupancy Map Shannon Entropy & Mutual Information (MI) Gain
+
+Global map uncertainty across an occupancy grid $m$ is quantified via **Shannon Information Entropy**:
+
+$$
+H(m) = - \sum_{i} \sum_{j} p(m_{i,j}) \log p(m_{i,j})
+$$
+
+Where unobserved cells hold prior probability $p(m_{i,j}) = 0.5$ (each contributing 1 unit of maximal entropy).
+
+### Mutual Information (MI) Reward Gain:
+The expected entropy reduction obtained by dispatching the robot to candidate action point $x_{t+1}$:
+
+$$
+I(m_t, x_{t+1}) = H(m_t) - H(m_t \mid x_{t+1})
+$$
+
+---
+
+## 2. Fast Continuous MI Surface Estimation via Matérn GPR & Bayesian Optimization
+
+Computing analytical raycasting MI over millions of grid pixels is computationally prohibitive ($O(N^2)$). LAGS overcomes this through:
+1. **Gaussian Process Regression (GPR)** utilizing the **Matérn Kernel** to interpolate the continuous MI reward surface $I(m, x_*)$ and predicted variance $\sigma^2(x_*)$:
+   $$k(x, x') = \frac{2^{1-v}}{\Gamma(v)} \left(\frac{\sqrt{2v}|x-x'|}{\ell}\right)^v K_v\left(\frac{\sqrt{2v}|x-x'|}{\ell}\right)$$
+   *(The Matérn kernel captures abrupt step changes in information across obstacle occlusions far better than standard RBF kernels).*
+2. **Bayesian Optimization (GP-UCB)** active acquisition sampling:
+   $$x_{\text{sample}}^* = \arg\max_{x \in \mathcal{C}_{\text{action}}} \left[ \mu(x) + \kappa \sigma(x) \right]$$
+
+---
+
+## 3. Dual-Tier LAGS Architecture: Balancing Local Speed and Global Completeness
+
+```text
+┌────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────┐
+│ Strategy Layer                         │ Operational Behavior & Objective Formulation                           │
+├────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ 1. Local Exploration Strategy          │ Rapidly uncovers contiguous high-gain frontiers in the local patch:    │
+│                                        │ score_local = I(m_local, x) / I_max                                    │
+│ 2. Global Perception Strategy (DRL)    │ Identifies nearby small legacy pockets to prevent late backtracking:   │
+│                                        │ score_global = w*g + (1-w)*(1-d)                                       │
+│ 3. Superimposed Final Decision         │ score_finish = score_local + eta * score_global                         │
+└────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Interactive Simulator: LAGS vs. Classical Nearest Frontier
+
+Experiment with **LAGS (MDPI 2023)** against the standard baseline **Nearest Frontier (NF 1997)** and observe real-time Shannon Entropy reduction:
+
+<AutonomousExplorationSimulator />
+
+---
+
+## 5. Concept Verification
+
+<ConceptCheck
+  id="quiz-autonomous-exploration-lags"
+  question="What causes the 'Regional Legacy Issue' in greedy autonomous exploration planners?"
+  options={[
+    {
+      id: "A",
+      text: "A myopic policy that constantly pursues large open areas with high information gain while ignoring small adjacent corners, forcing the robot into costly, lengthy backtracking in the late stages of exploration.",
+      isCorrect: true,
+      explanation: "Correct! LAGS balances local high-gain exploration with global perception to clear nearby small pockets before moving far away."
+    },
+    {
+      id: "B",
+      text: "Mechanical gear degradation on the drive motors.",
+      isCorrect: false,
+      explanation: "Incorrect. This is a path optimality and decision planning phenomenon in spatial robotics."
+    },
+    {
+      id: "C",
+      text: "A sensor battery discharging below 50% capacity.",
+      isCorrect: false,
+      explanation: "Incorrect. Regional legacy describes redundant trajectory inefficiency caused by abandoned map pockets."
+    }
+  ]}
+  hint="Consider the path distance cost incurred if a single small closet is left unexplored at the building entrance until the robot reaches the far end of the facility."
+/>

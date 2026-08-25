@@ -44,6 +44,8 @@ import { EkfLocalizationSimulator } from '@/components/simulation/EkfLocalizatio
 import { HistogramFilterSimulator } from '@/components/simulation/HistogramFilterSimulator';
 import { FastSlamSimulator } from '@/components/simulation/FastSlamSimulator';
 import { LoopClosureOptimizationSimulator } from '@/components/simulation/LoopClosureOptimizationSimulator';
+import { AutonomousExplorationSimulator } from '@/components/simulation/AutonomousExplorationSimulator';
+import { SafeCorridorExplorationSimulator } from '@/components/simulation/SafeCorridorExplorationSimulator';
 import {
   Compass,
   Cpu,
@@ -598,6 +600,32 @@ export default function LabsPage() {
       icon: '🔗',
       lessonHref: '/learn/advanced/2d-lidar-slam',
       component: <LoopClosureOptimizationSimulator />,
+    },
+    {
+      id: 'autonomous-exploration-lags',
+      category: 'planning',
+      paths: ['slam'],
+      titleEn: 'Information-Theoretic Exploration & LAGS Lab',
+      titleId: 'Laboratorium Eksplorasi Otonom & Strategi LAGS (MDPI 2023)',
+      descEn: 'Observe live Shannon map entropy reduction and compare Nearest Frontier vs LAGS in clearing dead-ends.',
+      descId: 'Amati penurunan entropi Shannon peta okupansi dan bandingkan Nearest Frontier vs LAGS dalam membersihkan kantong wilayah.',
+      levelBadge: 'Level 6',
+      icon: '🧭',
+      lessonHref: '/learn/planning/autonomous-exploration-lags',
+      component: <AutonomousExplorationSimulator />,
+    },
+    {
+      id: 'safe-corridor-exploration',
+      category: 'planning',
+      paths: ['slam'],
+      titleEn: '3D MAV Exploration & Safe Flight Corridor Lab',
+      titleId: 'Laboratorium Eksplorasi MAV 3D & Safe Flight Corridor (MDPI 2020)',
+      descEn: 'Fly a quadrotor through 3D voxel obstacles inside inflated convex Safe Flight Corridors (SFC).',
+      descId: 'Terbangkan drone quadrotor melintasi voxel rintangan 3D di dalam koridor penerbangan aman cembung (SFC).',
+      levelBadge: 'Level 6',
+      icon: '🛡️',
+      lessonHref: '/learn/planning/3d-frontier-exploration-mav',
+      component: <SafeCorridorExplorationSimulator />,
     },
   ];
 

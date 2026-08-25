@@ -1,0 +1,107 @@
+---
+id: 3d-frontier-exploration-mav
+title: "3D Frontier-Based Autonomous Exploration & Safe Flight Corridors"
+slug: 3d-frontier-exploration-mav
+domain: planning
+level: 6
+tier: Core Autonomy
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - a-star
+  - autonomous-exploration-lags
+  - 3d-lidar-and-vslam
+references:
+  - "Liang Lu, Carlos Redondo, Pascual Campoy (2020). Optimal Frontier-Based Autonomous Exploration in Unconstructed Environment Using RGB-D Sensor. Sensors (MDPI), 20(22), 6507."
+  - "Armin Hornung, Kai M. Wurm, Maren Bennewitz, Cyrill Stachniss, Wolfram Burgard (2013). OctoMap: An Efficient Probabilistic 3D Mapping Framework Based on Octrees. Autonomous Robots."
+components:
+  - SafeCorridorExplorationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# 3D Frontier-Based Autonomous Exploration & Safe Flight Corridors
+
+> "How can an agile Micro Aerial Vehicle (MAV) equipped with lightweight RGB-D depth sensors map complex, unconstructed 3D disaster ruins without colliding into unseen obstacles?"
+
+Autonomous 3D exploration using Micro Aerial Vehicles (MAVs / Quadrotors) in collapsed subterranean structures or post-disaster search-and-rescue demands volumetric spatial reasoning within strictly constrained on-board computing limits. Grounded in research from *MDPI Sensors 2020 (Lu, Redondo, & Campoy)*, the autonomous aerial exploration framework unifies:
+1. Volumetric **3D OctoMap** mapping
+2. Polar Candidate Generation & **$k$-Means++** Frontier Clustering
+3. Collision-Free **Safe Flight Corridor (SFC)** Inflation Planning
+
+---
+
+## 1. 3D OctoMap Voxel Grid Representation & Volumetric Information Gain
+
+The three-dimensional environment is discretized into hierarchical octree voxels. For each voxel $x$ with occupancy probability $p(x) \in [0, 1]$, spatial uncertainty is quantified by **Voxel Shannon Entropy**:
+
+$$
+e(x) = - p(x) \log p(x) - (1 - p(x)) \log(1 - p(x))
+$$
+
+### Volumetric Information Gain ($G_v$) for Viewpoint $v$:
+The aggregate entropy of all unmapped voxels intersected by the RGB-D camera ray bundle $R_v$:
+
+$$
+G_v = \sum_{r \in R_v} \sum_{x \in X} e(x)
+$$
+
+---
+
+## 2. Polar Frontier Generation & $k$-Means++ Candidate Filtering
+
+Frontier points along boundaries between free and unknown space are parameterized in cylindrical coordinates around frontier origin $(X_f, Y_f, Z_f)$:
+
+$$
+\begin{bmatrix} X_c \\ Y_c \\ Z_c \\ \theta_c \end{bmatrix} = \begin{bmatrix} X_f + R_i \cos(\theta_i) \\ Y_f + R_i \sin(\theta_i) \\ Z_f \\ \theta_i \end{bmatrix}
+$$
+
+To eliminate redundant computation from thousands of raw point candidates, **$k$-Means++** clusters the frontier space into $k$ optimal centroid viewpoints ranked by maximal Information Gain $G_v$.
+
+---
+
+## 3. Collision-Free Flight: Safe Flight Corridor (SFC) Generation
+
+Once the optimal target frontier is selected by the global $A^*$ planner, the flight path is protected against obstacle proximity:
+1. **Convex Box Inflation**: Each waypoint on the $A^*$ path is inflated along all 6 axis directions until it touches the nearest obstacle voxel boundary.
+2. **Center-Corridor Replanning**: The trajectory is smoothed through the geometric centers of the inflated safe boxes, maximizing clearance from walls and narrow doorways.
+
+---
+
+## 4. Interactive Simulator: MAV 3D Exploration & Safe Flight Corridors
+
+Observe an aerial quadrotor navigating 3D voxel obstacles while dynamically bounded inside illuminated Safe Flight Corridors:
+
+<SafeCorridorExplorationSimulator />
+
+---
+
+## 5. Concept Verification
+
+<ConceptCheck
+  id="quiz-3d-frontier-exploration-mav"
+  question="What is the primary role of the Safe Flight Corridor (SFC) in MAV autonomous exploration?"
+  options={[
+    {
+      id: "A",
+      text: "It constructs a connected chain of collision-free convex bounding boxes along the planned path, allowing flight trajectories to be replanned through corridor centers to maximize obstacle clearance.",
+      isCorrect: true,
+      explanation: "Correct! Safe Flight Corridors ensure high-speed aerial flight without risk of corner clipping against unmapped obstacles."
+    },
+    {
+      id: "B",
+      text: "It reduces drone battery power consumption by turning off the propellers.",
+      isCorrect: false,
+      explanation: "Incorrect. The SFC is a spatial path planning and safety optimization strategy."
+    },
+    {
+      id: "C",
+      text: "It replaces the depth camera with a barometric pressure altimeter.",
+      isCorrect: false,
+      explanation: "Incorrect. SFC algorithms rely on accurate depth perception to calculate safe expansion limits."
+    }
+  ]}
+  hint="Consider the danger of high-speed quadrotors clipping sharp obstacle corners in cluttered corridors."
+/>

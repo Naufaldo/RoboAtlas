@@ -46,6 +46,8 @@ import { EkfLocalizationSimulator } from '@/components/simulation/EkfLocalizatio
 import { HistogramFilterSimulator } from '@/components/simulation/HistogramFilterSimulator';
 import { FastSlamSimulator } from '@/components/simulation/FastSlamSimulator';
 import { LoopClosureOptimizationSimulator } from '@/components/simulation/LoopClosureOptimizationSimulator';
+import { AutonomousExplorationSimulator } from '@/components/simulation/AutonomousExplorationSimulator';
+import { SafeCorridorExplorationSimulator } from '@/components/simulation/SafeCorridorExplorationSimulator';
 import { ConceptCheck, QuizOption } from '@/components/educational/ConceptCheck';
 import { VideoEmbed } from '@/components/educational/VideoEmbed';
 import { CodeBlock } from '@/components/mdx/CodeBlock';
@@ -495,6 +497,16 @@ export function MdxArticle({ content, className = '' }: MdxArticleProps) {
       }
       if (line.startsWith('<LoopClosureOptimizationSimulator')) {
         nodes.push(<LoopClosureOptimizationSimulator key={`comp-lcos-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<AutonomousExplorationSimulator')) {
+        nodes.push(<AutonomousExplorationSimulator key={`comp-aes-${i}`} />);
+        i++;
+        continue;
+      }
+      if (line.startsWith('<SafeCorridorExplorationSimulator')) {
+        nodes.push(<SafeCorridorExplorationSimulator key={`comp-sces-${i}`} />);
         i++;
         continue;
       }

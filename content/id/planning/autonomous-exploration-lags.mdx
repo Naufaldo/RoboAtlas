@@ -1,0 +1,115 @@
+---
+id: autonomous-exploration-lags
+title: "Eksplorasi Otonom Berbasis Informasi & Strategi Lokal-Global (LAGS / MDPI 2023)"
+slug: autonomous-exploration-lags
+domain: planning
+level: 6
+tier: Core Autonomy
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 45
+prerequisites:
+  - a-star
+  - occupancy-grid-mapping
+  - probability-for-robotics
+references:
+  - "Ao Feng, Yuyang Xie, Yankang Sun, Xuanzhi Wang, Bin Jiang, Jian Xiao (2023). Efficient Autonomous Exploration and Mapping in Unknown Environments. Sensors (MDPI), 23(10), 4766."
+  - "Brian J. Julian, Sertac Karaman, Daniela Rus (2014). On Mutual Information-Based Control of Range Sensing Robots for Mapping Applications. IJRR."
+components:
+  - AutonomousExplorationSimulator
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Eksplorasi Otonom Berbasis Informasi & Strategi Lokal-Global (LAGS)
+
+> "Mengapa robot eksplorasi otonom yang hanya mengejar perolehan informasi (*greedy information gain*) sering meninggalkan kantong-kantong kecil yang belum terpetakan di sudut peta, sehingga efisiensi eksplorasi di tahap akhir anjlok drastis?"
+
+Dalam misi pencarian dan penyelamatan (*search and rescue*), robot pembersih cerdas (*robotic vacuum cleaner*), dan pengintaian bencana, robot harus memetakan seluruh lingkungan asing secepat dan seefisien mungkin tanpa adanya peta awal. Berdasarkan kajian ilmiah *MDPI Sensors 2023 (Feng et al.)*, algoritma eksplorasi konvensional menderita masalah **Regional Legacy Issues** (kantong wilayah kecil tertinggal akibat keserakahan eksplorasi lokal).
+
+Metode **Local-and-Global Strategy (LAGS)** memadukan optimasi berbasis teori informasi Shannon, Regresi Proses Gaussian (GPR), *Bayesian Optimization (BO)*, dan *Deep Reinforcement Learning (DRL)* untuk mencapai eksplorasi yang efisien tanpa meninggalkan kantong kosong.
+
+---
+
+## 1. Entropi Shannon Peta Okupansi & Perolehan Informasi Mutual (MI)
+
+Ketidakpastian seluruh peta grid okupansi $m$ diukur menggunakan **Entropi Shannon**:
+
+$$
+H(m) = - \sum_{i} \sum_{j} p(m_{i,j}) \log p(m_{i,j})
+$$
+
+Di mana setiap sel yang belum diketahui memiliki probabilitas okupansi $p(m_{i,j}) = 0.5$ (memberikan 1 unit entropi maksimal).
+
+### Perolehan Informasi Mutual (Mutual Information Gain):
+Pengurangan entropi yang diharapkan jika robot berpindah ke koordinat target $x_{t+1}$ dan melakukan pemindaian sensor:
+
+$$
+I(m_t, x_{t+1}) = H(m_t) - H(m_t \mid x_{t+1})
+$$
+
+---
+
+## 2. Prediksi Permukaan MI dengan Regresi Proses Gaussian (GPR) & Bayesian Optimization
+
+Menghitung raycasting MI secara analitik pada setiap piksel peta sangat mahal ($O(N^2)$). Algoritma LAGS menyelesaikannya dengan:
+1. **Regresi Proses Gaussian (GPR)** dengan **Kernel Matérn** untuk memprediksi permukaan nilai $I(m, x_*)$ beserta varians ketidakpastiannya $\sigma^2(x_*)$:
+   $$k(x, x') = \frac{2^{1-v}}{\Gamma(v)} \left(\frac{\sqrt{2v}|x-x'|}{\ell}\right)^v K_v\left(\frac{\sqrt{2v}|x-x'|}{\ell}\right)$$
+   *(Kernel Matérn sangat unggul memodelkan perubahan tajam nilai informasi di balik dinding/rintangan).*
+2. **Bayesian Optimization (GP-UCB)** untuk memilih titik aksi kandidat terbaik:
+   $$x_{\text{sample}}^* = \arg\max_{x \in \mathcal{C}_{\text{action}}} \left[ \mu(x) + \kappa \sigma(x) \right]$$
+
+---
+
+## 3. Strategi Dual-Layer LAGS (Local Exploration + Global Perception)
+
+```text
+┌────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────┐
+│ Lapisan Strategi                       │ Fungsi & Perilaku Pengambilan Keputusan                                │
+├────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ 1. Local Exploration Strategy          │ Memaksimalkan perolehan informasi lokal berkecepatan tinggi di dekat   │
+│                                        │ posisi robot saat ini: score_local = I(m_local, x) / I_max             │
+│ 2. Global Perception Strategy (DRL)    │ Mengidentifikasi kantong kecil yang tertinggal dan memandu robot       │
+│                                        │ membersihkan area regional legacy: score_global = w*g + (1-w)*(1-d)    │
+│ 3. Keputusan Gabungan Akhir            │ score_finish = score_local + eta * score_global                        │
+└────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Simulator Interaktif: Eksplorasi Otonom LAGS vs Nearest Frontier
+
+Bandingkan strategi eksplorasi **LAGS (MDPI 2023)** dengan metode klasik **Nearest Frontier (NF 1997)** dan amati penurunan kurva Entropi Peta $H(m)$ secara real-time:
+
+<AutonomousExplorationSimulator />
+
+---
+
+## 5. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-autonomous-exploration-lags"
+  question="Apa yang dimaksud dengan 'Regional Legacy Issue' pada algoritma eksplorasi otonom berbasis informasi murni?"
+  options={[
+    {
+      id: "A",
+      text: "Kecenderungan strategi serakah lokal mengejar area berinformasi tinggi dan meninggalkan kantong-kantong kecil belum terpetakan di berbagai sudut, memaksa robot menempuh rute bolak-balik yang sangat panjang di akhir eksplorasi.",
+      isCorrect: true,
+      explanation: "Tepat! LAGS memecahkan masalah ini dengan mengombinasikan persepsi global untuk segera membersihkan kantong kecil di dekatnya sebelum berpindah jauh."
+    },
+    {
+      id: "B",
+      text: "Kerusakan mekanik pada girboks motor penggerak roda.",
+      isCorrect: false,
+      explanation: "Salah. Ini adalah masalah optimasi jalur spasial dan perencanaan keputusan eksplorasi."
+    },
+    {
+      id: "C",
+      text: "Kondisi di mana baterai robot terisi penuh 100%.",
+      isCorrect: false,
+      explanation: "Salah. Regional legacy adalah inefisiensi lintasan akibat kantong peta yang terabaikan."
+    }
+  ]}
+  hint="Pikirkan berapa biaya jarak yang harus ditempuh robot jika ada 1 ruang kecil di awal peta yang tertinggal saat robot sudah berada di ujung gedung."
+/>
