@@ -1,0 +1,171 @@
+---
+id: model-predictive-control-mpc
+title: "Model Predictive Control (MPC): Receding Horizon, QP Solvers & Nonlinear MPC"
+slug: model-predictive-control-mpc
+domain: control
+category: control
+level: 7
+tier: Core Autonomy
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 55
+prerequisites:
+  - pid-and-lqr-control
+  - state-space-and-feedback
+  - mathematical-foundations
+references:
+  - "Jan M. Maciejowski (2002). Predictive Control with Constraints. Prentice Hall."
+  - "James B. Rawlings, David Q. Mayne & Moritz Diehl (2020). Model Predictive Control: Theory, Computation, and Design (2nd ed.). Nob Hill Publishing."
+  - "Bartolomeo Stellato et al. (2020). OSQP: An Operator Splitting Solver for Quadratic Programs. Mathematical Programming Computation."
+components:
+  - NumericalIntegrationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Model Predictive Control (MPC): Receding Horizon, QP Solvers & Nonlinear MPC
+
+> "How does a self-driving car anticipate a sharp curve 50 meters ahead and pre-emptively slow down before the apex — while simultaneously respecting steering angle limits, tire friction constraints, and passenger comfort bounds — in less than 10 milliseconds?"
+
+**Model Predictive Control (MPC)** is the industry gold standard for constrained optimal control: a controller that **repeatedly solves an online optimization problem** over a finite future horizon using a dynamic model of the system, implementing only the first control action, then discarding the rest and re-solving at the next timestep. This **Receding Horizon Control** strategy adapts to disturbances, plant model mismatch, and state estimation errors inherently.
+
+---
+
+<VideoEmbed
+  title="Model Predictive Control — Understanding the Receding Horizon Principle"
+  videoId="8U0xiOkDcmw"
+  provider="youtube"
+  duration="15:40"
+  author="MATLAB Tech Talks"
+/>
+
+---
+
+## 1. The MPC Optimization Problem
+
+At each control timestep $t_k$, MPC solves the following finite-horizon optimal control problem over the prediction horizon $N$:
+
+$$\min_{\mathbf{U}} \; J(\mathbf{X}, \mathbf{U}) = \underbrace{\mathbf{x}_N^T P \mathbf{x}_N}_{\text{Terminal Cost}} + \sum_{k=0}^{N-1} \underbrace{\mathbf{x}_k^T Q \mathbf{x}_k + \mathbf{u}_k^T R \mathbf{u}_k}_{\text{Stage Cost}}$$
+
+Subject to:
+$$\mathbf{x}_{k+1} = A \mathbf{x}_k + B \mathbf{u}_k \quad \text{(System Dynamics)}$$
+$$\mathbf{x}_k \in \mathcal{X}, \quad \mathbf{u}_k \in \mathcal{U} \quad \text{(State \& Input Constraints)}$$
+
+Where:
+- $Q \succeq 0$: **State weighting matrix** (penalizes deviation from setpoint)
+- $R \succ 0$: **Input weighting matrix** (penalizes control effort)
+- $P$: **Terminal cost matrix** (typically solved as LQR Riccati equation)
+- $\mathcal{X}$: Polytopic state constraints (e.g., $|v| \le v_{\max}$)
+- $\mathcal{U}$: Polytopic input constraints (e.g., $|\delta| \le \delta_{\max}$)
+
+Only $\mathbf{u}_0^*$ is applied to the system; the horizon then shifts by 1 step.
+
+---
+
+## 2. Receding Horizon Visualization
+
+```text
+  MPC Receding Horizon (N=5 steps):
+
+  Time:     t_0     t_1     t_2     t_3     t_4     t_5
+            │       │       │       │       │       │
+  State:    x_0 ──► x_1 ──► x_2 ──► x_3 ──► x_4 ──► x_5 (predicted)
+            │
+  Apply:    u_0* (only this step; discard u_1*, u_2*, u_3*, u_4*)
+            │
+            ▼
+  Shift:    [t_1] ──► re-solve with updated state estimate x̂_1
+```
+
+---
+
+## 3. Linear MPC as a Quadratic Program (QP)
+
+For linear systems $(A, B)$, MPC reduces to a **Quadratic Program (QP)** — a convex optimization problem with guaranteed global optimality and polynomial-time solvers:
+
+**Step 1: Prediction Matrix Condensing**
+
+Stack all future states using the substitution $\mathbf{X} = S_x \mathbf{x}_0 + S_u \mathbf{U}$:
+$$\mathbf{X} = \begin{bmatrix} \mathbf{x}_1 \\ \vdots \\ \mathbf{x}_N \end{bmatrix} = \underbrace{\begin{bmatrix} A \\ A^2 \\ \vdots \\ A^N \end{bmatrix}}_{S_x} \mathbf{x}_0 + \underbrace{\begin{bmatrix} B & 0 & \cdots \\ AB & B & \cdots \\ \vdots & \ddots & \end{bmatrix}}_{S_u} \underbrace{\begin{bmatrix} \mathbf{u}_0 \\ \vdots \\ \mathbf{u}_{N-1} \end{bmatrix}}_{\mathbf{U}}$$
+
+**Step 2: QP Formulation**
+$$\min_{\mathbf{U}} \; \frac{1}{2} \mathbf{U}^T H \mathbf{U} + \mathbf{f}^T \mathbf{U}$$
+$$\text{subject to: } G \mathbf{U} \le \mathbf{h}$$
+
+Where $H = 2(S_u^T \bar{Q} S_u + \bar{R})$ and $\mathbf{f} = 2 S_u^T \bar{Q} S_x \mathbf{x}_0$.
+
+---
+
+## 4. Real-Time MPC with OSQP
+
+**OSQP** (Operator Splitting QP Solver) is the leading embedded real-time solver for MPC, achieving:
+- **< 1 ms solve times** at 100Hz control frequencies
+- **Warm-starting** from previous horizon solution reduces iterations by 90%
+- **C code generation** for deployment on microcontrollers (STM32, Jetson Orin)
+
+OSQP uses the Alternating Direction Method of Multipliers (ADMM):
+$$\mathbf{x}^{k+1} = \arg\min_{\mathbf{x}} \left( f(\mathbf{x}) + \frac{\rho}{2} \|\mathbf{x} - \mathbf{z}^k + \mathbf{y}^k\|^2 \right)$$
+$$\mathbf{z}^{k+1} = \Pi_{\mathcal{C}} (\mathbf{x}^{k+1} + \mathbf{y}^k)$$
+
+---
+
+## 5. Nonlinear MPC (NMPC) with Multiple Shooting
+
+For nonlinear dynamics $\mathbf{x}_{k+1} = f(\mathbf{x}_k, \mathbf{u}_k)$ (quadrotors, legged robots, car dynamics):
+
+**Multiple Shooting** discretizes the prediction horizon into $N$ shooting intervals, enforcing continuity constraints between each segment. This is solved via sequential NLP solvers like **IPOPT** or **ACADOS**:
+
+$$\min_{\mathbf{x}_0, \ldots, \mathbf{x}_N, \mathbf{u}_0, \ldots, \mathbf{u}_{N-1}} J$$
+$$\text{s.t.} \; \mathbf{x}_{k+1} = f(\mathbf{x}_k, \mathbf{u}_k), \quad \forall k = 0, \ldots, N-1$$
+
+ACADOS achieves NMPC solve times of **~5-20 ms** for 6-DOF quadrotor models at 200Hz.
+
+---
+
+## 6. Stability via Terminal Cost
+
+Without a terminal constraint, MPC can become **unstable** for short horizons. The standard approach uses an **LQR terminal cost matrix** $P$ solving the Discrete Algebraic Riccati Equation (DARE):
+
+$$P = Q + A^T P A - A^T P B (R + B^T P B)^{-1} B^T P A$$
+
+This guarantees **asymptotic stability** for unconstrained MPC, equivalent to an infinite-horizon LQR with finite computational cost.
+
+---
+
+## 7. Interactive Control Dynamics Lab
+
+Explore closed-loop system dynamics and prediction horizons below:
+
+<NumericalIntegrationSimulator />
+
+---
+
+## 8. Concept Check
+
+<ConceptCheck
+  id="quiz-mpc-receding"
+  question="Why does MPC solve an optimization problem at every timestep but only apply the first control input u_0*, discarding the rest of the solution sequence?"
+  options={[
+    {
+      id: "A",
+      text: "Because at the next timestep, the state estimate will be updated with new sensor measurements, making the old planned sequence suboptimal. Re-solving with the fresh state provides better disturbance rejection than executing a pre-planned open-loop sequence.",
+      isCorrect: true,
+      explanation: "Exactly! This Receding Horizon principle is MPC's core strength: it continuously adapts to state estimation updates, external disturbances, and model mismatch in real-time."
+    },
+    {
+      id: "B",
+      text: "Because the solver can only compute one control action at a time.",
+      isCorrect: false,
+      explanation: "Incorrect. The solver computes the full N-step sequence U = [u_0, ..., u_{N-1}]^T simultaneously — only u_0 is applied by design."
+    },
+    {
+      id: "C",
+      text: "Because it reduces memory usage on embedded processors.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about what changes between t_k and t_{k+1} that makes the previously planned u_1* potentially suboptimal."
+/>

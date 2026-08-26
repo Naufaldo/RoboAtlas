@@ -1,0 +1,168 @@
+---
+id: reinforcement-learning-for-robotics
+title: "Reinforcement Learning untuk Robotika: MDP, Policy Gradient, PPO & SAC"
+slug: reinforcement-learning-for-robotics
+domain: advanced
+category: advanced
+level: 19
+tier: Advanced Embodiments
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 55
+prerequisites:
+  - slam-fundamentals
+  - mathematical-foundations
+  - probability-for-robotics
+references:
+  - "Richard S. Sutton & Andrew G. Barto (2018). Reinforcement Learning: An Introduction (2nd ed.). MIT Press."
+  - "John Schulman et al. (2017). Proximal Policy Optimization Algorithms. arXiv:1707.06347."
+  - "Tuomas Haarnoja et al. (2018). Soft Actor-Critic: Off-Policy Maximum Entropy Deep RL. ICML."
+  - "Viktor Makoviychuk et al. (2021). Isaac Gym: High Performance GPU-Based Physics Simulation for Robot Learning. NeurIPS."
+components:
+  - NumericalIntegrationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Reinforcement Learning untuk Robotika: MDP, Policy Gradient, PPO & SAC
+
+> "Bagaimana robot berkaki seperti Boston Dynamics Spot belajar berjalan di medan berbatu — bukan melalui persamaan yang dikodekan secara manual, melainkan dengan mencoba ribuan kali jatuh dalam simulator fisika GPU hingga menemukan kebijakan gaya berjalan yang sempurna?"
+
+**Reinforcement Learning (RL)** adalah paradigma komputasi belajar melalui interaksi: agen mengambil tindakan dalam lingkungan, menerima sinyal imbalan skalar, dan secara iteratif mengoptimalkan kebijakan (*policy*) untuk memaksimalkan imbalan kumulatif di masa depan. Berbeda dengan pembelajaran terawasi, RL tidak membutuhkan data berlabel — hanya fungsi imbalan. Hal ini menjadikannya sangat powerful untuk **lokomosi robot berkaki, manipulasi tangkas, dan navigasi otonom** di mana demonstrasi lengkap tidak praktis.
+
+---
+
+<VideoEmbed
+  title="Reinforcement Learning for Robotics: From Q-Learning to PPO and SAC"
+  videoId="qv6UVOQ0F44"
+  provider="youtube"
+  duration="24:10"
+  author="Steve Brunton / University of Washington"
+/>
+
+---
+
+## 1. Kerangka Markov Decision Process (MDP)
+
+Semua masalah RL diformalisasi sebagai **Markov Decision Process (MDP)** — sebuah 5-tupel $(S, A, P, R, \gamma)$:
+
+| Simbol | Arti | Contoh (Quadruped Berjalan) |
+|--------|------|---------------------------|
+| $S$ | Ruang status | Sudut sendi, kecepatan, orientasi basis $(q, \dot{q}, R)$ |
+| $A$ | Ruang aksi | Torsi sendi $\tau \in \mathbb{R}^{12}$ |
+| $P(s' \| s, a)$ | Dinamika transisi | Langkah simulator fisika |
+| $R(s, a, s')$ | Fungsi imbalan | $r = v_{\text{maju}} - c_1 \|\tau\|^2 - c_2 \|\dot{q}\|^2$ |
+| $\gamma \in [0,1)$ | Faktor diskon | 0.99 (tugas cakrawala jauh) |
+
+Tujuan agen adalah menemukan **kebijakan** $\pi(a \| s)$ yang memaksimalkan return terdiskon:
+$$G_t = \sum_{k=0}^{\infty} \gamma^k r_{t+k+1}$$
+
+---
+
+## 2. Persamaan Optimalitas Bellman
+
+**Fungsi nilai status optimal** $V^*(s)$ dan **fungsi nilai aksi optimal** $Q^*(s, a)$ memenuhi persamaan optimalitas Bellman:
+
+$$V^*(s) = \max_a \mathbb{E}_{s'} \left[ R(s, a, s') + \gamma V^*(s') \right]$$
+
+$$Q^*(s, a) = \mathbb{E}_{s'} \left[ R(s, a, s') + \gamma \max_{a'} Q^*(s', a') \right]$$
+
+Kebijakan optimal diperoleh secara greedy: $\pi^*(s) = \arg\max_a Q^*(s, a)$.
+
+---
+
+## 3. Metode Policy Gradient
+
+Untuk ruang aksi kontinu (torsi sendi robot, kecepatan), metode berbasis nilai menjadi tidak traktabel. Metode **policy gradient** secara langsung memparameterisasi $\pi_\theta(a|s)$ dan mengoptimalkan via gradient ascent pada expected return:
+
+$$\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta} \left[ \sum_{t=0}^T \nabla_\theta \log \pi_\theta(a_t|s_t) \cdot G_t \right]$$
+
+Inilah algoritma **REINFORCE** (Williams 1992) — elegan namun bervariansi tinggi, yang memotivasi pengembangan algoritma lebih canggih berikut.
+
+---
+
+## 4. Proximal Policy Optimization (PPO)
+
+**PPO** (Schulman et al., 2017) adalah algoritma RL *on-policy* yang dominan untuk robotika. Algoritma ini mencegah pembaruan kebijakan yang terlalu besar melalui **fungsi objektif surrogate dengan pemotongan (clipped)**:
+
+$$\mathcal{L}^{\text{PPO}}(\theta) = \mathbb{E}_t \left[ \min\left( r_t(\theta) \hat{A}_t, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t \right) \right]$$
+
+Di mana:
+- $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)}$ adalah **rasio importance sampling**
+- $\hat{A}_t$ adalah **Generalized Advantage Estimate (GAE)**: $\hat{A}_t = \sum_{l=0}^{\infty} (\gamma \lambda)^l \delta_{t+l}$, dengan $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$
+- $\epsilon \approx 0.2$ adalah rentang pemotongan
+
+```text
+  Loop Pelatihan PPO (per rollout):
+  ┌──────────────────────────────────────────────────┐
+  │ 1. Kumpulkan T langkah waktu menggunakan π_θ_old │
+  │ 2. Hitung keuntungan Â_t via GAE                 │
+  │ 3. Untuk K epoch:                                │
+  │    - Hitung L^PPO(θ) pada mini-batch             │
+  │    - Perbarui θ via optimizer Adam               │
+  │ 4. Perbarui θ_old ← θ                           │
+  └──────────────────────────────────────────────────┘
+```
+
+---
+
+## 5. Soft Actor-Critic (SAC) — RL Entropi Maksimum
+
+**SAC** (Haarnoja et al., 2018) adalah algoritma *off-policy* yang efisien secara sampling untuk kendali kontinu, memaksimalkan **objektif entropi maksimum**:
+
+$$J(\pi) = \mathbb{E}_{\tau \sim \pi} \left[ \sum_{t=0}^T r(s_t, a_t) + \alpha \mathcal{H}(\pi(\cdot|s_t)) \right]$$
+
+Di mana $\mathcal{H}(\pi) = -\mathbb{E}[\log \pi(a|s)]$ adalah **entropi kebijakan** dan $\alpha$ adalah **suhu** (disetel otomatis via gradient descent dual). Bonus entropi SAC mendorong:
+- **Eksplorasi multi-modal**: robot menemukan beberapa gaya berjalan valid secara bersamaan
+- **Ketahanan**: kebijakan stokastik menggeneralisasi ke gangguan medan yang belum pernah dilihat
+
+---
+
+## 6. Transfer Sim-to-Real: Pelatihan di Isaac Gym
+
+Melatih robot RL langsung pada perangkat keras fisik sangat lambat dan berisiko. **Simulasi berakselerasi GPU** (NVIDIA Isaac Gym, MuJoCo) memungkinkan:
+
+- **4096+ instans robot paralel** secara bersamaan pada satu GPU
+- **Rollout satu miliar langkah** dalam jam, bukan tahun
+- **Domain Randomization**: mengacak parameter fisika $(m, I, \mu, k_{\text{pegas}})$ di setiap episode untuk membangun kebijakan yang tangguh:
+  $$\pi^* = \arg\max_\pi \mathbb{E}_{\phi \sim p(\Phi)} \left[ J(\pi, \phi) \right]$$
+
+---
+
+## 7. Simulasi Interaktif
+
+Jelajahi dinamika numerik trajektori pembentukan imbalan di bawah ini:
+
+<NumericalIntegrationSimulator />
+
+---
+
+## 8. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-rl-ppo"
+  question="Mengapa PPO memotong rasio importance sampling r_t(θ) ke dalam rentang [1-ε, 1+ε] selama pembaruan kebijakan?"
+  options={[
+    {
+      id: "A",
+      text: "Untuk mencegah kebijakan baru menyimpang terlalu jauh dari kebijakan lama dalam satu langkah pembaruan, membatasi peningkatan kebijakan dan mencegah keruntuhan kebijakan yang katastrofik.",
+      isCorrect: true,
+      explanation: "Tepat! Tanpa pemotongan, satu langkah gradien bisa menghasilkan kebijakan yang sangat berbeda. Objektif terpotong PPO secara konservatif membatasi setiap pembaruan sambil tetap membuat kemajuan."
+    },
+    {
+      id: "B",
+      text: "Untuk membatasi jumlah sendi robot yang bisa bergerak bersamaan.",
+      isCorrect: false,
+      explanation: "Salah. Pemotongan berkaitan dengan rasio probabilitas aksi baru terhadap lama, bukan jumlah sendi."
+    },
+    {
+      id: "C",
+      text: "Untuk mengurangi penggunaan memori GPU selama pelatihan.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi pada kinerja kebijakan jika Anda mengambil langkah gradien yang terlalu besar."
+/>

@@ -1,0 +1,169 @@
+---
+id: foundation-models-and-embodied-ai
+title: "Foundation Models & Embodied AI: VLA, Diffusion Policy & World Models"
+slug: foundation-models-and-embodied-ai
+domain: advanced
+category: advanced
+level: 19
+tier: Advanced Embodiments
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 55
+prerequisites:
+  - vla-and-diffusion-policies
+  - sim-to-real-and-domain-randomization
+  - reinforcement-learning-for-robotics
+references:
+  - "Rohan Anil et al. (2023). PaLM 2 Technical Report. Google DeepMind."
+  - "Tony Z. Zhao et al. (2023). Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware (ACT). arXiv:2304.13705."
+  - "Danijar Hafner et al. (2023). Mastering Diverse Domains Through World Models (DreamerV3). arXiv:2301.04104."
+  - "Kevin Black et al. (2024). π₀: A Vision-Language-Action Flow Model for General Robot Control. Physical Intelligence."
+components:
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Foundation Models & Embodied AI: VLA, Diffusion Policy & World Models
+
+> "Apa yang berubah ketika 'otak' robot bukan lagi mesin status yang dirancang secara manual, tetapi model Vision-Language-Action berparameter triliun yang dilatih pada seluruh internet — dan bagaimana memberikan world model kepada robot memungkinkannya merencanakan dan membayangkan konsekuensi sebelum mengambil tindakan fisik?"
+
+Konvergensi **deep learning skala besar** dengan **robotika fisik** menghasilkan paradigma baru: **Embodied AI**. Daripada mempelajari pengontrol spesifik tugas dari awal, robot modern memanfaatkan foundation models — jaringan saraf masif yang dilatih terlebih dahulu pada data skala internet (teks, gambar, video, demonstrasi robot) — untuk memperoleh **kecerdasan robotik yang dapat digeneralisasi**: penambatan bahasa, transfer tugas zero-shot, dan penalaran kausal abstrak tentang konsekuensi fisik.
+
+---
+
+<VideoEmbed
+  title="Foundation Models for Robot Learning: RT-2, PaLM-E and Embodied AI"
+  videoId="UuCVjJXVVTI"
+  provider="youtube"
+  duration="22:45"
+  author="Sergey Levine / Berkeley AI Research"
+/>
+
+---
+
+## 1. Arsitektur Transformer dalam Robotika
+
+Semua foundation model modern dibangun di atas **Transformer** (Vaswani et al., 2017) — arsitektur jaringan saraf berbasis **self-attention**:
+
+$$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) V$$
+
+Di mana $Q$ (kueri), $K$ (kunci), dan $V$ (nilai) adalah proyeksi linier dari urutan masukan. Faktor skala $\frac{1}{\sqrt{d_k}}$ mencegah menghilangnya gradien di ruang kunci berdimensi tinggi.
+
+Multi-Head Attention memproses $h$ kepala perhatian paralel:
+$$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) W^O$$
+$$\text{head}_i = \text{Attention}(Q W_i^Q, K W_i^K, V W_i^V)$$
+
+Untuk robotika, **token** merepresentasikan:
+- **Patch gambar** (tokenisasi visual gaya ViT)
+- **Instruksi bahasa** ("Ambil kubus merah")
+- **Status sendi dan aksi robot** $(\mathbf{q}, \dot{\mathbf{q}}, \tau)$
+
+---
+
+## 2. Model Vision-Language-Action (VLA)
+
+**Model VLA** memperluas Vision-Language Models (VLM seperti PaLM-E, Gemini) dengan menambahkan **kepala aksi** yang langsung menghasilkan perintah motor robot:
+
+$$\underbrace{[\text{img}_t, \text{lang}, \mathbf{q}_t]}_{\text{Masukan Multimodal}} \xrightarrow{\text{Transformer VLA}} \underbrace{\mathbf{a}_{t:t+H}}_{\text{Chunk Aksi}}$$
+
+Sistem VLA terkemuka:
+- **RT-2** (Brohan et al., 2023): Backbone PaLM-E dengan token aksi yang di-fine-tune; generalisasi zero-shot ke objek yang belum pernah dilihat
+- **OpenVLA** (Kim et al., 2024): Backbone Llama-2 7 miliar parameter open-source dengan fine-tuning aksi robot
+- **$\pi_0$ (Pi-Zero)** (Black et al., 2024): VLA flow matching generatif untuk manipulasi bimanual yang lincah
+
+---
+
+## 3. Diffusion Policy untuk Kendali Robot
+
+**Diffusion Policy** (Chi et al., 2023) membingkai pembangkitan aksi robot sebagai **proses difusi denoising** — mempelajari cara membalikkan rantai korupsi noise Gaussian:
+
+**Proses maju** (menambahkan noise):
+$$q(\mathbf{a}^k | \mathbf{a}^0) = \mathcal{N}(\mathbf{a}^k; \sqrt{\bar{\alpha}_k} \mathbf{a}^0, (1 - \bar{\alpha}_k) I)$$
+
+**Proses balik** (denoising pencocokan skor, dikondisikan pada observasi $\mathbf{o}$):
+$$p_\theta(\mathbf{a}^{k-1} | \mathbf{a}^k, \mathbf{o}) = \mathcal{N}(\mathbf{a}^{k-1}; \boldsymbol{\mu}_\theta(\mathbf{a}^k, k, \mathbf{o}), \sigma_k^2 I)$$
+
+Di mana jaringan saraf $\epsilon_\theta$ memprediksi noise:
+$$\boldsymbol{\mu}_\theta = \frac{1}{\sqrt{\alpha_k}} \left( \mathbf{a}^k - \frac{1 - \alpha_k}{\sqrt{1 - \bar{\alpha}_k}} \epsilon_\theta(\mathbf{a}^k, k, \mathbf{o}) \right)$$
+
+**Keunggulan kunci**: Diffusion policy secara alami merepresentasikan **distribusi aksi multi-modal** — robot dapat mempelajari "meraih dari kiri ATAU dari kanan" tanpa rata-rata mode.
+
+---
+
+## 4. World Models: Bermimpi Sebelum Bertindak
+
+**World Models** (Ha & Schmidhuber, 2018; DreamerV3, Hafner et al., 2023) memungkinkan robot untuk **membayangkan konsekuensi masa depan** dari tindakan dalam ruang laten yang dipelajari, tanpa mengeksekusinya secara fisik:
+
+```text
+  Arsitektur World Model:
+
+  Observasi o_t ──► [Encoder] ──► z_t (status laten)
+                                      │
+                          a_t ──────► [Model Transisi] ──► z_{t+1} (status berikutnya yang dibayangkan)
+                                      │
+                               ──────► [Prediktor Imbalan] ──► r̂_t
+                                      │
+                               ──────► [Decoder] ──► ô_{t+1} (observasi yang dibayangkan)
+```
+
+Dinamika status laten mengikuti:
+$$h_t = f_\phi(h_{t-1}, z_{t-1}, a_{t-1}) \quad \text{(Status Berulang)}$$
+$$z_t \sim q_\phi(z_t | h_t, o_t) \quad \text{(Encoder Posterior)}$$
+$$\hat{z}_t \sim p_\phi(\hat{z}_t | h_t) \quad \text{(Prior / Imajinasi)}$$
+
+DreamerV3 melatih kebijakan sepenuhnya **di dalam imajinasi world model** — mencapai kinerja supermanusia pada 150+ tugas beragam tanpa penyetelan spesifik domain.
+
+---
+
+## 5. Embodied AI: Generalisasi Zero-Shot
+
+Janji utama Embodied AI adalah **transfer tugas zero-shot** — robot yang dilatih pada demonstrasi beragam dapat menggeneralisasi ke tugas-tugas yang benar-benar baru melalui instruksi bahasa:
+
+```text
+  Pipeline Generalisasi Zero-Shot:
+
+  "Letakkan apel di dalam mangkuk"
+        │
+        ▼ (Penambatan Bahasa)
+  [Model VLA] ── Persepsi visual: identifikasi apel (warna baru), mangkuk (bentuk baru)
+        │
+        ▼ (Penalaran Kausal)
+  Rencana: pegang_apel → pindah_ke_mangkuk → lepaskan
+        │
+        ▼ (Eksekusi Motor)
+  Torsi sendi τ_0, τ_1, ..., τ_T (60Hz)
+```
+
+Ini muncul dari **skala**: kemampuan generalisasi robot RT-2 muncul dari pra-pelatihan skala internet pada 540 miliar token — jaringan mempelajari intuisi fisik dari menonton video manusia memasak, membersihkan, dan merakit objek.
+
+---
+
+## 6. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-foundation-models-vla"
+  question="Apa inovasi arsitektur fundamental yang membuat model Vision-Language-Action (VLA) mampu melakukan manipulasi robot zero-shot pada objek yang belum pernah secara eksplisit dilatih?"
+  options={[
+    {
+      id: "A",
+      text: "Model VLA mewarisi representasi semantik kaya tentang objek fisik, hubungan spasial, dan afodans aksi dari pra-pelatihan skala internet pada teks dan gambar — memungkinkan generalisasi ke objek baru melalui penambatan bahasa dan penalaran fisik akal sehat.",
+      isCorrect: true,
+      explanation: "Tepat! Model VLA yang dilatih terlebih dahulu pada data internet sudah 'tahu' bahwa apel itu bulat, dapat dipegang, dan milik mangkuk. Pengetahuan awal ini memungkinkan transfer zero-shot tanpa pelatihan spesifik tugas."
+    },
+    {
+      id: "B",
+      text: "Model VLA menggunakan CPU yang lebih cepat daripada pengontrol robot sebelumnya.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "Model VLA memiliki lebih banyak motor servo daripada robot klasik.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan pengetahuan apa yang dikodekan dalam model yang dilatih pada miliaran gambar web dan teks yang mendeskripsikan dunia fisik."
+/>

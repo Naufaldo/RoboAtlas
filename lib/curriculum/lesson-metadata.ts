@@ -782,6 +782,91 @@ export const LESSON_PEDAGOGY_MAP: Record<string, LessonPedagogyData> = {
     progressionStepsEn: ['Quaternion Hamilton Algebra', 'SLERP Geodesic Interpolation', 'Non-Linear Least Squares', 'Gauss-Newton & Levenberg-Marquardt'],
     progressionStepsId: ['Aljabar Hamilton Kuaternion', 'Interpolasi Geodesik SLERP', 'Kuadrat Terkecil Non-Linear', 'Gauss-Newton & Levenberg-Marquardt'],
   },
+
+  // ─── Phase 3: Modern Topics ───
+  'reinforcement-learning-for-robotics': {
+    learningObjectivesEn: [
+      'Formalize robotics control as a Markov Decision Process (S, A, P, R, γ) and derive the Bellman optimality equations.',
+      'Understand the Policy Gradient Theorem and implement REINFORCE for continuous action-space robot controllers.',
+      'Explain PPO\'s clipped surrogate objective and GAE advantage estimation for stable on-policy robot training.',
+      'Differentiate SAC\'s maximum entropy framework and temperature auto-tuning from on-policy methods.',
+      'Describe domain randomization and GPU-accelerated simulation (Isaac Gym) for sim-to-real transfer.',
+    ],
+    learningObjectivesId: [
+      'Memformalisasi kendali robotika sebagai Markov Decision Process (S, A, P, R, γ) dan menurunkan persamaan optimalitas Bellman.',
+      'Memahami Teorema Policy Gradient dan mengimplementasikan REINFORCE untuk pengontrol robot ruang aksi kontinu.',
+      'Menjelaskan objektif surrogate terpotong PPO dan estimasi keuntungan GAE untuk pelatihan robot on-policy yang stabil.',
+      'Membedakan kerangka entropi maksimum SAC dan penyetelan otomatis suhu dari metode on-policy.',
+      'Mendeskripsikan domain randomization dan simulasi berakselerasi GPU (Isaac Gym) untuk transfer sim-to-real.',
+    ],
+    whyItMattersEn: 'RL is the only technique capable of training locomotion policies (Boston Dynamics Spot, ANYmal) and dexterous manipulation without exhaustive hand-engineering — powering the next generation of physical AI.',
+    whyItMattersId: 'RL adalah satu-satunya teknik yang mampu melatih kebijakan lokomosi (Boston Dynamics Spot, ANYmal) dan manipulasi tangkas tanpa rekayasa manual yang memakan waktu — mendorong generasi AI fisik berikutnya.',
+    progressionStepsEn: ['MDP & Bellman Equations', 'Policy Gradient & REINFORCE', 'PPO Clipped Objective', 'SAC Max-Entropy RL', 'Sim-to-Real via Isaac Gym'],
+    progressionStepsId: ['MDP & Persamaan Bellman', 'Policy Gradient & REINFORCE', 'Objektif Terpotong PPO', 'SAC RL Entropi-Maks', 'Sim-to-Real via Isaac Gym'],
+  },
+
+  'ros2-architecture-and-navigation-stack': {
+    learningObjectivesEn: [
+      'Explain ROS 2\'s Computational Graph (Node, Topic, Service, Action) and why DDS replaces the centralized ROS 1 rosmaster.',
+      'Read and interpret a TF2 Transform Tree with world → odom → base → sensor frame hierarchy.',
+      'Parse a URDF robot description and understand how robot_state_publisher broadcasts joint states as TF2 transforms.',
+      'Describe Nav2\'s BehaviorTree architecture: global planner, local planner, costmap layers, and recovery behaviors.',
+      'Explain MoveIt 2\'s motion planning pipeline: OMPL sampling, IK solver, trajectory execution via ros2_control.',
+    ],
+    learningObjectivesId: [
+      'Menjelaskan Graf Komputasi ROS 2 (Node, Topik, Layanan, Aksi) dan mengapa DDS menggantikan rosmaster terpusat ROS 1.',
+      'Membaca dan menginterpretasikan Pohon Transformasi TF2 dengan hirarki kerangka world → odom → base → sensor.',
+      'Mengurai deskripsi robot URDF dan memahami cara robot_state_publisher menyiarkan status sendi sebagai transformasi TF2.',
+      'Mendeskripsikan arsitektur BehaviorTree Nav2: perencana global, perencana lokal, lapisan peta biaya, dan perilaku pemulihan.',
+      'Menjelaskan pipeline perencanaan gerak MoveIt 2: sampling OMPL, pemecah IK, eksekusi trajektori via ros2_control.',
+    ],
+    whyItMattersEn: 'ROS 2 is the universal robot middleware used by NASA, Boston Dynamics, Amazon, and Waymo — fluency in its architecture is essential for any professional robotics engineer.',
+    whyItMattersId: 'ROS 2 adalah middleware robot universal yang digunakan NASA, Boston Dynamics, Amazon, dan Waymo — kefasihan dalam arsitekturnya sangat penting bagi setiap insinyur robotika profesional.',
+    progressionStepsEn: ['DDS & Computational Graph', 'TF2 Transform Tree', 'URDF Robot Description', 'Nav2 Navigation Stack', 'MoveIt 2 Manipulation'],
+    progressionStepsId: ['DDS & Graf Komputasi', 'Pohon Transformasi TF2', 'Deskripsi Robot URDF', 'Stack Navigasi Nav2', 'Manipulasi MoveIt 2'],
+  },
+
+  'model-predictive-control-mpc': {
+    learningObjectivesEn: [
+      'Formulate the MPC finite-horizon optimization problem with stage cost (Q, R) and terminal cost (P) matrices.',
+      'Derive the condensed QP formulation (H, f, G, h) for linear MPC using state prediction matrices.',
+      'Explain OSQP\'s ADMM algorithm and warm-starting strategy enabling sub-millisecond real-time MPC.',
+      'Describe Nonlinear MPC (NMPC) with multiple-shooting discretization solved via ACADOS / IPOPT.',
+      'Prove asymptotic stability of MPC via the terminal cost matrix P from the Discrete Algebraic Riccati Equation.',
+    ],
+    learningObjectivesId: [
+      'Memformulasikan masalah optimasi cakrawala terbatas MPC dengan matriks biaya tahap (Q, R) dan biaya terminal (P).',
+      'Menurunkan formulasi QP terkondensasi (H, f, G, h) untuk MPC linear menggunakan matriks prediksi status.',
+      'Menjelaskan algoritma ADMM OSQP dan strategi warm-starting yang memungkinkan MPC waktu-nyata sub-milidetik.',
+      'Mendeskripsikan MPC Non-Linear (NMPC) dengan diskritisasi multiple-shooting yang diselesaikan via ACADOS / IPOPT.',
+      'Membuktikan stabilitas asimtotik MPC via matriks biaya terminal P dari Persamaan Riccati Aljabar Diskrit.',
+    ],
+    whyItMattersEn: 'MPC is the control backbone of Tesla Autopilot, quadrotor racing drones, and legged robots — it is the only classical method that handles constraints, optimality, and multi-step prediction simultaneously.',
+    whyItMattersId: 'MPC adalah tulang punggung kendali Tesla Autopilot, drone balap quadrotor, dan robot berkaki — satu-satunya metode klasik yang menangani kendala, optimalitas, dan prediksi multi-langkah secara bersamaan.',
+    progressionStepsEn: ['MPC Optimization Problem', 'Receding Horizon Principle', 'Linear MPC as QP', 'OSQP Real-Time Solver', 'Nonlinear MPC & NMPC'],
+    progressionStepsId: ['Masalah Optimasi MPC', 'Prinsip Cakrawala Mundur', 'MPC Linear sebagai QP', 'Pemecah Waktu-Nyata OSQP', 'MPC Non-Linear & NMPC'],
+  },
+
+  'foundation-models-and-embodied-ai': {
+    learningObjectivesEn: [
+      'Explain the Transformer self-attention mechanism (Q, K, V matrices) and multi-head attention for robot input tokenization.',
+      'Describe VLA model architectures (RT-2, OpenVLA, π₀) and how they map multimodal tokens to robot action chunks.',
+      'Formulate Diffusion Policy\'s forward (noise addition) and reverse (score-matching denoising) processes for action generation.',
+      'Understand World Model architectures (DreamerV3) with recurrent state h_t, posterior z_t, and latent imagination rollouts.',
+      'Explain zero-shot task generalization emerging from internet-scale pre-training and language grounding in VLA models.',
+    ],
+    learningObjectivesId: [
+      'Menjelaskan mekanisme self-attention Transformer (matriks Q, K, V) dan multi-head attention untuk tokenisasi masukan robot.',
+      'Mendeskripsikan arsitektur model VLA (RT-2, OpenVLA, π₀) dan cara mereka memetakan token multimodal ke chunk aksi robot.',
+      'Memformulasikan proses maju (penambahan noise) dan balik (denoising pencocokan skor) Diffusion Policy untuk pembangkitan aksi.',
+      'Memahami arsitektur World Model (DreamerV3) dengan status berulang h_t, posterior z_t, dan rollout imajinasi laten.',
+      'Menjelaskan generalisasi tugas zero-shot yang muncul dari pra-pelatihan skala internet dan penambatan bahasa di model VLA.',
+    ],
+    whyItMattersEn: 'Foundation models are collapsing the decades-long boundary between language intelligence and physical manipulation — making robots programmable through natural language and capable of reasoning about physics from internet-scale priors.',
+    whyItMattersId: 'Foundation model meruntuhkan batas puluhan tahun antara kecerdasan bahasa dan manipulasi fisik — menjadikan robot dapat diprogram melalui bahasa alami dan mampu bernalar tentang fisika dari prior skala internet.',
+    progressionStepsEn: ['Transformer Self-Attention', 'VLA Architectures (RT-2, π₀)', 'Diffusion Policy Generation', 'World Models (DreamerV3)', 'Zero-Shot Embodied AI'],
+    progressionStepsId: ['Self-Attention Transformer', 'Arsitektur VLA (RT-2, π₀)', 'Pembangkitan Diffusion Policy', 'World Models (DreamerV3)', 'Embodied AI Zero-Shot'],
+  },
 };
 
 export function getLessonPedagogy(slug: string, isId: boolean) {

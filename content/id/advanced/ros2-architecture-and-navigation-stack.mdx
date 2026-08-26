@@ -1,0 +1,179 @@
+---
+id: ros2-architecture-and-navigation-stack
+title: "Arsitektur ROS 2, Komunikasi DDS & Stack Navigasi Nav2 / MoveIt 2"
+slug: ros2-architecture-and-navigation-stack
+domain: advanced
+category: advanced
+level: 19
+tier: Advanced Embodiments
+difficulty: intermediate
+language: id
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - intro-to-robotics
+  - coordinate-frames-and-transforms
+  - slam-fundamentals
+references:
+  - "ROS 2 Documentation (Jazzy Jalisco). Open Robotics (2024). https://docs.ros.org/en/jazzy/"
+  - "Steve Macenski et al. (2020). The Marathon 2: A Navigation System. IEEE/RSJ IROS."
+  - "Ioan Sucan, Sachin Chitta et al. (2012). MoveIt! IEEE Robotics & Automation Magazine."
+components:
+  - CoordinateFrameExplorer
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Arsitektur ROS 2, Komunikasi DDS & Stack Navigasi Nav2 / MoveIt 2
+
+> "Mengapa ROS 2 menjadi middleware standar universal yang digunakan oleh wahana bulan VIPER milik NASA hingga robot gudang Amazon — dan bagaimana model komunikasi DDS-nya berbeda secara fundamental dari ROS 1 yang terpusat?"
+
+**Robot Operating System 2 (ROS 2)** bukan sistem operasi, melainkan sebuah **kerangka middleware terdistribusi** yang menyediakan transport, alat, dan pustaka untuk membangun sistem robot otonom kompleks. ROS 2 menggantikan `rosmaster` terpusat ROS 1 dengan **Data Distribution Service (DDS)** — protokol publish-subscribe waktu-nyata yang sudah terbukti (digunakan di avionik F-35 dan kendali jaringan listrik) yang memungkinkan **komunikasi multi-robot, multi-mesin, waktu-nyata tanpa titik kegagalan tunggal**.
+
+---
+
+<VideoEmbed
+  title="ROS 2 Architecture Explained: Nodes, Topics, Services, Actions & DDS"
+  videoId="7TVWlADXwRw"
+  provider="youtube"
+  duration="17:30"
+  author="Articulated Robotics / Josh Newans"
+/>
+
+---
+
+## 1. Graf Komputasi Inti: Node, Topik, Layanan, Aksi
+
+**Graf Komputasi ROS 2** terdiri dari:
+
+```text
+  ┌──────────────────────────────────────────────────────────────┐
+  │                   Graf Komputasi ROS 2                       │
+  │                                                              │
+  │  [Node Driver LiDAR]                                         │
+  │       │ /scan (Topik: Publish)                               │
+  │       ▼                                                      │
+  │  [Node SLAM] ─── /map (Topik: Publish) ───► [Node Nav2]      │
+  │       │                                        │             │
+  │       │ /pose (Topik: Publish)                 │             │
+  │       ▼                                        ▼             │
+  │  [Broadcaster TF2] ────────────────► [Aksi MoveBase]        │
+  │                                              │               │
+  │  [Kontroler Lengan] ◄─ /joint_cmd ◄── [Node MoveIt 2]       │
+  └──────────────────────────────────────────────────────────────┘
+```
+
+| Tipe Komunikasi | Arah | Kasus Penggunaan | Contoh |
+|----------------|------|-----------------|--------|
+| **Topik** (Pub/Sub) | Async, N:M | Aliran sensor | `/scan`, `/cmd_vel`, `/odom` |
+| **Layanan** (Req/Res) | Sync, 1:1 | Kueri diskrit | `/set_mode`, `/get_parameters` |
+| **Aksi** (Goal/Result) | Async, 1:1, dapat dibatalkan | Tugas lama | `/navigate_to_pose`, `/follow_joint_trajectory` |
+
+---
+
+## 2. Pohon Transformasi TF2: Tulang Punggung Spasial
+
+Setiap robot ROS 2 memelihara **Pohon Transformasi TF2** — pohon dinamis hubungan kerangka koordinat yang dilanggani oleh setiap sensor, aktuator, dan algoritma:
+
+```text
+  world
+    └── map
+          └── odom
+                └── base_link          ← Pusat massa robot
+                      ├── base_laser   ← Sensor LiDAR
+                      ├── camera_link  ← Kamera RGB-D
+                      ├── imu_link     ← Sensor IMU
+                      └── arm_link_0   ← Basis lengan robot
+                            ├── arm_link_1
+                            ├── arm_link_2
+                            └── arm_end_effector
+```
+
+Setiap sisi menyimpan transformasi benda kaku bertanda waktu:
+$$T_{A}^{B}(t) = \begin{bmatrix} R_{AB}(t) & \mathbf{p}_{AB}(t) \\ \mathbf{0}^T & 1 \end{bmatrix} \in SE(3)$$
+
+TF2 menyangga transformasi ini dengan interpolasi, memungkinkan node mana pun mencari transformasi antara dua kerangka mana pun pada waktu masa lalu $t_{\text{kueri}}$ mana pun.
+
+---
+
+## 3. URDF: Standar Deskripsi Robot
+
+File XML **URDF (Unified Robot Description Format)** sepenuhnya menentukan:
+- **Link**: Benda kaku dengan massa $m$, tensor inersia $I$, jaring visual, dan geometri tabrakan
+- **Joint**: Tipe koneksi kinematik (tetap, revolute, prismatik, mengambang) dengan batas $[\theta_{\min}, \theta_{\max}]$
+
+```xml
+<joint name="shoulder_pan_joint" type="revolute">
+  <parent link="base_link"/>
+  <child link="shoulder_link"/>
+  <axis xyz="0 0 1"/>
+  <limit lower="-π" upper="π" effort="100" velocity="2.0"/>
+</joint>
+```
+
+`robot_state_publisher` terus-menerus menyiarkan status sendi → transformasi TF2, membuat konfigurasi kinematik penuh robot tersedia untuk semua node.
+
+---
+
+## 4. Nav2: Stack Navigasi Robot Bergerak
+
+**Nav2** (Navigation 2) adalah sistem navigasi bergerak lengkap ROS 2 yang diatur sebagai **Pohon Perilaku (BT)**:
+
+1. **Perencana Global** (Smac Planner / NavFn): Menghitung jalur bebas tabrakan pada **Peta Biaya Global** (rintangan statis + terinflas).
+2. **Perencana Lokal** (DWA / TEB / MPPI): Menghasilkan perintah kecepatan $\mathbf{u} = [v, \omega]^T$ untuk mengikuti jalur global sambil menghindari rintangan dinamis.
+3. **Perilaku Pemulihan**: Putar, mundur, bersihkan peta biaya saat gagal.
+4. **Navigator BT**: Mengorkestrasikan seluruh jalur alur via pohon perilaku XML.
+
+**Lapisan Peta Biaya**:
+- **Lapisan Statis**: Kisi hunian terinflas dari peta SLAM
+- **Lapisan Rintangan**: Deteksi dinamis LiDAR/Kamera
+- **Lapisan Inflasi**: Ekspansi ruang-C $r_{\text{inflasi}} = r_{\text{robot}} + r_{\text{keamanan}}$
+
+---
+
+## 5. MoveIt 2: Stack Perencanaan Manipulasi
+
+**MoveIt 2** menyediakan perencanaan gerak untuk lengan robot:
+1. **Perencanaan OMPL**: Mengambil sampel konfigurasi sendi di ruang-C, menemukan trajektori bebas tabrakan
+2. **Pemecah IK KDL/TracIK**: Menghitung sudut sendi dari pose kartesian efektor ujung
+3. **Eksekusi Trajektori**: Mengirimkan aksi `FollowJointTrajectory` ke kontroler perangkat keras (ros2_control)
+4. **Pemeriksaan Tabrakan**: Menggunakan FCL (Flexible Collision Library) dengan geometri tabrakan URDF robot
+
+---
+
+## 6. Lab Visualisasi Kerangka Interaktif
+
+Jelajahi hierarki kerangka koordinat dan hubungan transformasi di bawah ini:
+
+<CoordinateFrameExplorer />
+
+---
+
+## 7. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-ros2-dds"
+  question="Mengapa ROS 2 menggunakan DDS (Data Distribution Service) alih-alih rosmaster terpusat ROS 1 untuk komunikasi node?"
+  options={[
+    {
+      id: "A",
+      text: "DDS adalah protokol peer-to-peer terdesentralisasi tanpa titik kegagalan tunggal, memungkinkan jaminan QoS waktu-nyata, komunikasi multi-robot multi-mesin, dan operasi tanpa konektivitas jaringan ke node master.",
+      isCorrect: true,
+      explanation: "Tepat! Rosmaster ROS 1 adalah titik kegagalan tunggal — jika crash, seluruh sistem robot berhenti. DDS menyediakan transportasi dan penemuan terdesentralisasi, agnostik vendor, dan waktu-nyata yang digunakan dalam sistem kritis keselamatan."
+    },
+    {
+      id: "B",
+      text: "DDS mengurangi ukuran file program robot.",
+      isCorrect: false,
+      explanation: "Salah."
+    },
+    {
+      id: "C",
+      text: "DDS memungkinkan robot berkomunikasi dalam Python 2.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan apa yang terjadi ketika node koordinator pusat mengalami crash."
+/>

@@ -1,0 +1,169 @@
+---
+id: foundation-models-and-embodied-ai
+title: "Foundation Models & Embodied AI: VLA, Diffusion Policy & World Models"
+slug: foundation-models-and-embodied-ai
+domain: advanced
+category: advanced
+level: 19
+tier: Advanced Embodiments
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 55
+prerequisites:
+  - vla-and-diffusion-policies
+  - sim-to-real-and-domain-randomization
+  - reinforcement-learning-for-robotics
+references:
+  - "Rohan Anil et al. (2023). PaLM 2 Technical Report. Google DeepMind."
+  - "Tony Z. Zhao et al. (2023). Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware (ACT). arXiv:2304.13705."
+  - "Danijar Hafner et al. (2023). Mastering Diverse Domains Through World Models (DreamerV3). arXiv:2301.04104."
+  - "Kevin Black et al. (2024). π₀: A Vision-Language-Action Flow Model for General Robot Control. Physical Intelligence."
+components:
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Foundation Models & Embodied AI: VLA, Diffusion Policy & World Models
+
+> "What changes when a robot's 'brain' is not a hand-engineered state machine but a trillion-parameter Vision-Language-Action model pre-trained on the entire internet — and how does giving a robot a world model allow it to plan and imagine consequences before taking physical actions?"
+
+The convergence of **large-scale deep learning** with **physical robotics** is producing a new paradigm: **Embodied AI**. Rather than learning task-specific controllers from scratch, modern robots leverage foundation models — massive neural networks pre-trained on internet-scale data (text, images, video, robot demonstrations) — to acquire **generalizable robotic intelligence**: language grounding, zero-shot task transfer, and abstract causal reasoning about physical consequences.
+
+---
+
+<VideoEmbed
+  title="Foundation Models for Robot Learning: RT-2, PaLM-E and Embodied AI"
+  videoId="UuCVjJXVVTI"
+  provider="youtube"
+  duration="22:45"
+  author="Sergey Levine / Berkeley AI Research"
+/>
+
+---
+
+## 1. The Transformer Architecture in Robotics
+
+All modern foundation models are built on the **Transformer** (Vaswani et al., 2017) — a neural network architecture based on **self-attention**:
+
+$$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) V$$
+
+Where $Q$ (queries), $K$ (keys), and $V$ (values) are linear projections of the input sequence. The scaling factor $\frac{1}{\sqrt{d_k}}$ prevents gradient vanishing in high-dimensional key spaces.
+
+Multi-Head Attention processes $h$ parallel attention heads:
+$$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) W^O$$
+$$\text{head}_i = \text{Attention}(Q W_i^Q, K W_i^K, V W_i^V)$$
+
+For robotics, **tokens** represent:
+- **Image patches** (ViT-style visual tokenization)
+- **Language instructions** ("Pick up the red cube")
+- **Robot joint states and actions** $(\mathbf{q}, \dot{\mathbf{q}}, \tau)$
+
+---
+
+## 2. Vision-Language-Action (VLA) Models
+
+**VLA models** extend Vision-Language Models (VLMs like PaLM-E, Gemini) by adding an **action head** that directly outputs robot motor commands:
+
+$$\underbrace{[\text{img}_t, \text{lang}, \mathbf{q}_t]}_{\text{Multimodal Inputs}} \xrightarrow{\text{VLA Transformer}} \underbrace{\mathbf{a}_{t:t+H}}_{\text{Action Chunk}}$$
+
+Notable VLA systems:
+- **RT-2** (Brohan et al., 2023): PaLM-E backbone with fine-tuned action tokens; zero-shot generalization to unseen objects
+- **OpenVLA** (Kim et al., 2024): Open-source 7B parameter Llama-2 backbone with robot action fine-tuning
+- **$\pi_0$ (Pi-Zero)** (Black et al., 2024): Flow matching generative VLA for dexterous bimanual manipulation
+
+---
+
+## 3. Diffusion Policy for Robot Control
+
+**Diffusion Policy** (Chi et al., 2023) frames robot action generation as a **denoising diffusion process** — learning to reverse a Gaussian noise corruption chain:
+
+**Forward process** (adding noise):
+$$q(\mathbf{a}^k | \mathbf{a}^0) = \mathcal{N}(\mathbf{a}^k; \sqrt{\bar{\alpha}_k} \mathbf{a}^0, (1 - \bar{\alpha}_k) I)$$
+
+**Reverse process** (score matching denoising, conditioned on observation $\mathbf{o}$):
+$$p_\theta(\mathbf{a}^{k-1} | \mathbf{a}^k, \mathbf{o}) = \mathcal{N}(\mathbf{a}^{k-1}; \boldsymbol{\mu}_\theta(\mathbf{a}^k, k, \mathbf{o}), \sigma_k^2 I)$$
+
+Where the neural network $\epsilon_\theta$ predicts the noise:
+$$\boldsymbol{\mu}_\theta = \frac{1}{\sqrt{\alpha_k}} \left( \mathbf{a}^k - \frac{1 - \alpha_k}{\sqrt{1 - \bar{\alpha}_k}} \epsilon_\theta(\mathbf{a}^k, k, \mathbf{o}) \right)$$
+
+**Key advantage**: Diffusion policy naturally represents **multi-modal action distributions** — a robot can learn to "either grasp from the left OR from the right" without mode averaging.
+
+---
+
+## 4. World Models: Dreaming Before Acting
+
+**World Models** (Ha & Schmidhuber, 2018; DreamerV3, Hafner et al., 2023) enable robots to **imagine future consequences** of actions in a learned latent space, without executing them physically:
+
+```text
+  World Model Architecture:
+
+  Observation o_t ──► [Encoder] ──► z_t (latent state)
+                                      │
+                          a_t ──────► [Transition Model] ──► z_{t+1} (imagined next state)
+                                      │
+                               ──────► [Reward Predictor] ──► r̂_t
+                                      │
+                               ──────► [Decoder] ──► ô_{t+1} (imagined observation)
+```
+
+The latent state dynamics follow:
+$$h_t = f_\phi(h_{t-1}, z_{t-1}, a_{t-1}) \quad \text{(Recurrent State)}$$
+$$z_t \sim q_\phi(z_t | h_t, o_t) \quad \text{(Posterior Encoder)}$$
+$$\hat{z}_t \sim p_\phi(\hat{z}_t | h_t) \quad \text{(Prior / Imagination)}$$
+
+DreamerV3 trains a policy entirely **inside the world model's imagination** — achieving superhuman performance on 150+ diverse tasks without domain-specific tuning.
+
+---
+
+## 5. Embodied AI: Zero-Shot Generalization
+
+The key promise of Embodied AI is **zero-shot task transfer** — a robot trained on diverse demonstrations can generalize to completely novel tasks via language instruction:
+
+```text
+  Zero-Shot Generalization Pipeline:
+
+  "Place the apple in the bowl"
+        │
+        ▼ (Language Grounding)
+  [VLA Model] ── Visual perception: identify apple (novel color), bowl (novel shape)
+        │
+        ▼ (Causal Reasoning)
+  Plan: grasp_apple → move_to_bowl → release
+        │
+        ▼ (Motor Execution)
+  Joint torques τ_0, τ_1, ..., τ_T (60Hz)
+```
+
+This emerges from **scale**: RT-2's robot generalization abilities emerge from internet-scale pre-training on 540B tokens — the network learns physical intuitions from watching videos of humans cooking, cleaning, and assembling objects.
+
+---
+
+## 6. Concept Check
+
+<ConceptCheck
+  id="quiz-foundation-models-vla"
+  question="What is the fundamental architectural innovation that makes Vision-Language-Action (VLA) models capable of zero-shot robot manipulation of objects they have never been explicitly trained on?"
+  options={[
+    {
+      id: "A",
+      text: "VLA models inherit rich semantic representations of physical objects, spatial relationships, and action affordances from internet-scale pre-training on text and images — enabling generalization to novel objects via language grounding and common-sense physical reasoning.",
+      isCorrect: true,
+      explanation: "Exactly! A VLA model pre-trained on internet data already 'knows' that apples are round, graspable, and belong in bowls. This prior knowledge enables zero-shot transfer without task-specific training."
+    },
+    {
+      id: "B",
+      text: "VLA models use faster CPUs than previous robot controllers.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "VLA models have more servo motors than classical robots.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about what knowledge is encoded in a model trained on billions of web images and text describing the physical world."
+/>

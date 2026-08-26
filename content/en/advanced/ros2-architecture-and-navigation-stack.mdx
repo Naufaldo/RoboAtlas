@@ -1,0 +1,179 @@
+---
+id: ros2-architecture-and-navigation-stack
+title: "ROS 2 Architecture, DDS Communication & Nav2 / MoveIt 2 Navigation Stack"
+slug: ros2-architecture-and-navigation-stack
+domain: advanced
+category: advanced
+level: 19
+tier: Advanced Embodiments
+difficulty: intermediate
+language: en
+interactive: true
+estimatedMinutes: 50
+prerequisites:
+  - intro-to-robotics
+  - coordinate-frames-and-transforms
+  - slam-fundamentals
+references:
+  - "ROS 2 Documentation (Jazzy Jalisco). Open Robotics (2024). https://docs.ros.org/en/jazzy/"
+  - "Steve Macenski et al. (2020). The Marathon 2: A Navigation System. IEEE/RSJ IROS."
+  - "Ioan Sucan, Sachin Chitta et al. (2012). MoveIt! IEEE Robotics & Automation Magazine."
+components:
+  - CoordinateFrameExplorer
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# ROS 2 Architecture, DDS Communication & Nav2 / MoveIt 2 Navigation Stack
+
+> "Why is ROS 2 the universal middleware standard used by everything from NASA's VIPER Moon rover to Amazon warehouse robots — and how does its DDS communication model fundamentally differ from the centralized ROS 1 master?"
+
+The **Robot Operating System 2 (ROS 2)** is not an operating system but a **distributed middleware framework** providing transport, tools, and libraries for building complex autonomous robot systems. It replaces ROS 1's centralized `rosmaster` with **Data Distribution Service (DDS)** — a proven real-time publish-subscribe protocol (used in F-35 avionics and power grid control) enabling **multi-robot, multi-machine, real-time communication without a single point of failure**.
+
+---
+
+<VideoEmbed
+  title="ROS 2 Architecture Explained: Nodes, Topics, Services, Actions & DDS"
+  videoId="7TVWlADXwRw"
+  provider="youtube"
+  duration="17:30"
+  author="Articulated Robotics / Josh Newans"
+/>
+
+---
+
+## 1. Core Computational Graph: Nodes, Topics, Services, Actions
+
+The ROS 2 **Computational Graph** consists of:
+
+```text
+  ┌─────────────────────────────────────────────────────────────┐
+  │                    ROS 2 Computational Graph                │
+  │                                                             │
+  │  [LiDAR Driver Node]                                        │
+  │       │ /scan (Topic: Publish)                              │
+  │       ▼                                                     │
+  │  [SLAM Node] ──── /map (Topic: Publish) ───► [Nav2 Node]    │
+  │       │                                         │           │
+  │       │ /pose (Topic: Publish)                  │           │
+  │       ▼                                         ▼           │
+  │  [TF2 Broadcaster] ──────────────────► [MoveBase Action]   │
+  │                                              │               │
+  │  [Arm Controller] ◄── /joint_cmd ◄─── [MoveIt 2 Node]      │
+  └─────────────────────────────────────────────────────────────┘
+```
+
+| Communication Type | Direction | Use Case | Example |
+|--------------------|-----------|----------|---------|
+| **Topic** (Pub/Sub) | Async, N:M | Sensor streams | `/scan`, `/cmd_vel`, `/odom` |
+| **Service** (Req/Res) | Sync, 1:1 | Discrete queries | `/set_mode`, `/get_parameters` |
+| **Action** (Goal/Result) | Async, 1:1, cancellable | Long-running tasks | `/navigate_to_pose`, `/follow_joint_trajectory` |
+
+---
+
+## 2. TF2 Transform Tree: The Spatial Backbone
+
+Every ROS 2 robot maintains a **TF2 Transform Tree** — a dynamic tree of coordinate frame relationships that every sensor, actuator, and algorithm subscribes to:
+
+```text
+  world
+    └── map
+          └── odom
+                └── base_link          ← Robot center of mass
+                      ├── base_laser   ← LiDAR sensor
+                      ├── camera_link  ← RGB-D camera
+                      ├── imu_link     ← IMU sensor
+                      └── arm_link_0   ← Robot arm base
+                            ├── arm_link_1
+                            ├── arm_link_2
+                            └── arm_end_effector
+```
+
+Each edge stores a timestamped rigid body transform:
+$$T_{A}^{B}(t) = \begin{bmatrix} R_{AB}(t) & \mathbf{p}_{AB}(t) \\ \mathbf{0}^T & 1 \end{bmatrix} \in SE(3)$$
+
+TF2 buffers these transforms with interpolation, enabling any node to look up the transform between any two frames at any past time $t_{\text{query}}$.
+
+---
+
+## 3. URDF: The Robot Description Standard
+
+A **URDF (Unified Robot Description Format)** XML file fully specifies:
+- **Links**: Rigid bodies with mass $m$, inertia tensor $I$, visual mesh, and collision geometry
+- **Joints**: Kinematic connection type (fixed, revolute, prismatic, floating) with limits $[\theta_{\min}, \theta_{\max}]$
+
+```xml
+<joint name="shoulder_pan_joint" type="revolute">
+  <parent link="base_link"/>
+  <child link="shoulder_link"/>
+  <axis xyz="0 0 1"/>
+  <limit lower="-π" upper="π" effort="100" velocity="2.0"/>
+</joint>
+```
+
+`robot_state_publisher` continuously broadcasts joint state → TF2 transforms, making the robot's full kinematic configuration available to all nodes.
+
+---
+
+## 4. Nav2: The Mobile Navigation Stack
+
+**Nav2** (Navigation 2) is ROS 2's complete mobile navigation system organized as a **Behavior Tree (BT)**:
+
+1. **Global Planner** (Smac Planner / NavFn): Computes collision-free path on **Global Costmap** (static + inflated obstacles).
+2. **Local Planner** (DWA / TEB / MPPI): Generates velocity commands $\mathbf{u} = [v, \omega]^T$ to follow the global path while avoiding dynamic obstacles on **Local Costmap**.
+3. **Recovery Behaviors**: Spin, backup, clear costmaps on failure.
+4. **BT Navigator**: Orchestrates the full pipeline via XML behavior trees.
+
+**Costmap Layers**:
+- **Static Layer**: Inflated occupancy grid from SLAM map
+- **Obstacle Layer**: Dynamic LiDAR/Camera detections
+- **Inflation Layer**: C-space expansion $r_{\text{inflate}} = r_{\text{robot}} + r_{\text{safety}}$
+
+---
+
+## 5. MoveIt 2: The Manipulation Planning Stack
+
+**MoveIt 2** provides motion planning for robot arms:
+1. **OMPL Planning**: Samples joint configs in C-space, finds collision-free trajectory
+2. **KDL/TracIK IK Solver**: Computes joint angles from Cartesian end-effector pose
+3. **Trajectory Execution**: Sends `FollowJointTrajectory` actions to hardware controllers (ros2_control)
+4. **Collision Checking**: Uses FCL (Flexible Collision Library) with robot's URDF collision geometry
+
+---
+
+## 6. Interactive Frame Visualization Lab
+
+Explore coordinate frame hierarchies and transform relationships below:
+
+<CoordinateFrameExplorer />
+
+---
+
+## 7. Concept Check
+
+<ConceptCheck
+  id="quiz-ros2-dds"
+  question="Why does ROS 2 use DDS (Data Distribution Service) instead of ROS 1's centralized rosmaster for node communication?"
+  options={[
+    {
+      id: "A",
+      text: "DDS is a decentralized peer-to-peer protocol with no single point of failure, enabling real-time QoS guarantees, multi-robot multi-machine communication, and operation without network connectivity to a master node.",
+      isCorrect: true,
+      explanation: "Exactly! ROS 1's rosmaster was a single point of failure — if it crashed, the entire robot system stopped. DDS provides vendor-agnostic, real-time, decentralized discovery and transport used in safety-critical systems."
+    },
+    {
+      id: "B",
+      text: "DDS reduces the file size of robot programs.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    },
+    {
+      id: "C",
+      text: "DDS allows robots to communicate in Python 2.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about what happens when a central coordinator node crashes."
+/>

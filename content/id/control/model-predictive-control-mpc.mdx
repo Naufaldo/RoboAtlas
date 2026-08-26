@@ -1,0 +1,171 @@
+---
+id: model-predictive-control-mpc
+title: "Model Predictive Control (MPC): Cakrawala Mundur, Pemecah QP & NMPC Non-Linear"
+slug: model-predictive-control-mpc
+domain: control
+category: control
+level: 7
+tier: Core Autonomy
+difficulty: advanced
+language: id
+interactive: true
+estimatedMinutes: 55
+prerequisites:
+  - pid-and-lqr-control
+  - state-space-and-feedback
+  - mathematical-foundations
+references:
+  - "Jan M. Maciejowski (2002). Predictive Control with Constraints. Prentice Hall."
+  - "James B. Rawlings, David Q. Mayne & Moritz Diehl (2020). Model Predictive Control: Theory, Computation, and Design (2nd ed.). Nob Hill Publishing."
+  - "Bartolomeo Stellato et al. (2020). OSQP: An Operator Splitting Solver for Quadratic Programs. Mathematical Programming Computation."
+components:
+  - NumericalIntegrationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Model Predictive Control (MPC): Cakrawala Mundur, Pemecah QP & NMPC Non-Linear
+
+> "Bagaimana mobil self-driving mengantisipasi tikungan tajam 50 meter ke depan dan secara proaktif melambat sebelum puncak tikungan — sambil menghormati batas sudut kemudi, batasan gesekan ban, dan batasan kenyamanan penumpang — dalam waktu kurang dari 10 milidetik?"
+
+**Model Predictive Control (MPC)** adalah standar industri emas untuk kendali optimal berkendalian: pengontrol yang **berulang kali memecahkan masalah optimasi online** atas cakrawala masa depan yang terbatas menggunakan model dinamika sistem, hanya menerapkan aksi kontrol pertama, lalu membuang sisanya dan memecahkan ulang pada langkah waktu berikutnya. Strategi **Receding Horizon Control** ini secara inheren beradaptasi dengan gangguan, ketidakcocokan model pabrik, dan kesalahan estimasi status.
+
+---
+
+<VideoEmbed
+  title="Model Predictive Control — Understanding the Receding Horizon Principle"
+  videoId="8U0xiOkDcmw"
+  provider="youtube"
+  duration="15:40"
+  author="MATLAB Tech Talks"
+/>
+
+---
+
+## 1. Masalah Optimasi MPC
+
+Pada setiap langkah waktu kendali $t_k$, MPC memecahkan masalah kendali optimal cakrawala terbatas berikut atas cakrawala prediksi $N$:
+
+$$\min_{\mathbf{U}} \; J(\mathbf{X}, \mathbf{U}) = \underbrace{\mathbf{x}_N^T P \mathbf{x}_N}_{\text{Biaya Terminal}} + \sum_{k=0}^{N-1} \underbrace{\mathbf{x}_k^T Q \mathbf{x}_k + \mathbf{u}_k^T R \mathbf{u}_k}_{\text{Biaya Tahap}}$$
+
+Dengan kendala:
+$$\mathbf{x}_{k+1} = A \mathbf{x}_k + B \mathbf{u}_k \quad \text{(Dinamika Sistem)}$$
+$$\mathbf{x}_k \in \mathcal{X}, \quad \mathbf{u}_k \in \mathcal{U} \quad \text{(Kendala Status \& Masukan)}$$
+
+Di mana:
+- $Q \succeq 0$: **Matriks bobot status** (menghukum penyimpangan dari titik setel)
+- $R \succ 0$: **Matriks bobot masukan** (menghukum upaya kontrol)
+- $P$: **Matriks biaya terminal** (biasanya diselesaikan sebagai persamaan Riccati LQR)
+- $\mathcal{X}$: Kendala status politopik (mis., $|v| \le v_{\max}$)
+- $\mathcal{U}$: Kendala masukan politopik (mis., $|\delta| \le \delta_{\max}$)
+
+Hanya $\mathbf{u}_0^*$ yang diterapkan ke sistem; cakrawala kemudian bergeser 1 langkah.
+
+---
+
+## 2. Visualisasi Cakrawala Mundur
+
+```text
+  Cakrawala Mundur MPC (N=5 langkah):
+
+  Waktu:    t_0     t_1     t_2     t_3     t_4     t_5
+            │       │       │       │       │       │
+  Status:   x_0 ──► x_1 ──► x_2 ──► x_3 ──► x_4 ──► x_5 (prediksi)
+            │
+  Terapkan: u_0* (hanya langkah ini; buang u_1*, u_2*, u_3*, u_4*)
+            │
+            ▼
+  Geser:    [t_1] ──► pecahkan ulang dengan estimasi status x̂_1 yang diperbarui
+```
+
+---
+
+## 3. MPC Linear sebagai Quadratic Program (QP)
+
+Untuk sistem linear $(A, B)$, MPC menjadi **Quadratic Program (QP)** — masalah optimasi konveks dengan optimalitas global yang terjamin dan pemecah waktu-polinomial:
+
+**Langkah 1: Kondensasi Matriks Prediksi**
+
+Tumpuk semua status masa depan menggunakan substitusi $\mathbf{X} = S_x \mathbf{x}_0 + S_u \mathbf{U}$:
+$$\mathbf{X} = \begin{bmatrix} \mathbf{x}_1 \\ \vdots \\ \mathbf{x}_N \end{bmatrix} = \underbrace{\begin{bmatrix} A \\ A^2 \\ \vdots \\ A^N \end{bmatrix}}_{S_x} \mathbf{x}_0 + \underbrace{\begin{bmatrix} B & 0 & \cdots \\ AB & B & \cdots \\ \vdots & \ddots & \end{bmatrix}}_{S_u} \underbrace{\begin{bmatrix} \mathbf{u}_0 \\ \vdots \\ \mathbf{u}_{N-1} \end{bmatrix}}_{\mathbf{U}}$$
+
+**Langkah 2: Formulasi QP**
+$$\min_{\mathbf{U}} \; \frac{1}{2} \mathbf{U}^T H \mathbf{U} + \mathbf{f}^T \mathbf{U}$$
+$$\text{dengan kendala: } G \mathbf{U} \le \mathbf{h}$$
+
+Di mana $H = 2(S_u^T \bar{Q} S_u + \bar{R})$ dan $\mathbf{f} = 2 S_u^T \bar{Q} S_x \mathbf{x}_0$.
+
+---
+
+## 4. MPC Waktu-Nyata dengan OSQP
+
+**OSQP** (Operator Splitting QP Solver) adalah pemecah tertanam waktu-nyata terkemuka untuk MPC, mencapai:
+- **Waktu pemecahan < 1 ms** pada frekuensi kontrol 100Hz
+- **Warm-starting** dari solusi cakrawala sebelumnya mengurangi iterasi hingga 90%
+- **Generasi kode C** untuk penerapan pada mikrokontroler (STM32, Jetson Orin)
+
+OSQP menggunakan Metode Pergantian Arah Pengganda (ADMM):
+$$\mathbf{x}^{k+1} = \arg\min_{\mathbf{x}} \left( f(\mathbf{x}) + \frac{\rho}{2} \|\mathbf{x} - \mathbf{z}^k + \mathbf{y}^k\|^2 \right)$$
+$$\mathbf{z}^{k+1} = \Pi_{\mathcal{C}} (\mathbf{x}^{k+1} + \mathbf{y}^k)$$
+
+---
+
+## 5. MPC Non-Linear (NMPC) dengan Multiple Shooting
+
+Untuk dinamika non-linear $\mathbf{x}_{k+1} = f(\mathbf{x}_k, \mathbf{u}_k)$ (quadrotor, robot berkaki, dinamika mobil):
+
+**Multiple Shooting** mendiskritisasi cakrawala prediksi menjadi $N$ interval penembakan, menegakkan kendala kesinambungan antar segmen. Ini diselesaikan melalui pemecah NLP sekuensial seperti **IPOPT** atau **ACADOS**:
+
+$$\min_{\mathbf{x}_0, \ldots, \mathbf{x}_N, \mathbf{u}_0, \ldots, \mathbf{u}_{N-1}} J$$
+$$\text{k.t.} \; \mathbf{x}_{k+1} = f(\mathbf{x}_k, \mathbf{u}_k), \quad \forall k = 0, \ldots, N-1$$
+
+ACADOS mencapai waktu pemecahan NMPC **~5-20 ms** untuk model quadrotor 6-DOF pada 200Hz.
+
+---
+
+## 6. Stabilitas via Biaya Terminal
+
+Tanpa kendala terminal, MPC dapat menjadi **tidak stabil** untuk cakrawala pendek. Pendekatan standar menggunakan **matriks biaya terminal LQR** $P$ yang memecahkan Persamaan Riccati Aljabar Diskrit (DARE):
+
+$$P = Q + A^T P A - A^T P B (R + B^T P B)^{-1} B^T P A$$
+
+Ini menjamin **stabilitas asimtotik** untuk MPC tanpa kendala, setara dengan LQR cakrawala tak terbatas dengan biaya komputasi terbatas.
+
+---
+
+## 7. Lab Dinamika Kontrol Interaktif
+
+Jelajahi dinamika sistem loop tertutup dan cakrawala prediksi di bawah ini:
+
+<NumericalIntegrationSimulator />
+
+---
+
+## 8. Uji Pemahaman Konsep
+
+<ConceptCheck
+  id="quiz-mpc-receding"
+  question="Mengapa MPC memecahkan masalah optimasi di setiap langkah waktu tetapi hanya menerapkan masukan kontrol pertama u_0*, membuang sisa urutan solusi?"
+  options={[
+    {
+      id: "A",
+      text: "Karena pada langkah waktu berikutnya, estimasi status akan diperbarui dengan pengukuran sensor baru, membuat urutan yang direncanakan sebelumnya menjadi suboptimal. Pemecahan ulang dengan status segar memberikan penolakan gangguan yang lebih baik daripada menjalankan urutan loop terbuka yang telah direncanakan.",
+      isCorrect: true,
+      explanation: "Tepat! Prinsip Receding Horizon ini adalah kekuatan inti MPC: ia terus beradaptasi dengan pembaruan estimasi status, gangguan eksternal, dan ketidakcocokan model secara waktu-nyata."
+    },
+    {
+      id: "B",
+      text: "Karena pemecah hanya dapat menghitung satu aksi kontrol dalam satu waktu.",
+      isCorrect: false,
+      explanation: "Salah. Pemecah menghitung urutan N langkah penuh U = [u_0, ..., u_{N-1}]^T secara bersamaan — hanya u_0 yang diterapkan berdasarkan desain."
+    },
+    {
+      id: "C",
+      text: "Karena mengurangi penggunaan memori pada prosesor tertanam.",
+      isCorrect: false,
+      explanation: "Salah."
+    }
+  ]}
+  hint="Pikirkan apa yang berubah antara t_k dan t_{k+1} yang membuat u_1* yang sebelumnya direncanakan berpotensi menjadi suboptimal."
+/>

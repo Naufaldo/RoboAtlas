@@ -1,0 +1,168 @@
+---
+id: reinforcement-learning-for-robotics
+title: "Reinforcement Learning for Robotics: MDP, Policy Gradients, PPO & SAC"
+slug: reinforcement-learning-for-robotics
+domain: advanced
+category: advanced
+level: 19
+tier: Advanced Embodiments
+difficulty: advanced
+language: en
+interactive: true
+estimatedMinutes: 55
+prerequisites:
+  - slam-fundamentals
+  - mathematical-foundations
+  - probability-for-robotics
+references:
+  - "Richard S. Sutton & Andrew G. Barto (2018). Reinforcement Learning: An Introduction (2nd ed.). MIT Press."
+  - "John Schulman et al. (2017). Proximal Policy Optimization Algorithms. arXiv:1707.06347."
+  - "Tuomas Haarnoja et al. (2018). Soft Actor-Critic: Off-Policy Maximum Entropy Deep RL. ICML."
+  - "Viktor Makoviychuk et al. (2021). Isaac Gym: High Performance GPU-Based Physics Simulation for Robot Learning. NeurIPS."
+components:
+  - NumericalIntegrationSimulator
+  - VideoEmbed
+  - FormulaExplainer
+  - ConceptCheck
+---
+
+# Reinforcement Learning for Robotics: MDP, Policy Gradients, PPO & SAC
+
+> "How does a legged robot like Boston Dynamics Spot learn to walk on rough terrain — not through hand-coded equations, but by trying thousands of falls in a GPU-accelerated physics simulator until it discovers a gait policy that never falls?"
+
+**Reinforcement Learning (RL)** is the computational paradigm of learning through interaction: an agent takes actions in an environment, receives scalar reward signals, and iteratively optimizes a policy to maximize cumulative future reward. Unlike supervised learning, RL requires no labeled data — only a reward function. This makes it uniquely powerful for **robot locomotion, dexterous manipulation, and autonomous navigation** where exhaustive demonstration is impractical.
+
+---
+
+<VideoEmbed
+  title="Reinforcement Learning for Robotics: From Q-Learning to PPO and SAC"
+  videoId="qv6UVOQ0F44"
+  provider="youtube"
+  duration="24:10"
+  author="Steve Brunton / University of Washington"
+/>
+
+---
+
+## 1. The Markov Decision Process (MDP) Framework
+
+All RL problems are formalized as a **Markov Decision Process (MDP)** — a 5-tuple $(S, A, P, R, \gamma)$:
+
+| Symbol | Meaning | Example (Quadruped Walking) |
+|--------|---------|---------------------------|
+| $S$ | State space | Joint angles, velocities, base orientation $(q, \dot{q}, R)$ |
+| $A$ | Action space | Joint torques $\tau \in \mathbb{R}^{12}$ |
+| $P(s' \| s, a)$ | Transition dynamics | Physics simulator step |
+| $R(s, a, s')$ | Reward function | $r = v_{\text{forward}} - c_1 \|\tau\|^2 - c_2 \|\dot{q}\|^2$ |
+| $\gamma \in [0,1)$ | Discount factor | 0.99 (long-horizon tasks) |
+
+The agent's goal is to find a **policy** $\pi(a \| s)$ that maximizes the discounted return:
+$$G_t = \sum_{k=0}^{\infty} \gamma^k r_{t+k+1}$$
+
+---
+
+## 2. Bellman Optimality Equations
+
+The **optimal state-value function** $V^*(s)$ and **optimal action-value function** $Q^*(s, a)$ satisfy the Bellman optimality equations:
+
+$$V^*(s) = \max_a \mathbb{E}_{s'} \left[ R(s, a, s') + \gamma V^*(s') \right]$$
+
+$$Q^*(s, a) = \mathbb{E}_{s'} \left[ R(s, a, s') + \gamma \max_{a'} Q^*(s', a') \right]$$
+
+The optimal policy is recovered greedily: $\pi^*(s) = \arg\max_a Q^*(s, a)$.
+
+---
+
+## 3. Policy Gradient Methods
+
+For continuous action spaces (robot joint torques, velocities), value-based methods are intractable. **Policy gradient** methods directly parameterize $\pi_\theta(a|s)$ and optimize via gradient ascent on expected return:
+
+$$\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta} \left[ \sum_{t=0}^T \nabla_\theta \log \pi_\theta(a_t|s_t) \cdot G_t \right]$$
+
+This is the **REINFORCE** (Williams 1992) algorithm — elegant but high-variance, motivating advanced algorithms below.
+
+---
+
+## 4. Proximal Policy Optimization (PPO)
+
+**PPO** (Schulman et al., 2017) is the dominant on-policy RL algorithm for robotics. It prevents destructively large policy updates via a **clipped surrogate objective**:
+
+$$\mathcal{L}^{\text{PPO}}(\theta) = \mathbb{E}_t \left[ \min\left( r_t(\theta) \hat{A}_t, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t \right) \right]$$
+
+Where:
+- $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)}$ is the **importance sampling ratio**
+- $\hat{A}_t$ is the **Generalized Advantage Estimate (GAE)**: $\hat{A}_t = \sum_{l=0}^{\infty} (\gamma \lambda)^l \delta_{t+l}$, with $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$
+- $\epsilon \approx 0.2$ is the clipping range
+
+```text
+  PPO Training Loop (per rollout):
+  ┌──────────────────────────────────────────────────┐
+  │ 1. Collect T timesteps using π_θ_old             │
+  │ 2. Compute advantages Â_t via GAE                │
+  │ 3. For K epochs:                                 │
+  │    - Compute L^PPO(θ) over mini-batches          │
+  │    - Update θ via Adam optimizer                 │
+  │ 4. Update θ_old ← θ                             │
+  └──────────────────────────────────────────────────┘
+```
+
+---
+
+## 5. Soft Actor-Critic (SAC) — Maximum Entropy RL
+
+**SAC** (Haarnoja et al., 2018) is an off-policy algorithm for sample-efficient continuous control that maximizes a **maximum entropy** objective:
+
+$$J(\pi) = \mathbb{E}_{\tau \sim \pi} \left[ \sum_{t=0}^T r(s_t, a_t) + \alpha \mathcal{H}(\pi(\cdot|s_t)) \right]$$
+
+Where $\mathcal{H}(\pi) = -\mathbb{E}[\log \pi(a|s)]$ is the **policy entropy** and $\alpha$ is the **temperature** (auto-tuned via dual gradient descent). SAC's entropy bonus encourages:
+- **Multi-modal exploration**: robot discovers multiple valid gaits simultaneously
+- **Robustness**: stochastic policy generalizes to unseen terrain perturbations
+
+---
+
+## 6. Sim-to-Real Transfer: Training in Isaac Gym
+
+Training RL robots directly on physical hardware is prohibitively slow and risky. **GPU-accelerated simulation** (NVIDIA Isaac Gym, MuJoCo) enables:
+
+- **4096+ parallel robot instances** simultaneously on a single GPU
+- **Billion-step rollouts** in hours instead of years
+- **Domain Randomization**: randomize physics parameters $(m, I, \mu, k_{\text{spring}})$ at each episode to build robust policies:
+  $$\pi^* = \arg\max_\pi \mathbb{E}_{\phi \sim p(\Phi)} \left[ J(\pi, \phi) \right]$$
+
+---
+
+## 7. Interactive Simulation
+
+Explore numerical dynamics of reward-shaping trajectories below:
+
+<NumericalIntegrationSimulator />
+
+---
+
+## 8. Concept Check
+
+<ConceptCheck
+  id="quiz-rl-ppo"
+  question="Why does PPO clip the importance sampling ratio r_t(θ) to the range [1-ε, 1+ε] during policy updates?"
+  options={[
+    {
+      id: "A",
+      text: "To prevent the new policy from deviating too far from the old policy in a single update step, bounding the policy improvement and preventing catastrophic policy collapse.",
+      isCorrect: true,
+      explanation: "Exactly! Without clipping, a single gradient step could produce a drastically different policy. PPO's clipped objective conservatively constrains each update while still making progress."
+    },
+    {
+      id: "B",
+      text: "To limit the number of robot joints that can move simultaneously.",
+      isCorrect: false,
+      explanation: "Incorrect. The clipping is about the ratio of new to old action probabilities, not joint count."
+    },
+    {
+      id: "C",
+      text: "To reduce GPU memory usage during training.",
+      isCorrect: false,
+      explanation: "Incorrect."
+    }
+  ]}
+  hint="Think about what happens to policy performance if you take an overly large gradient step."
+/>
