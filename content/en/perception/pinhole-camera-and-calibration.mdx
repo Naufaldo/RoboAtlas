@@ -73,6 +73,8 @@ $$
 
 *(where $s_{xy}$ is the skew coefficient, typically 0 for rectangular modern CMOS/CCD sensors, and $s = Z_C$ is the projective scale factor).*
 
+![Pinhole Camera Projection Model: 3D point P=(X,Y,Z) in world space, projection ray through optical center, 2D image plane with projected point p=(u,v), focal length f, principal point (cx,cy), camera matrix K=[[fx,0,cx],[0,fy,cy],[0,0,1]], and equation [u,v,1]ᵀ = K[R|t][X,Y,Z,1]ᵀ](/images/sensors/pinhole-camera-diagram.jpg)
+
 ---
 
 ## 3. The Complete Projective Pipeline: Extrinsics + Intrinsics

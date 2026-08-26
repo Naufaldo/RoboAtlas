@@ -95,6 +95,8 @@ $$T_{A}^{B}(t) = \begin{bmatrix} R_{AB}(t) & \mathbf{p}_{AB}(t) \\ \mathbf{0}^T 
 
 TF2 buffers these transforms with interpolation, enabling any node to look up the transform between any two frames at any past time $t_{\text{query}}$.
 
+![ROS 2 TF2 Transform Tree: hierarchical node graph showing world → map → odom → base_link → {base_laser, camera_link, imu_link, arm_link_0 → arm_link_1 → arm_end_effector} with SE(3) transform edges T=[R|p; 0|1] and DDS communication icon](/images/sensors/ros2-tf2-tree.jpg)
+
 ---
 
 ## 3. URDF: The Robot Description Standard

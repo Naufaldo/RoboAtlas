@@ -1,4 +1,4 @@
----
+﻿---
 id: rigid-body-and-lagrangian-dynamics
 title: "Dinamika Benda Kaku & Mekanika Lagrange untuk Robotika"
 slug: rigid-body-and-lagrangian-dynamics
@@ -60,6 +60,8 @@ $$
 \frac{d}{dt}\left( \frac{\partial L}{\partial \dot{q}_i} \right) - \frac{\partial L}{\partial q_i} = \tau_i
 $$
 
+![Newton-Euler Rigid Body Dynamics: robot arm link showing applied torque τ (cyan), gravity force mg (white), Coriolis force C(q,q̇)q̇ (amber), inertial force M(q)q̈ (purple) with the equation M(q)q̈ + C(q,q̇)q̇ + g(q) = τ](/images/sensors/newton-euler-dynamics.jpg)
+
 ---
 
 ## 2. Persamaan Matriks Standar Dinamika Robot Manipulator
@@ -112,6 +114,8 @@ Diberikan status saat ini $(\mathbf{q}, \dot{\mathbf{q}})$ dan torsi motor yang 
 $$
 \ddot{\mathbf{q}} = M(\mathbf{q})^{-1} \Big( \boldsymbol{\tau} - C(\mathbf{q}, \dot{\mathbf{q}})\dot{\mathbf{q}} - \mathbf{g}(\mathbf{q}) \Big)
 $$
+
+![Newton-Euler Rigid Body Dynamics: robot arm link showing applied torque τ (cyan), gravity force mg (white), Coriolis force C(q,q̇)q̇ (amber), inertial force M(q)q̈ (purple) with the equation M(q)q̈ + C(q,q̇)q̇ + g(q) = τ](/images/sensors/newton-euler-dynamics.jpg)
 
 ---
 

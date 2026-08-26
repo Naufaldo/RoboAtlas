@@ -58,6 +58,8 @@ Between two successive coordinate frames $\{i-1\}$ and $\{i\}$, the spatial rela
 └───────────────────────────────┴────────────┴────────────────────────────────────────────────────────────────────────┘
 ```
 
+![Denavit-Hartenberg Parameters Diagram: showing θᵢ (joint angle), dᵢ (link offset), aᵢ (link length), αᵢ (link twist) with coordinate frames X/Y/Z at each joint, and the transformation T_{i-1,i} = Rz(θ)Tz(d)Tx(a)Rx(α)](/images/sensors/dh-parameters-diagram.jpg)
+
 - For **Revolute (R) joints**: $\theta_i$ is the active controlled joint variable, while $a_i, \alpha_i, d_i$ are constant physical link dimensions.
 - For **Prismatic (P) joints**: $d_i$ is the active joint displacement variable, while $a_i, \alpha_i, \theta_i$ are constant geometric properties.
 

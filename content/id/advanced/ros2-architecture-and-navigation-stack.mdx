@@ -95,6 +95,8 @@ $$T_{A}^{B}(t) = \begin{bmatrix} R_{AB}(t) & \mathbf{p}_{AB}(t) \\ \mathbf{0}^T 
 
 TF2 menyangga transformasi ini dengan interpolasi, memungkinkan node mana pun mencari transformasi antara dua kerangka mana pun pada waktu masa lalu $t_{\text{kueri}}$ mana pun.
 
+![Pohon Transformasi TF2 ROS 2: graf node hierarkis menunjukkan world → map → odom → base_link → {base_laser, camera_link, imu_link, arm_link_0 → arm_link_1 → arm_end_effector} dengan tepi transformasi SE(3) T=[R|p; 0|1] dan ikon komunikasi DDS](/images/sensors/ros2-tf2-tree.jpg)
+
 ---
 
 ## 3. URDF: Standar Deskripsi Robot

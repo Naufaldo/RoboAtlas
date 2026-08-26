@@ -53,6 +53,8 @@ $$
 2. **Integral Term ($K_i \int e(\tau) d\tau$)**: Accumulates past persistent errors over time, eliminating **steady-state offset error**.
 3. **Derivative Term ($K_d \frac{de}{dt}$)**: Anticipates future error trajectory and provides damping, reducing **overshoot** and oscillations.
 
+![PID Controller Block Diagram: closed-loop feedback system showing Reference r(t) → error e(t) → P/I/D parallel paths → Plant/System → Output y(t) with feedback, and transfer function C(s) = Kp + Ki/s + Kd·s](/images/sensors/pid-block-diagram.jpg)
+
 ---
 
 ## 2. Discrete-Time Implementation for Microcontrollers

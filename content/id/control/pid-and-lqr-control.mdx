@@ -1,4 +1,4 @@
----
+﻿---
 id: pid-and-lqr-control
 title: Kendali Umpan Balik PID & Regulasi Ruang Status Optimal LQR
 slug: pid-and-lqr-control
@@ -40,6 +40,9 @@ Perintah loop terbuka (*open-loop*) tidak mampu mengatasi ketidakpastian dunia n
 
 ---
 
+![PID Controller Block Diagram: closed-loop feedback system showing Reference r(t) → error e(t) → P/I/D parallel paths → Plant/System → Output y(t) with feedback, and transfer function C(s) = Kp + Ki/s + Kd·s](/images/sensors/pid-block-diagram.jpg)
+
+
 ## 1. Hukum Kendali Proportional-Integral-Derivative (PID)
 
 PID menghitung sinyal kendali $u(t)$ dari sinyal galat $e(t) = r(t) - y(t)$:
@@ -79,6 +82,9 @@ Atur slider Proporsional ($K_p$), Integral ($K_i$), dan Derivatif ($K_d$) di baw
 <PidTuningSimulator />
 
 ---
+
+![PID Controller Block Diagram: closed-loop feedback system showing Reference r(t) → error e(t) → P/I/D parallel paths → Plant/System → Output y(t) with feedback, and transfer function C(s) = Kp + Ki/s + Kd·s](/images/sensors/pid-block-diagram.jpg)
+
 
 ## 4. Uji Pemahaman Konsep
 

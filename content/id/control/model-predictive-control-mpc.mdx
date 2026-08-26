@@ -1,4 +1,4 @@
----
+﻿---
 id: model-predictive-control-mpc
 title: "Model Predictive Control (MPC): Cakrawala Mundur, Pemecah QP & NMPC Non-Linear"
 slug: model-predictive-control-mpc
@@ -108,6 +108,8 @@ Di mana $H = 2(S_u^T \bar{Q} S_u + \bar{R})$ dan $\mathbf{f} = 2 S_u^T \bar{Q} S
 OSQP menggunakan Metode Pergantian Arah Pengganda (ADMM):
 $$\mathbf{x}^{k+1} = \arg\min_{\mathbf{x}} \left( f(\mathbf{x}) + \frac{\rho}{2} \|\mathbf{x} - \mathbf{z}^k + \mathbf{y}^k\|^2 \right)$$
 $$\mathbf{z}^{k+1} = \Pi_{\mathcal{C}} (\mathbf{x}^{k+1} + \mathbf{y}^k)$$
+
+![MPC Receding Horizon Diagram: timeline showing t0–t5 with predicted state trajectory (cyan curve), u0* applied (green, bright), u1*–u4* discarded (gray dashed), prediction horizon bracket, and cost function min_U Σ(xᵀQx + uᵀRu)](/images/sensors/mpc-receding-horizon.jpg)
 
 ---
 

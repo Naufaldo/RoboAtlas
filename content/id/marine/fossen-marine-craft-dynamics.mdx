@@ -1,4 +1,4 @@
----
+﻿---
 id: fossen-marine-craft-dynamics
 title: "Hidrodinamika Laut Fossen 6-DOF, Massa Tambahan & Kendali Gerak AUV"
 slug: fossen-marine-craft-dynamics
@@ -121,6 +121,8 @@ Pengendalian kedalaman $z(t)$ dan sudut *pitch* $\theta(t)$ diatur melalui kontr
 $$
 u_{\text{depth}} = K_p (z_{\text{target}} - z) + K_i \int (z_{\text{target}} - z) dt + K_d \dot{z}
 $$
+
+![Fossen AUV 6-DOF Motion Axes: torpedo-shaped AUV showing Surge u (cyan, X-axis), Sway v (green, Y-axis), Heave w (amber, Z-axis), Roll p (red circular, X), Pitch q (purple circular, Y), Yaw r (white circular, Z), with Fossen model equation Mν̇ + C(ν)ν + D(ν)ν + g(η) = τ](/images/sensors/fossen-auv-6dof.jpg)
 
 ---
 
